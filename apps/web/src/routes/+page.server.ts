@@ -19,6 +19,7 @@ export type DigestCard = {
   categoryLine: string | null;
   sources: unknown[];
   bucket: Bucket;
+  isBreaking: boolean;
 };
 
 function parseFuseThreshold(raw: string | undefined): number {
@@ -35,7 +36,8 @@ export const load = async () => {
   const fuseThreshold = parseFuseThreshold(env.DIGEST_FUSE_THRESHOLD);
 
   if (useMockData()) {
-    return { digest: buildMockDigest() as Partial<Record<Bucket, DigestCard[]>>, fuseThreshold };
+    const mock = buildMockDigest();
+    return { digest: mock.cards as Partial<Record<Bucket, DigestCard[]>>, summaries: mock.summaries, fuseThreshold };
   }
 
   const now = new Date();
@@ -51,24 +53,25 @@ export const load = async () => {
 
   if (error) {
     console.error('Supabase load error:', error);
-    return { digest: {} as Partial<Record<Bucket, DigestCard[]>>, fuseThreshold };
+    return { digest: {} as Partial<Record<Bucket, DigestCard[]>>, summaries: {} as Partial<Record<Bucket, string[]>>, fuseThreshold };
   }
 
   const digest = (data ?? []).reduce<Partial<Record<Bucket, DigestCard[]>>>((acc, row) => {
     const b = row.bucket as Bucket;
     const s = row.summary as SummaryJson;
     if (!acc[b]) acc[b] = [];
-    acc[b]?.push({
-      headline: s.headline,
-      bullets: s.bullets,
-      whyItMatters: s.why_it_matters,
-      tags: Array.isArray(s.tags) ? (s.tags as string[]).filter((t) => typeof t === 'string') : [],
-      categoryLine: row.category_line,
-      sources: Array.isArray(s.sources) ? s.sources : [],
-      bucket: b,
-    });
+      acc[b]?.push({
+        headline: s.headline,
+        bullets: s.bullets,
+        whyItMatters: s.why_it_matters,
+        tags: Array.isArray(s.tags) ? (s.tags as string[]).filter((t) => typeof t === 'string') : [],
+        categoryLine: row.category_line,
+        sources: Array.isArray(s.sources) ? s.sources : [],
+        bucket: b,
+        isBreaking: false,
+      });
     return acc;
   }, {});
 
-  return { digest, fuseThreshold };
+  return { digest, summaries: {} as Partial<Record<Bucket, string[]>>, fuseThreshold };
 };

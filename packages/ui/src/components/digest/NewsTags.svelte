@@ -7,7 +7,7 @@
 </script>
 
 {#if tags.length > 0}
-  <div class="mt-2 flex flex-wrap justify-end gap-x-2 gap-y-0.5 text-[0.55rem] leading-tight opacity-60">
+  <div class="summary-text mt-2 flex flex-wrap justify-end gap-x-2 gap-y-0.5">
     {#each tags as tag}
       <span>#{tag}</span>
     {/each}

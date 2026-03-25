@@ -20,7 +20,7 @@
   };
 
   const { data } = $props<{
-    data: { digest: Partial<Record<string, DigestCard[]>>; fuseThreshold: number };
+    data: { digest: Partial<Record<string, DigestCard[]>>; summaries: Partial<Record<string, string[]>>; fuseThreshold: number };
   }>();
 
   let debouncedQ = $state('');
@@ -85,13 +85,13 @@
       .filter((b) => digest[b]?.length)
       .map((b) => ({
         name: b,
-        summary: (digest[b] ?? []).slice(0, 5).map((c) => c.headline),
+        summary: data.summaries?.[b] ?? (digest[b] ?? []).slice(0, 5).map((c) => c.headline),
         news: (digest[b] ?? []).map((c) => ({
           title: c.headline,
           bullets: c.bullets,
           whyItMatters: c.whyItMatters,
           source: c.categoryLine ?? b,
-          isBreaking: false,
+          isBreaking: c.isBreaking,
           tags: c.tags,
         })),
       }));

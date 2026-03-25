@@ -10,14 +10,22 @@ export type MockDigestCard = {
   categoryLine: string | null;
   sources: unknown[];
   bucket: Bucket;
+  isBreaking: boolean;
 };
 
-export function buildMockDigest(): Partial<Record<Bucket, MockDigestCard[]>> {
-  const acc: Partial<Record<Bucket, MockDigestCard[]>> = {};
+export type MockDigest = {
+  cards: Partial<Record<Bucket, MockDigestCard[]>>;
+  summaries: Partial<Record<Bucket, string[]>>;
+};
+
+export function buildMockDigest(): MockDigest {
+  const cards: Partial<Record<Bucket, MockDigestCard[]>> = {};
+  const summaries: Partial<Record<Bucket, string[]>> = {};
   for (const cat of mockData) {
     const b = cat.name as Bucket;
-    if (!acc[b]) acc[b] = [];
-    const list = acc[b] as MockDigestCard[];
+    summaries[b] = cat.summary;
+    if (!cards[b]) cards[b] = [];
+    const list = cards[b] as MockDigestCard[];
     for (const n of cat.news) {
       list.push({
         headline: n.title,
@@ -27,8 +35,9 @@ export function buildMockDigest(): Partial<Record<Bucket, MockDigestCard[]>> {
         categoryLine: n.source,
         sources: [],
         bucket: b,
+        isBreaking: n.isBreaking,
       });
     }
   }
-  return acc;
+  return { cards, summaries };
 }

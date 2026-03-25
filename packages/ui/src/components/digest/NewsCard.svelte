@@ -16,10 +16,10 @@
 <style>
   @keyframes neon-pulse {
     0%, 100% {
-      box-shadow: 0 0 3px 1px rgba(255, 99, 71, 0.2);
+      box-shadow: 0 0 4px 1px rgba(255, 99, 71, 0.2);
     }
     50% {
-      box-shadow: 0 0 6px 2px rgba(255, 99, 71, 0.5);
+      box-shadow: 0 0 2px 1px rgba(255, 99, 71, 0.5);
     }
   }
 

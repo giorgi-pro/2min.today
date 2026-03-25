@@ -14,6 +14,12 @@
   }
 }
 
+@layer components {
+  .summary-text {
+    @apply cursor-text text-[0.55rem] leading-tight opacity-60;
+  }
+}
+
 /* Global vertical scrollbar — black square on white, always visible */
 html {
   overflow-y: scroll;
