@@ -13,7 +13,7 @@ The palette is restricted to a high-contrast monochromatic base with a singular 
 ### The Palette
 - **Primary / On-Background:** `#000000` (Pure Black) - Used for primary headlines and grounding elements.
 - **Surface / Background:** `#f9f9f9` (Off-White) - Softens the starkness of pure white for long-form reading.
-- **Secondary:** `#0057c0` (Deep Blue) - Reserved strictly for interactive links and active states.
+- **Secondary:** `#ff6347` (Orangey) - Reserved strictly for interactive links and active states.
 - **Surface Containers:** A range from `#ffffff` (Lowest) to `#e2e2e2` (Highest) for subtle grouping.
 
 ### The "No-Line" Rule (Refinement)
@@ -73,7 +73,7 @@ In this system, "Elevation" is a misnomer. We do not elevate; we **carve.**
 - **Focus State:** Underline thickens to 2px. Label shifts to `SF Mono` above the field.
 
 ### Progress Bars (Reading Indicator)
-- **Visual:** A 2px line at the very top of the viewport. Use `secondary` (`#0057c0`) to show progress against a `surface_variant` background.
+- **Visual:** A 2px line at the very top of the viewport. Use `secondary` (`#ff6347`) to show progress against a `surface_variant` background.
 
 ---
 

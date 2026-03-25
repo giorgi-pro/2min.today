@@ -1,8 +1,6 @@
-<footer class="border-t-2 border-neutral bg-surface-container-low">
-  <div
-    class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-10 text-sm text-tertiary md:flex-row md:items-center md:justify-between md:px-6"
-  >
-    <p class="tracking-label">High-signal news in about two minutes.</p>
-    <p class="text-on-surface/60">© {new Date().getFullYear()} 2min.today</p>
+<footer class="border-t-2 border-black bg-black">
+  <div class="flex flex-col gap-3 px-6 py-8 md:flex-row md:items-center md:justify-between md:px-8">
+    <p class="font-mono text-[0.6875rem] uppercase tracking-widest text-white/50">High-signal news in about two minutes.</p>
+    <p class="font-mono text-[0.6875rem] uppercase tracking-widest text-white/30">© {new Date().getFullYear()} 2min.today</p>
   </div>
 </footer>
