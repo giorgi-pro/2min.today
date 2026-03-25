@@ -13,14 +13,25 @@
   const { title, bullets, whyItMatters, source, isBreaking, tags }: Props = $props();
 </script>
 
+<style>
+  @keyframes neon-pulse {
+    0%, 100% {
+      box-shadow: 0 0 3px 1px rgba(255, 99, 71, 0.2);
+    }
+    50% {
+      box-shadow: 0 0 6px 2px rgba(255, 99, 71, 0.5);
+    }
+  }
+
+  .dot-pulse {
+    animation: neon-pulse 2s ease-in-out infinite;
+  }
+</style>
+
 <div class="news-tile flex h-full min-w-[min(100%,280px)] flex-col p-2 pb-[4px]">
-  <div class="mb-3 flex w-0 min-w-full flex-none items-center justify-between gap-4">
+  <div class="mb-1 flex w-0 min-w-full flex-none justify-between gap-4 items-start">
     {#if isBreaking}
-      <span class="bg-black px-2 py-0.5 font-mono text-[0.55rem] font-medium uppercase tracking-widest text-white">
-        Breaking
-      </span>
-    {:else}
-      <span class="font-mono text-[0.55rem] uppercase tracking-widest text-black/30">Update</span>
+      <span class="dot-pulse mt-[3px] block h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF6347]"></span>
     {/if}
     <span class="ml-auto font-mono text-[0.55rem] uppercase tracking-widest text-black/40">{source}</span>
   </div>
