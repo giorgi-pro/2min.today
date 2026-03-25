@@ -33,7 +33,7 @@
       </div>
 
       <!-- Right: horizontally scrolling news tiles -->
-      <div class="news-scroll flex h-[30vh] divide-x divide-black/10">
+      <div class="news-scroll flex h-[30vh] overflow-x-scroll overflow-y-hidden divide-x divide-black/10">
         {#each category.news as item}
           <div class="flex h-full min-w-[30vh] max-w-[60vh] shrink-0 flex-col p-5">
 
