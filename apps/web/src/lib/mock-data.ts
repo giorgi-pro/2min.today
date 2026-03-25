@@ -8,12 +8,20 @@ export interface NewsItem {
 
 export interface Category {
   name: string
+  summary: string[]
   news: NewsItem[]
 }
 
 export const mockData: Category[] = [
   {
     name: 'World',
+    summary: [
+      'Ukraine–Russia ceasefire talks resume in Istanbul',
+      'India–Pakistan border tensions escalate',
+      'EU emergency migration summit after 400 drown',
+      'China holds largest South China Sea drills since 2016',
+      'UN deploys peacekeepers to Sudan after genocide ruling',
+    ],
     news: [
       {
         title: 'Ukraine and Russia Hold First Direct Ceasefire Talks in Three Years',
@@ -64,6 +72,13 @@ export const mockData: Category[] = [
   },
   {
     name: 'Business',
+    summary: [
+      'Fed signals rate-cut pause through mid-year',
+      'NVIDIA crosses $4T market cap',
+      'Amazon acquires Deliverr for $2.1B',
+      'OPEC+ raises output by 400K barrels/day',
+      'Container shipping rates drop 38%',
+    ],
     news: [
       {
         title: 'Federal Reserve Signals Extended Pause on Rate Cuts Through Mid-Year',
@@ -114,6 +129,13 @@ export const mockData: Category[] = [
   },
   {
     name: 'Tech',
+    summary: [
+      'GPT-5 launches with 1M-token context',
+      'Apple foldable iPhone enters mass production',
+      'EU enforces AI Act on high-risk systems',
+      'Lazarus Group breaches SWIFT, steals $340M',
+      'Starship completes full orbital mission',
+    ],
     news: [
       {
         title: 'OpenAI Releases GPT-5 With Native Reasoning and 1M Token Context Window',
@@ -164,6 +186,13 @@ export const mockData: Category[] = [
   },
   {
     name: 'Science',
+    summary: [
+      "Blood test predicts Alzheimer's 15 years early",
+      'Antarctic ice loss 40% above projections',
+      'Perseverance finds organics on Mars',
+      'Muon experiment hints at fifth force',
+      'Gene therapy cures Type 1 diabetes in trial',
+    ],
     news: [
       {
         title: "Blood Biomarker Predicts Alzheimer's Onset 15 Years Before Symptoms",
@@ -214,6 +243,13 @@ export const mockData: Category[] = [
   },
   {
     name: 'Health',
+    summary: [
+      'WHO declares mpox Clade Ib a global emergency',
+      'New antibiotic defeats all drug-resistant strains',
+      'Ultra-processed food linked to 32 conditions',
+      'FDA approves first oral GLP-1 weight-loss pill',
+      'Youth anxiety rates double pre-pandemic levels',
+    ],
     news: [
       {
         title: 'WHO Declares New mpox Variant Clade Ib a Public Health Emergency of International Concern',

@@ -9,8 +9,14 @@
       .slice(0, 3)
   }
 
-  // One thumb-left position (px) per category row
   let thumbPositions: number[] = $state(mockData.map(() => 0))
+  let scrollEls: HTMLElement[] = []
+  let marqueeFrames: (number | null)[] = Array(mockData.length).fill(null)
+  let marqueeSpeeds: number[] = Array(mockData.length).fill(0)
+  let marqueeEnabled: boolean[] = $state(mockData.map(() => true))
+  let pressed: boolean[] = $state(mockData.map(() => false))
+
+  const MAX_SPEED = 2.5
 
   function onScroll(e: Event, i: number) {
     const el = e.currentTarget as HTMLElement
@@ -19,6 +25,49 @@
     const thumbWidth = window.innerWidth * 0.2
     const trackWidth = el.clientWidth
     thumbPositions[i] = ratio * Math.max(0, trackWidth - thumbWidth - 1)
+  }
+
+  let categoryEls: HTMLElement[] = []
+
+  function onCategoryMouseMove(e: MouseEvent, i: number) {
+    if (!marqueeEnabled[i]) return
+    const rect = categoryEls[i].getBoundingClientRect()
+    const offset = (e.clientX - rect.left) / rect.width
+    marqueeSpeeds[i] = (offset - 0.5) * 2 * MAX_SPEED
+  }
+
+  function startMarquee(i: number) {
+    if (!marqueeEnabled[i]) return
+    const el = scrollEls[i]
+    if (!el) return
+
+    function tick() {
+      el.scrollLeft += marqueeSpeeds[i]
+      marqueeFrames[i] = requestAnimationFrame(tick)
+    }
+
+    marqueeFrames[i] = requestAnimationFrame(tick)
+  }
+
+  function stopMarquee(i: number) {
+    if (marqueeFrames[i] != null) {
+      cancelAnimationFrame(marqueeFrames[i]!)
+      marqueeFrames[i] = null
+    }
+    marqueeSpeeds[i] = 0
+  }
+
+  function toggleMarquee(e: MouseEvent, i: number) {
+    marqueeEnabled[i] = !marqueeEnabled[i]
+    if (marqueeEnabled[i]) {
+      onCategoryMouseMove(e, i)
+      startMarquee(i)
+    } else {
+      stopMarquee(i)
+    }
+
+    pressed[i] = true
+    setTimeout(() => (pressed[i] = false), 150)
   }
 </script>
 
@@ -32,16 +81,29 @@
 
 <div class="border-t-2 border-black">
   {#each mockData as category, i}
-    <div class="grid border-b-2 border-black" style="grid-template-columns: 180px 1fr">
+    <div class="grid border-b-2 border-black" style="grid-template-columns: 30vh 1fr">
 
       <!-- Left: category sidebar -->
       <div
-        class="flex h-[30vh] flex-col p-6
-          {i % 2 === 0 ? 'bg-black text-white' : 'bg-white text-black border-r-2 border-black'}"
+        role="presentation"
+        class="flex h-[30vh] flex-col justify-between transition-transform duration-150 ease-out 
+          {i % 2 === 0 ? 'bg-black text-white' : 'bg-white text-black border-r-2 border-black'}
+          {marqueeEnabled[i] ? 'cursor-grab' : 'cursor-pointer'}"
+        style:transform={pressed[i] ? 'translate(-1px, 1px)' : ''}
+        bind:this={categoryEls[i]}
+        onmouseenter={() => startMarquee(i)}
+        onmouseleave={() => stopMarquee(i)}
+        onmousemove={e => onCategoryMouseMove(e, i)}
+        onclick={e => toggleMarquee(e, i)}
       >
-        <span class="whitespace-nowrap text-xl font-black uppercase leading-none tracking-tight">
+        <span class="whitespace-nowrap text-xl font-black uppercase leading-none tracking-tight m-6">
           {category.name}
         </span>
+        <ul class="space-y-1 text-right m-3">
+          {#each category.summary as line}
+            <li class="text-[0.55rem] leading-tight opacity-60">{line}.</li>
+          {/each}
+        </ul>
       </div>
 
       <!-- Right: tile area wrapper (relative so custom scrollbar can anchor to bottom) -->
@@ -50,6 +112,7 @@
         <!-- Scrollable tiles -->
         <div
           class="news-scroll flex h-[30vh] overflow-x-scroll overflow-y-hidden divide-x divide-black/10"
+          bind:this={scrollEls[i]}
           onscroll={e => onScroll(e, i)}
         >
           {#each category.news as item}
