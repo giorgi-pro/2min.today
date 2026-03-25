@@ -10,7 +10,6 @@
 
   let {
     searchQuery = $bindable(''),
-    searchPlaceholder = 'Search digest',
   }: Props = $props();
 </script>
 
@@ -20,7 +19,7 @@
   >
     <Logo />
     <div class="flex min-w-0 justify-center px-2 md:px-4">
-      <GlobalSearch bind:value={searchQuery} placeholder={searchPlaceholder} />
+      <GlobalSearch bind:value={searchQuery} />
     </div>
     <Menu />
   </div>

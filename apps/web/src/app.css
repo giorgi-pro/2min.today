@@ -38,6 +38,10 @@
   }
 }
 
+input[type='search']::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
 /* Global vertical scrollbar — black square on white, always visible */
 html {
   overflow-y: scroll;

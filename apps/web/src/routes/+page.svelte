@@ -1,8 +1,9 @@
 <script lang="ts">
-  import Fuse from 'fuse.js';
   import { BUCKET_ORDER, type Bucket } from '$lib/config/buckets.constants';
   import { buildMockDigest } from '$lib/mock-digest';
   import { debouncedSearchQuery } from '$lib/digest-filter';
+  import { SearchHandler, ThresholdStrategy } from '$lib/search/search-handler';
+  import { parseQuery } from '$lib/search/query-parser';
   import type { DigestCard } from './+page.server';
   import CategoryRow from '@2min.today/ui/components/digest/CategoryRow.svelte';
 
@@ -46,29 +47,21 @@
     ) as CardRow[],
   );
 
-  const fuse = $derived(
-    new Fuse(allCards, {
-      keys: [
-        'headline',
-        'whyItMatters',
-        {
-          name: 'bullets',
-          getFn: (c: CardRow) => c.bullets.join(' '),
-        },
-      ],
-      threshold: data.fuseThreshold,
-      ignoreLocation: true,
-    }),
+  const handler = $derived(
+    new SearchHandler(
+      new ThresholdStrategy<CardRow>({
+        keys: [
+          'headline',
+          'whyItMatters',
+          { name: 'bullets', getFn: (c: CardRow) => c.bullets.join(' ') },
+        ],
+        ignoreLocation: true,
+      }),
+      data.fuseThreshold,
+    ),
   );
 
-  const filteredCards = $derived.by(() => {
-    let results = allCards;
-    const q = debouncedQ.trim();
-    if (q) {
-      results = fuse.search(q).map((r) => r.item);
-    }
-    return results;
-  });
+  const filteredCards = $derived(handler.handle(debouncedQ, allCards));
 
   const filteredDigest = $derived(
     filteredCards.reduce<Partial<Record<Bucket, DigestCard[]>>>((acc, card) => {
@@ -100,7 +93,7 @@
   const categories: Category[] = $derived(liveToCategories(filteredDigest));
 
   const showFilteredEmpty = $derived(
-    debouncedQ.trim().length > 0 && allCards.length > 0 && filteredCards.length === 0,
+    parseQuery(debouncedQ, data.fuseThreshold) !== null && allCards.length > 0 && filteredCards.length === 0,
   );
 </script>
 
