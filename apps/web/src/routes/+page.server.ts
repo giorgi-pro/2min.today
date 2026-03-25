@@ -1,4 +1,4 @@
-import { supabaseClient } from '$lib/supabase/client';
+import { getSupabaseClient } from '$lib/supabase/client';
 import type { Bucket } from '$lib/config/buckets';
 
 type SummaryJson = {
@@ -21,7 +21,7 @@ export const load = async () => {
   const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 
-  const { data, error } = await supabaseClient
+  const { data, error } = await getSupabaseClient()
     .from('clusters')
     .select('id, bucket, category_line, summary, published_at')
     .gte('published_at', todayStart.toISOString())

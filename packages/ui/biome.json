@@ -31,6 +31,20 @@
   },
   "overrides": [
     {
+      "includes": ["src/**/*.svelte"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedImports": "off",
+            "noUnusedVariables": "off"
+          },
+          "style": {
+            "useConst": "off"
+          }
+        }
+      }
+    },
+    {
       "includes": ["src/app/api/auth/\\[...nextauth\\]/**"],
       "linter": {
         "enabled": false
