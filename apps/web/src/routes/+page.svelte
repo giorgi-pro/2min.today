@@ -45,7 +45,7 @@
       </div>
 
       <!-- Right: tile area wrapper (relative so custom scrollbar can anchor to bottom) -->
-      <div class="relative">
+      <div class="relative overflow-hidden">
 
         <!-- Scrollable tiles -->
         <div
@@ -53,10 +53,10 @@
           onscroll={e => onScroll(e, i)}
         >
           {#each category.news as item}
-            <div class="flex h-full min-w-[30vh] max-w-[60vh] shrink-0 flex-col p-5">
+            <div class="news-tile flex h-full flex-col p-5">
 
               <!-- Badge + source -->
-              <div class="mb-3 flex flex-none items-center justify-between gap-4">
+              <div class="mb-3 flex w-0 min-w-full flex-none items-center justify-between gap-4">
                 {#if item.isBreaking}
                   <span class="bg-black px-2 py-0.5 font-mono text-[0.55rem] font-medium uppercase tracking-widest text-white">
                     Breaking
@@ -77,7 +77,7 @@
               </h2>
 
               <!-- Bullets: takes remaining space, clips overflow -->
-              <ul class="min-h-0 flex-1 space-y-1.5 overflow-hidden">
+              <ul class="min-h-0 w-0 min-w-full flex-1 space-y-1.5 overflow-hidden">
                 {#each toBullets(item.content) as bullet}
                   <li class="flex gap-2 text-[0.8rem] leading-snug text-black">
                     <span class="mt-[0.35rem] block h-[3px] w-[3px] shrink-0 bg-black"></span>
@@ -87,7 +87,7 @@
               </ul>
 
               <!-- Why it matters: pinned to bottom -->
-              <div class="mt-3 flex-none">
+              <div class="mt-3 w-0 min-w-full flex-none">
                 <div class="mb-2 border-t border-black/15"></div>
                 <p class="mb-1 font-mono text-[0.55rem] uppercase tracking-widest text-black/30">
                   Why it matters
