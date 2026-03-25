@@ -12,7 +12,9 @@
     "check-types": "svelte-check --tsconfig ./tsconfig.json"
   },
   "dependencies": {
-    "@2min.today/ui": "workspace:*"
+    "@2min.today/ui": "workspace:*",
+    "@google/generative-ai": "0.24.1",
+    "@supabase/supabase-js": "2.100.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.1",
