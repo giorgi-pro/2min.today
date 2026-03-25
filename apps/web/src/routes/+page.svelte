@@ -1,9 +1,10 @@
 <script lang="ts">
   import { BUCKET_ORDER, type Bucket } from '$lib/config/buckets.constants';
   import { buildMockDigest } from '$lib/mock-digest';
-  import { debouncedSearchQuery } from '$lib/digest-filter';
+  import { debouncedSearchQuery, activeRegion } from '$lib/digest-filter';
   import { SearchHandler, ThresholdStrategy } from '$lib/search/search-handler';
   import type { DigestCard } from './+page.server';
+  import type { Region } from '$lib/types/digest';
   import CategoryRow from '@2min.today/ui/components/digest/CategoryRow.svelte';
 
   type Category = {
@@ -24,18 +25,22 @@
   }>();
 
   let debouncedQ = $state('');
+  let region = $state<Region>('global');
 
   $effect(() => {
-    const u = debouncedSearchQuery.subscribe((v) => {
-      debouncedQ = v;
-    });
+    const u = debouncedSearchQuery.subscribe((v) => { debouncedQ = v; });
+    return () => u();
+  });
+
+  $effect(() => {
+    const u = activeRegion.subscribe((v) => { region = v; });
     return () => u();
   });
 
   const sourceDigest = $derived(
     data.digest && Object.keys(data.digest).length > 0
       ? (data.digest as Partial<Record<Bucket, DigestCard[]>>)
-      : buildMockDigest(),
+      : (buildMockDigest().cards as Partial<Record<Bucket, DigestCard[]>>),
   );
 
   type CardRow = DigestCard & { bucket: Bucket };
@@ -60,7 +65,11 @@
     ),
   );
 
-  const filteredCards = $derived(handler.handle(debouncedQ, allCards));
+  const searchedCards = $derived(handler.handle(debouncedQ, allCards));
+
+  const filteredCards = $derived(
+    region === 'global' ? searchedCards : searchedCards.filter((c) => c.region === region),
+  );
 
   const filteredDigest = $derived(
     filteredCards.reduce<Partial<Record<Bucket, DigestCard[]>>>((acc, card) => {

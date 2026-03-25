@@ -5,25 +5,22 @@
     icon: Snippet;
     class?: string;
     active?: boolean;
+    onclick?: () => void;
   }
 
-  const { icon, class: className, active = false }: Props = $props();
-
-  function handleClick() {
-    console.log('region clicked');
-  }
+  const { icon, class: className, active = false, onclick }: Props = $props();
 
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      handleClick();
+      onclick?.();
     }
   }
 </script>
 
 <div
   class="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center hover:text-primary {active ? 'text-primary' : 'text-black'} {className ?? ''}"
-  onclick={handleClick}
+  onclick={onclick}
   onkeydown={handleKeydown}
   role="button"
   tabindex="0"

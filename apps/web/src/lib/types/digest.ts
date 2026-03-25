@@ -1,5 +1,14 @@
 import type { Bucket } from '$lib/config/buckets';
 
+export type Region = 'global' | 'europe' | 'americas' | 'middle-east' | 'usa';
+
+export const VALID_REGIONS = new Set<Region>(['global', 'europe', 'americas', 'middle-east', 'usa']);
+
+export function parseRegion(value: unknown): Region {
+  if (typeof value === 'string' && VALID_REGIONS.has(value as Region)) return value as Region;
+  return 'global';
+}
+
 export interface RawItem {
   id: string;
   title: string;
@@ -7,6 +16,7 @@ export interface RawItem {
   source: string;
   url: string;
   published: Date;
+  feedRegion?: Region;
 }
 
 export interface EmbeddedItem extends RawItem {
@@ -24,6 +34,7 @@ export interface SummarizedCluster extends Cluster {
   bullets: string[];
   whyItMatters: string;
   tags: string[];
+  region: Region;
 }
 
 export interface ClassifiedCluster extends SummarizedCluster {

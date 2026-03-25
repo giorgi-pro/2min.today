@@ -2,6 +2,7 @@ import { env } from '$env/dynamic/private';
 import { getSupabaseClient } from '$lib/supabase/client';
 import { buildMockDigest } from '$lib/mock-digest';
 import type { Bucket } from '$lib/config/buckets';
+import { parseRegion, type Region } from '$lib/types/digest';
 
 type SummaryJson = {
   headline: string;
@@ -9,6 +10,7 @@ type SummaryJson = {
   why_it_matters: string;
   sources?: unknown;
   tags?: unknown;
+  region?: unknown;
 };
 
 export type DigestCard = {
@@ -16,6 +18,7 @@ export type DigestCard = {
   bullets: string[];
   whyItMatters: string;
   tags: string[];
+  region: Region;
   categoryLine: string | null;
   sources: unknown[];
   bucket: Bucket;
@@ -65,6 +68,7 @@ export const load = async () => {
         bullets: s.bullets,
         whyItMatters: s.why_it_matters,
         tags: Array.isArray(s.tags) ? (s.tags as string[]).filter((t) => typeof t === 'string') : [],
+        region: parseRegion(s.region),
         categoryLine: row.category_line,
         sources: Array.isArray(s.sources) ? s.sources : [],
         bucket: b,

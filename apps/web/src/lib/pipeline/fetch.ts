@@ -1,11 +1,13 @@
 import { XMLParser } from 'fast-xml-parser';
 import { TwitterApi } from 'twitter-api-v2';
 import { env } from '$env/dynamic/private';
-import type { RawItem } from '$lib/types/digest';
+import type { RawItem, Region } from '$lib/types/digest';
 
-const RSS_FEEDS = [
+const RSS_FEEDS: { url: string; source: string; region?: Region }[] = [
   { url: 'https://feeds.reuters.com/reuters/topNews', source: 'Reuters' },
   { url: 'https://feeds.reuters.com/reuters/worldNews', source: 'Reuters' },
+  { url: 'https://feeds.reuters.com/reuters/USNews', source: 'Reuters', region: 'usa' },
+  { url: 'https://feeds.reuters.com/reuters/europeanNews', source: 'Reuters', region: 'europe' },
   { url: 'https://rss.app/feeds/v1.1/tAjLcDBcVDkSVOUI.xml', source: 'AP' },
   { url: 'https://techcrunch.com/feed/', source: 'TechCrunch' },
   { url: 'https://feeds.bloomberg.com/markets/news.rss', source: 'Bloomberg' },
@@ -54,7 +56,7 @@ async function fetchRss(): Promise<RawItem[]> {
   const items: RawItem[] = [];
 
   const results = await Promise.allSettled(
-    RSS_FEEDS.map(async ({ url, source }) => {
+    RSS_FEEDS.map(async ({ url, source, region }) => {
       const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
       if (!res.ok) return [];
       const xml = await res.text();
@@ -74,6 +76,7 @@ async function fetchRss(): Promise<RawItem[]> {
         source,
         url: extractLink(entry),
         published: entry.pubDate ? new Date(entry.pubDate) : entry.published ? new Date(entry.published) : new Date(),
+        ...(region ? { feedRegion: region } : {}),
       }));
     }),
   );

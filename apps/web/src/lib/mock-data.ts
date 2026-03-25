@@ -1,9 +1,12 @@
+import type { Region } from '$lib/types/digest';
+
 export interface NewsItem {
   title: string
   content: string
   whyItMatters: string
   source: string
   isBreaking: boolean
+  region: Region
 }
 
 export interface Category {
@@ -31,6 +34,7 @@ export const mockData: Category[] = [
           'Even a temporary halt to hostilities could unlock humanitarian corridors and set the framework for broader peace negotiations backed by the G7.',
         source: 'Reuters',
         isBreaking: true,
+        region: 'europe',
       },
       {
         title: 'India Recalls Ambassador After Cross-Border Strike Kills 12 in Pakistani Kashmir',
@@ -40,6 +44,7 @@ export const mockData: Category[] = [
           'Any sustained escalation between two nuclear-armed states would destabilize the entire South Asian region and draw immediate responses from China and the US.',
         source: 'AP',
         isBreaking: false,
+        region: 'global',
       },
       {
         title: 'EU Calls Emergency Summit on Migration After 400 Drown Off Libya',
@@ -49,6 +54,7 @@ export const mockData: Category[] = [
           "The crisis is fueling far-right electoral momentum across Europe and straining the EU's Schengen framework, which faces border-closure threats from Italy and Greece.",
         source: 'AP',
         isBreaking: false,
+        region: 'europe',
       },
       {
         title: 'China Conducts Largest Naval Drills in South China Sea Since 2016',
@@ -58,6 +64,7 @@ export const mockData: Category[] = [
           'The exercise is widely read as a direct signal to Manila and Washington ahead of planned US-Philippines bilateral defense treaty talks next month.',
         source: 'Reuters',
         isBreaking: false,
+        region: 'global',
       },
       {
         title: 'UN Security Council Votes to Deploy Peacekeepers to Sudan After Genocide Finding',
@@ -67,6 +74,7 @@ export const mockData: Category[] = [
           "It is the Council's first unanimous genocide designation since Rwanda and sets a precedent for faster multilateral intervention in ongoing conflicts.",
         source: 'Reuters',
         isBreaking: false,
+        region: 'global',
       },
     ],
   },
@@ -88,6 +96,7 @@ export const mockData: Category[] = [
           'A longer hold keeps mortgage rates elevated, pressures commercial real estate refinancing, and delays relief for over-leveraged corporate borrowers facing wall-of-maturity deadlines.',
         source: 'WSJ',
         isBreaking: true,
+        region: 'usa',
       },
       {
         title: 'NVIDIA Becomes First Chipmaker to Surpass $4 Trillion in Market Capitalization',
@@ -97,6 +106,7 @@ export const mockData: Category[] = [
           "NVIDIA's dominance in AI training hardware is now so entrenched that its valuation is effectively a proxy for market confidence in the entire AI buildout cycle.",
         source: 'Bloomberg',
         isBreaking: false,
+        region: 'usa',
       },
       {
         title: 'Amazon Acquires Deliverr for $2.1 Billion to Expand Same-Day Logistics Network',
@@ -106,6 +116,7 @@ export const mockData: Category[] = [
           "The acquisition closes the last major gap in Amazon's fulfillment stack and sharpens its competitive edge against Shopify and TikTok Shop, both of which have been poaching third-party merchants.",
         source: 'AP',
         isBreaking: false,
+        region: 'usa',
       },
       {
         title: 'OPEC+ Votes to Raise Output by 400,000 Barrels Per Day Starting April',
@@ -115,6 +126,7 @@ export const mockData: Category[] = [
           'Lower oil prices feed directly into transport and manufacturing costs, providing central banks with additional room to cut rates without stoking energy-driven inflation.',
         source: 'Reuters',
         isBreaking: false,
+        region: 'middle-east',
       },
       {
         title: 'Global Container Shipping Rates Drop 38% as Red Sea Rerouting Fades',
@@ -124,6 +136,7 @@ export const mockData: Category[] = [
           'Normalized shipping rates will ease goods inflation in Europe and reduce inventory costs for manufacturers who spent 2024 over-ordering to buffer against transit delays.',
         source: 'Bloomberg',
         isBreaking: false,
+        region: 'global',
       },
     ],
   },
@@ -145,6 +158,7 @@ export const mockData: Category[] = [
           'A 1M-token context window enables entire codebases, legal contracts, and research corpora to be processed in a single query, fundamentally altering enterprise software workflows.',
         source: 'TechCrunch',
         isBreaking: true,
+        region: 'usa',
       },
       {
         title: 'Apple Confirms Foldable iPhone Entering Mass Production, Q4 Launch Expected',
@@ -154,6 +168,7 @@ export const mockData: Category[] = [
           'Apple entering the foldable segment will mainstream the form factor and pressure Samsung and Google to accelerate next-generation Galaxy and Pixel Fold updates.',
         source: 'TechCrunch',
         isBreaking: false,
+        region: 'global',
       },
       {
         title: 'EU Begins Enforcing AI Act High-Risk System Requirements',
@@ -163,6 +178,7 @@ export const mockData: Category[] = [
           'The enforcement phase sets the first binding global legal standard for AI deployment, compelling multinationals to update model governance practices worldwide to satisfy EU requirements.',
         source: 'Reuters',
         isBreaking: false,
+        region: 'europe',
       },
       {
         title: 'State-Linked Hackers Breach SWIFT Network at Six Central Banks, $340M Stolen',
@@ -172,6 +188,7 @@ export const mockData: Category[] = [
           'It is the largest successful SWIFT breach since Bangladesh Bank in 2016 and demonstrates that critical financial infrastructure remains vulnerable despite a decade of post-incident hardening.',
         source: 'AP',
         isBreaking: false,
+        region: 'global',
       },
       {
         title: 'SpaceX Starship Completes First Full Orbital Mission, Catches Both Stages',
@@ -181,6 +198,7 @@ export const mockData: Category[] = [
           'Full reusability of both stages is the engineering prerequisite for the cost structure that makes Mars missions and NASA Artemis lunar contracts commercially viable.',
         source: 'TechCrunch',
         isBreaking: false,
+        region: 'usa',
       },
     ],
   },
@@ -202,6 +220,7 @@ export const mockData: Category[] = [
           'An affordable early-detection blood test could enable preventive drug interventions to begin well before irreversible neurodegeneration, fundamentally changing clinical trial design.',
         source: 'Nature',
         isBreaking: false,
+        region: 'europe',
       },
       {
         title: 'Antarctic Ice Sheet Losing Mass 40% Faster Than Models Predicted',
@@ -211,6 +230,7 @@ export const mockData: Category[] = [
           'If current rates persist, sea-level rise projections for 2100 must be revised upward by 15–25 cm, redrawing flood-risk maps for 300 million coastal residents.',
         source: 'Science',
         isBreaking: false,
+        region: 'global',
       },
       {
         title: 'Perseverance Rover Confirms Organic Molecules in Jezero Crater Rock Cores',
@@ -220,6 +240,7 @@ export const mockData: Category[] = [
           'While not confirmation of life, preserved organics in a site with ancient water exposure significantly raises the scientific probability that Mars once harbored microbial life.',
         source: 'NASA',
         isBreaking: false,
+        region: 'usa',
       },
       {
         title: 'Fermilab Muon Experiment Crosses 5-Sigma Threshold, Hinting at Fifth Fundamental Force',
@@ -229,6 +250,7 @@ export const mockData: Category[] = [
           'A confirmed fifth fundamental force would be the most significant revision to particle physics since the Standard Model was formalized in the 1970s.',
         source: 'CERN',
         isBreaking: true,
+        region: 'global',
       },
       {
         title: 'Gene Therapy Achieves Insulin Independence in 11 of 14 Type 1 Diabetes Patients',
@@ -238,6 +260,7 @@ export const mockData: Category[] = [
           'A durable functional cure for Type 1 diabetes would eliminate the $6,000–$15,000 annual insulin and device cost burden for approximately 8.4 million patients worldwide.',
         source: 'NEJM',
         isBreaking: false,
+        region: 'global',
       },
     ],
   },
@@ -259,6 +282,7 @@ export const mockData: Category[] = [
           'The PHEIC designation unlocks emergency vaccine sharing agreements and fast-tracks modified MVA-BN vaccine trials, but supply constraints mean doses will be scarce for at least six months.',
         source: 'WHO',
         isBreaking: true,
+        region: 'global',
       },
       {
         title: 'New Antibiotic Compound Defeats All Known Drug-Resistant Bacterial Strains in Trial',
@@ -268,6 +292,7 @@ export const mockData: Category[] = [
           'AMR-resistant infections are projected to kill 10 million people annually by 2050; a novel drug class effective against pan-resistant strains would be one of the most significant medical advances in decades.',
         source: 'Lancet',
         isBreaking: false,
+        region: 'europe',
       },
       {
         title: 'Meta-Study Links Ultra-Processed Food Consumption to 32 Distinct Health Conditions',
@@ -277,6 +302,7 @@ export const mockData: Category[] = [
           'The scale of evidence will likely force regulatory action in the EU and UK, including mandatory front-of-pack warning labels and restrictions on advertising to children.',
         source: 'BMJ',
         isBreaking: false,
+        region: 'europe',
       },
       {
         title: 'FDA Approves First Oral GLP-1 Pill for Weight Management, Rivaling Injectable Ozempic',
@@ -286,6 +312,7 @@ export const mockData: Category[] = [
           'An oral formulation removes the injection barrier that limits adoption, potentially expanding the addressable patient population from millions to tens of millions globally.',
         source: 'FDA',
         isBreaking: false,
+        region: 'usa',
       },
       {
         title: 'Youth Anxiety Rates Have Doubled Pre-Pandemic Levels, WHO Reports Across 78 Countries',
@@ -295,6 +322,7 @@ export const mockData: Category[] = [
           'A generation entering the workforce with disproportionate mental health burdens will have compounding economic consequences, with the WHO estimating $1 trillion in lost productivity annually by 2030.',
         source: 'WHO',
         isBreaking: false,
+        region: 'global',
       },
     ],
   },

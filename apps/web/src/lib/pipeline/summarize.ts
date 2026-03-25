@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { env } from '$env/dynamic/private';
 import { FLASH_MODEL } from '$lib/server/digest/models';
+import { parseRegion } from '$lib/types/digest';
 import type { Cluster, SummarizedCluster } from '$lib/types/digest';
 
 const MAX_RETRIES = 3;
@@ -50,8 +51,9 @@ export async function summarizeClusters(clusters: Cluster[]): Promise<Summarized
           bullets: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
           whyItMatters: { type: SchemaType.STRING },
           tags: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+          region: { type: SchemaType.STRING },
         },
-        required: ['headline', 'bullets', 'whyItMatters', 'tags'],
+        required: ['headline', 'bullets', 'whyItMatters', 'tags', 'region'],
       },
     },
   });
@@ -72,7 +74,12 @@ Return ONLY valid JSON matching this schema:
   "tags": ["3-5 single-word or short-phrase keywords, e.g. fed-rate, nvidia-chip, ai-regulation"]
 }
 
-Tone: dense, zero fluff, future-facing. Tags must be precise and reusable across days.`;
+Tone: dense, zero fluff, future-facing. Tags must be precise and reusable across days.
+
+For "region", assign exactly one of: global, europe, americas, middle-east, usa.
+Rules: "usa" = US-domestic stories only. "americas" = multi-country Americas or non-US Americas countries. "middle-east" = MENA. "europe" = Europe/EU/UK. Default to "global" if unclear, or for tech/science/health with no primary geographic anchor.`;
+
+    const feedRegion = cluster.items.find((i) => i.feedRegion)?.feedRegion;
 
     const parsed = await withRetry(async () => {
       const result = await model.generateContent(prompt);
@@ -81,6 +88,7 @@ Tone: dense, zero fluff, future-facing. Tags must be precise and reusable across
         bullets: string[];
         whyItMatters: string;
         tags?: unknown;
+        region?: unknown;
       };
     });
 
@@ -90,6 +98,7 @@ Tone: dense, zero fluff, future-facing. Tags must be precise and reusable across
       bullets: parsed.bullets.slice(0, 3),
       whyItMatters: parsed.whyItMatters,
       tags: normalizeSummaryTags(parsed.tags),
+      region: feedRegion ?? parseRegion(parsed.region),
     });
   }
 

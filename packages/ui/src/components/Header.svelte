@@ -3,13 +3,18 @@
   import Logo from './Logo.svelte';
   import Menu from './Menu.svelte';
 
+  type Region = 'global' | 'europe' | 'americas' | 'middle-east' | 'usa';
+
   interface Props {
     searchQuery?: string;
-    searchPlaceholder?: string;
+    activeRegion?: Region;
+    onRegionChange?: (r: Region) => void;
   }
 
   let {
     searchQuery = $bindable(''),
+    activeRegion = 'global',
+    onRegionChange,
   }: Props = $props();
 </script>
 
@@ -21,6 +26,6 @@
     <div class="flex min-w-0 justify-center px-2 md:px-4">
       <GlobalSearch bind:value={searchQuery} />
     </div>
-    <Menu />
+    <Menu {activeRegion} {onRegionChange} />
   </div>
 </header>
