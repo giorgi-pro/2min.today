@@ -14,7 +14,11 @@
   "dependencies": {
     "@2min.today/ui": "workspace:*",
     "@google/generative-ai": "0.24.1",
-    "@supabase/supabase-js": "2.100.0"
+    "@supabase/supabase-js": "2.100.0",
+    "fast-xml-parser": "5.5.9",
+    "twitter-api-v2": "1.29.0",
+    "uuid": "13.0.0",
+    "yaml": "2.8.3"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.1",
@@ -22,9 +26,11 @@
     "@sveltejs/kit": "^2.55.0",
     "@sveltejs/vite-plugin-svelte": "^7.0.0",
     "@types/node": "^22.15.3",
+    "@types/uuid": "11.0.0",
     "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "17.3.1",
     "lucide-svelte": "^0.542.0",
     "postcss": "^8.5.6",
     "svelte": "^5.46.4",

@@ -1,20 +1,69 @@
 <script lang="ts">
   import { mockData } from '$lib/mock-data'
+  import type { DigestCard } from './+page.server'
 
-  function toBullets(text: string): string[] {
-    return text
-      .split('. ')
-      .map(s => s.replace(/\.$/, '').trim())
-      .filter(Boolean)
-      .slice(0, 3)
+  type Category = {
+    name: string
+    summary: string[]
+    news: {
+      title: string
+      bullets: string[]
+      whyItMatters: string
+      source: string
+      isBreaking: boolean
+    }[]
   }
 
-  let thumbPositions: number[] = $state(mockData.map(() => 0))
+  const { data } = $props<{ data: { digest: Partial<Record<string, DigestCard[]>> } }>()
+
+  function liveToCategories(digest: Partial<Record<string, DigestCard[]>>): Category[] {
+    const bucketOrder = ['World', 'Business', 'Tech', 'Science', 'Health', 'Emerging']
+    return bucketOrder
+      .filter(b => digest[b]?.length)
+      .map(b => ({
+        name: b,
+        summary: (digest[b] ?? []).slice(0, 5).map(c => c.headline),
+        news: (digest[b] ?? []).map(c => ({
+          title: c.headline,
+          bullets: c.bullets,
+          whyItMatters: c.whyItMatters,
+          source: c.categoryLine ?? b,
+          isBreaking: false,
+        })),
+      }))
+  }
+
+  function mockToCategories(): Category[] {
+    return mockData.map(c => ({
+      name: c.name,
+      summary: c.summary,
+      news: c.news.map(n => ({
+        title: n.title,
+        bullets: n.content
+          .split('. ')
+          .map(s => s.replace(/\.$/, '').trim())
+          .filter(Boolean)
+          .slice(0, 3),
+        whyItMatters: n.whyItMatters,
+        source: n.source,
+        isBreaking: n.isBreaking,
+      })),
+    }))
+  }
+
+  const categories: Category[] = $derived(
+    data?.digest && Object.keys(data.digest).length > 0
+      ? liveToCategories(data.digest)
+      : mockToCategories()
+  )
+
+  const MAX_BUCKETS = 8
+  let thumbPositions: number[] = $state(new Array(MAX_BUCKETS).fill(0))
   let scrollEls: HTMLElement[] = []
-  let marqueeFrames: (number | null)[] = Array(mockData.length).fill(null)
-  let marqueeSpeeds: number[] = Array(mockData.length).fill(0)
-  let marqueeEnabled: boolean[] = $state(mockData.map(() => true))
-  let pressed: boolean[] = $state(mockData.map(() => false))
+  let marqueeFrames: (number | null)[] = new Array(MAX_BUCKETS).fill(null)
+  let marqueeSpeeds: number[] = new Array(MAX_BUCKETS).fill(0)
+  let marqueeEnabled: boolean[] = $state(new Array(MAX_BUCKETS).fill(true))
+  let pressed: boolean[] = $state(new Array(MAX_BUCKETS).fill(false))
 
   const MAX_SPEED = 2.5
 
@@ -51,7 +100,7 @@
 
   function stopMarquee(i: number) {
     if (marqueeFrames[i] != null) {
-      cancelAnimationFrame(marqueeFrames[i]!)
+      cancelAnimationFrame(marqueeFrames[i] as number)
       marqueeFrames[i] = null
     }
     marqueeSpeeds[i] = 0
@@ -80,10 +129,9 @@
 </svelte:head>
 
 <div class="border-t-2 border-black">
-  {#each mockData as category, i}
+  {#each categories as category, i}
     <div class="grid border-b-2 border-black" style="grid-template-columns: 30vh 1fr">
 
-      <!-- Left: category sidebar -->
       <div
         role="presentation"
         class="flex h-[30vh] flex-col justify-between transition-transform duration-150 ease-out 
@@ -106,10 +154,8 @@
         </ul>
       </div>
 
-      <!-- Right: tile area wrapper (relative so custom scrollbar can anchor to bottom) -->
       <div class="relative overflow-hidden">
 
-        <!-- Scrollable tiles -->
         <div
           class="news-scroll flex h-[30vh] overflow-x-scroll overflow-y-hidden divide-x divide-black/10"
           bind:this={scrollEls[i]}
@@ -118,7 +164,6 @@
           {#each category.news as item}
             <div class="news-tile flex h-full flex-col p-5">
 
-              <!-- Badge + source -->
               <div class="mb-3 flex w-0 min-w-full flex-none items-center justify-between gap-4">
                 {#if item.isBreaking}
                   <span class="bg-black px-2 py-0.5 font-mono text-[0.55rem] font-medium uppercase tracking-widest text-white">
@@ -134,14 +179,12 @@
                 </span>
               </div>
 
-              <!-- Title -->
               <h2 class="mb-3 flex-none text-lg font-bold leading-snug tracking-tight text-black">
                 {item.title}
               </h2>
 
-              <!-- Bullets: takes remaining space, clips overflow -->
               <ul class="min-h-0 w-0 min-w-full flex-1 space-y-1.5 overflow-hidden">
-                {#each toBullets(item.content) as bullet}
+                {#each item.bullets as bullet}
                   <li class="flex gap-2 text-[0.8rem] leading-snug text-black">
                     <span class="mt-[0.35rem] block h-[3px] w-[3px] shrink-0 bg-black"></span>
                     <span>{bullet}</span>
@@ -149,7 +192,6 @@
                 {/each}
               </ul>
 
-              <!-- Why it matters: pinned to bottom -->
               <div class="mt-3 w-0 min-w-full flex-none">
                 <div class="mb-2 border-t border-black/15"></div>
                 <p class="mb-1 font-mono text-[0.55rem] uppercase tracking-widest text-black/30">
@@ -164,7 +206,6 @@
           {/each}
         </div>
 
-        <!-- Custom scrollbar: sits at the very bottom of the tile area, on the border -->
         <div class="pointer-events-none absolute bottom-[1px] left-[1px] right-0 h-[4px]">
           <div
             class="absolute top-0 h-full bg-black"

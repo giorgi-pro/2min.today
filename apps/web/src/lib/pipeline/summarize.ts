@@ -1,0 +1,81 @@
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
+import { env } from '$env/dynamic/private';
+import { FLASH_MODEL } from '$lib/server/digest/models';
+import type { Cluster, SummarizedCluster } from '$lib/types/digest';
+
+const MAX_RETRIES = 3;
+
+async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+  let delay = 1000;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      return await fn();
+    } catch (e: any) {
+      if (attempt === MAX_RETRIES - 1) throw e;
+      if (e?.status === 429 || e?.message?.includes('rate')) {
+        await new Promise((r) => setTimeout(r, delay));
+        delay *= 2;
+      } else {
+        throw e;
+      }
+    }
+  }
+  throw new Error('Unreachable');
+}
+
+export async function summarizeClusters(clusters: Cluster[]): Promise<SummarizedCluster[]> {
+  if (clusters.length === 0) return [];
+
+  const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY ?? '');
+  const model = genAI.getGenerativeModel({
+    model: FLASH_MODEL,
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          headline: { type: SchemaType.STRING },
+          bullets: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+          whyItMatters: { type: SchemaType.STRING },
+        },
+        required: ['headline', 'bullets', 'whyItMatters'],
+      },
+    },
+  });
+
+  const results: SummarizedCluster[] = [];
+
+  for (const cluster of clusters) {
+    const prompt = `You are a brutalist news editor for 2min.today.
+
+Cluster of reports:
+${JSON.stringify(cluster.items.map((i) => ({ title: i.title, content: i.content.slice(0, 800) })))}
+
+Return ONLY valid JSON matching this schema:
+{
+  "headline": "max 12 words",
+  "bullets": ["exactly 3 bullets, max 25 words each"],
+  "whyItMatters": "max 30 words"
+}
+
+Tone: dense, zero fluff, future-facing.`;
+
+    const parsed = await withRetry(async () => {
+      const result = await model.generateContent(prompt);
+      return JSON.parse(result.response.text()) as {
+        headline: string;
+        bullets: string[];
+        whyItMatters: string;
+      };
+    });
+
+    results.push({
+      ...cluster,
+      headline: parsed.headline,
+      bullets: parsed.bullets.slice(0, 3),
+      whyItMatters: parsed.whyItMatters,
+    });
+  }
+
+  return results;
+}

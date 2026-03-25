@@ -1,48 +1,34 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
-import { createClient } from '@supabase/supabase-js'
-import { env } from '$env/dynamic/private'
-import { EMBEDDING_MODEL, FLASH_MODEL } from '$lib/server/digest/models'
-import { error, json } from '@sveltejs/kit'
-import type { RequestHandler } from './$types'
+import { json } from '@sveltejs/kit';
+import { supabase } from '$lib/supabase/server';
+import { pipeline } from '$lib/pipeline';
+import { env } from '$env/dynamic/private';
+import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ request }) => {
-  const cronSecret = env.CRON_SECRET
-  if (cronSecret) {
-    const auth = request.headers.get('authorization')
-    if (auth !== `Bearer ${cronSecret}`) {
-      throw error(401, 'Unauthorized')
-    }
+export const GET: RequestHandler = async ({ url }) => {
+  if (url.searchParams.get('secret') !== env.CRON_SECRET) {
+    return new Response('Unauthorized', { status: 401 });
   }
 
-  const geminiKey = env.GEMINI_API_KEY
-  const supabaseUrl = env.SUPABASE_URL
-  const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY
+  const now = new Date();
+  const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 
-  if (!geminiKey || !supabaseUrl || !supabaseKey) {
-    return json(
-      {
-        ok: false,
-        step: 'config',
-        detail:
-          'Set GEMINI_API_KEY, SUPABASE_URL, and SUPABASE_SERVICE_ROLE_KEY (see .env.example)',
-      },
-      { status: 503 },
-    )
+  const { data: existing } = await supabase
+    .from('clusters')
+    .select('id')
+    .gte('published_at', todayStart.toISOString())
+    .lt('published_at', todayEnd.toISOString())
+    .limit(1);
+
+  if (existing?.length) {
+    return json({ status: 'already-run-today' });
   }
 
-  const genAI = new GoogleGenerativeAI(geminiKey)
-  const pipeline = {
-    flash: genAI.getGenerativeModel({ model: FLASH_MODEL }),
-    embedding: genAI.getGenerativeModel({ model: EMBEDDING_MODEL }),
-    supabase: createClient(supabaseUrl, supabaseKey),
+  try {
+    const result = await pipeline.run(supabase);
+    return json({ status: 'success', clustersCreated: result.length });
+  } catch (e) {
+    console.error('Pipeline failed:', e);
+    return json({ status: 'error', message: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 });
   }
-
-  return json({
-    ok: true,
-    step: 'scaffold',
-    models: { flash: FLASH_MODEL, embedding: EMBEDDING_MODEL },
-    clients: Object.keys(pipeline),
-    message:
-      'Pipeline entrypoint ready: RSS/X fetch → embed → cluster/classify → synthesize → Supabase upsert',
-  })
-}
+};
