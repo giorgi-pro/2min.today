@@ -23,6 +23,7 @@ export interface SummarizedCluster extends Cluster {
   headline: string;
   bullets: string[];
   whyItMatters: string;
+  tags: string[];
 }
 
 export interface ClassifiedCluster extends SummarizedCluster {

@@ -1,4 +1,6 @@
+import { env } from '$env/dynamic/private';
 import { getSupabaseClient } from '$lib/supabase/client';
+import { buildMockDigest } from '$lib/mock-digest';
 import type { Bucket } from '$lib/config/buckets';
 
 type SummaryJson = {
@@ -6,17 +8,36 @@ type SummaryJson = {
   bullets: string[];
   why_it_matters: string;
   sources?: unknown;
+  tags?: unknown;
 };
 
 export type DigestCard = {
   headline: string;
   bullets: string[];
   whyItMatters: string;
+  tags: string[];
   categoryLine: string | null;
   sources: unknown[];
+  bucket: Bucket;
 };
 
+function parseFuseThreshold(raw: string | undefined): number {
+  if (raw == null || raw === '') return 0.4;
+  const n = Number.parseFloat(raw);
+  return Number.isFinite(n) ? n : 0.4;
+}
+
+function useMockData(): boolean {
+  return env.USE_MOCK_DATA?.trim() === 'true';
+}
+
 export const load = async () => {
+  const fuseThreshold = parseFuseThreshold(env.DIGEST_FUSE_THRESHOLD);
+
+  if (useMockData()) {
+    return { digest: buildMockDigest() as Partial<Record<Bucket, DigestCard[]>>, fuseThreshold };
+  }
+
   const now = new Date();
   const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
@@ -30,7 +51,7 @@ export const load = async () => {
 
   if (error) {
     console.error('Supabase load error:', error);
-    return { digest: {} as Partial<Record<Bucket, DigestCard[]>> };
+    return { digest: {} as Partial<Record<Bucket, DigestCard[]>>, fuseThreshold };
   }
 
   const digest = (data ?? []).reduce<Partial<Record<Bucket, DigestCard[]>>>((acc, row) => {
@@ -41,11 +62,13 @@ export const load = async () => {
       headline: s.headline,
       bullets: s.bullets,
       whyItMatters: s.why_it_matters,
+      tags: Array.isArray(s.tags) ? (s.tags as string[]).filter((t) => typeof t === 'string') : [],
       categoryLine: row.category_line,
       sources: Array.isArray(s.sources) ? s.sources : [],
+      bucket: b,
     });
     return acc;
   }, {});
 
-  return { digest };
+  return { digest, fuseThreshold };
 };

@@ -16,6 +16,7 @@
     "@google/generative-ai": "0.24.1",
     "@supabase/supabase-js": "2.100.0",
     "fast-xml-parser": "5.5.9",
+    "fuse.js": "7.1.0",
     "twitter-api-v2": "1.29.0",
     "uuid": "13.0.0",
     "yaml": "2.8.3"

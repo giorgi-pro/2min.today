@@ -5,6 +5,18 @@ import type { Cluster, SummarizedCluster } from '$lib/types/digest';
 
 const MAX_RETRIES = 3;
 
+function normalizeSummaryTags(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  const out: string[] = [];
+  for (const x of raw) {
+    if (typeof x !== 'string') continue;
+    const t = x.trim();
+    if (t) out.push(t);
+    if (out.length >= 5) break;
+  }
+  return out;
+}
+
 async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   let delay = 1000;
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
@@ -37,8 +49,9 @@ export async function summarizeClusters(clusters: Cluster[]): Promise<Summarized
           headline: { type: SchemaType.STRING },
           bullets: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
           whyItMatters: { type: SchemaType.STRING },
+          tags: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
         },
-        required: ['headline', 'bullets', 'whyItMatters'],
+        required: ['headline', 'bullets', 'whyItMatters', 'tags'],
       },
     },
   });
@@ -55,10 +68,11 @@ Return ONLY valid JSON matching this schema:
 {
   "headline": "max 12 words",
   "bullets": ["exactly 3 bullets, max 25 words each"],
-  "whyItMatters": "max 30 words"
+  "whyItMatters": "max 30 words",
+  "tags": ["3-5 single-word or short-phrase keywords, e.g. fed-rate, nvidia-chip, ai-regulation"]
 }
 
-Tone: dense, zero fluff, future-facing.`;
+Tone: dense, zero fluff, future-facing. Tags must be precise and reusable across days.`;
 
     const parsed = await withRetry(async () => {
       const result = await model.generateContent(prompt);
@@ -66,6 +80,7 @@ Tone: dense, zero fluff, future-facing.`;
         headline: string;
         bullets: string[];
         whyItMatters: string;
+        tags?: unknown;
       };
     });
 
@@ -74,6 +89,7 @@ Tone: dense, zero fluff, future-facing.`;
       headline: parsed.headline,
       bullets: parsed.bullets.slice(0, 3),
       whyItMatters: parsed.whyItMatters,
+      tags: normalizeSummaryTags(parsed.tags),
     });
   }
 

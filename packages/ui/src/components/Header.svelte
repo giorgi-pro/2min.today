@@ -2,6 +2,16 @@
   import GlobalSearch from './GlobalSearch.svelte';
   import Logo from './Logo.svelte';
   import Menu from './Menu.svelte';
+
+  interface Props {
+    searchQuery?: string;
+    searchPlaceholder?: string;
+  }
+
+  let {
+    searchQuery = $bindable(''),
+    searchPlaceholder = 'Search digest',
+  }: Props = $props();
 </script>
 
 <header class="sticky top-0 z-50 border-b-2 border-black bg-white">
@@ -10,7 +20,7 @@
   >
     <Logo />
     <div class="flex min-w-0 justify-center px-2 md:px-4">
-      <GlobalSearch />
+      <GlobalSearch bind:value={searchQuery} placeholder={searchPlaceholder} />
     </div>
     <Menu />
   </div>
