@@ -222,7 +222,7 @@
   </p>
 {/if}
 
-<div class="border-t-2 border-black">
+<div>
   {#each categories as category, i}
     <div class="grid border-b-2 border-black" style="grid-template-columns: 30vh 1fr">
       <div
