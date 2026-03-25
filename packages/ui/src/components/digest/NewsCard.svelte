@@ -8,14 +8,12 @@
     source: string;
     isBreaking: boolean;
     tags: string[];
-    selectedTags: string[];
-    onToggleTag: (tag: string) => void;
   };
 
-  const { title, bullets, whyItMatters, source, isBreaking, tags, selectedTags, onToggleTag }: Props = $props();
+  const { title, bullets, whyItMatters, source, isBreaking, tags }: Props = $props();
 </script>
 
-<div class="news-tile relative flex h-full min-w-[min(100%,280px)] flex-col p-5">
+<div class="news-tile flex h-full min-w-[min(100%,280px)] flex-col p-2 pb-[4px]">
   <div class="mb-3 flex w-0 min-w-full flex-none items-center justify-between gap-4">
     {#if isBreaking}
       <span class="bg-black px-2 py-0.5 font-mono text-[0.55rem] font-medium uppercase tracking-widest text-white">
@@ -42,7 +40,6 @@
     <div class="mb-2 border-t border-black/15"></div>
     <p class="mb-1 font-mono text-[0.55rem] uppercase tracking-widest text-black/30">Why it matters</p>
     <p class="border-l border-black/20 pl-2 text-[0.7rem] italic leading-tight text-black/55">{whyItMatters}</p>
+    <NewsTags {tags} />
   </div>
-
-  <NewsTags {tags} {selectedTags} {onToggleTag} />
 </div>

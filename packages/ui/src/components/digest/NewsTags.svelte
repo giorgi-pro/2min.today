@@ -1,19 +1,15 @@
 <script lang="ts">
-  import NewsTag from './NewsTag.svelte';
-
   type Props = {
     tags: string[];
-    selectedTags: string[];
-    onToggleTag: (tag: string) => void;
   };
 
-  const { tags, selectedTags, onToggleTag }: Props = $props();
+  const { tags }: Props = $props();
 </script>
 
 {#if tags.length > 0}
-  <div class="pointer-events-auto absolute bottom-3 right-3 flex max-w-[85%] flex-wrap justify-end gap-1">
+  <div class="mt-2 flex flex-wrap justify-end gap-x-2 gap-y-0.5 text-[0.55rem] leading-tight opacity-60">
     {#each tags as tag}
-      <NewsTag {tag} selected={selectedTags.includes(tag)} onclick={() => onToggleTag(tag)} />
+      <span>#{tag}</span>
     {/each}
   </div>
 {/if}

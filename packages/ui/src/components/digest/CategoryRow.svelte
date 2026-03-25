@@ -16,11 +16,9 @@
     summary: string[];
     news: NewsItem[];
     index: number;
-    selectedTags: string[];
-    onToggleTag: (tag: string) => void;
   };
 
-  const { name, summary, news, index, selectedTags, onToggleTag }: Props = $props();
+  const { name, summary, news, index }: Props = $props();
 
   const MAX_SPEED = 2.5;
 
@@ -72,7 +70,9 @@
       stopMarquee();
     }
     pressed = true;
-    setTimeout(() => (pressed = false), 150);
+    setTimeout(() => {
+      pressed = false;
+    }, 150);
   }
 </script>
 
@@ -104,8 +104,6 @@
           source={item.source}
           isBreaking={item.isBreaking}
           tags={item.tags}
-          {selectedTags}
-          {onToggleTag}
         />
       {/each}
     </div>
