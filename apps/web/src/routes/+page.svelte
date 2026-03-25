@@ -16,6 +16,7 @@
       whyItMatters: string;
       source: string;
       isBreaking: boolean;
+      isLive: boolean;
       tags: string[];
     }[];
   };
@@ -93,6 +94,7 @@
           whyItMatters: c.whyItMatters,
           source: c.categoryLine ?? b,
           isBreaking: c.isBreaking,
+          isLive: c.isLive,
           tags: c.tags,
         })),
       })),

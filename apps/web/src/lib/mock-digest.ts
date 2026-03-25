@@ -13,6 +13,7 @@ export type MockDigestCard = {
   sources: unknown[];
   bucket: Bucket;
   isBreaking: boolean;
+  isLive: boolean;
 };
 
 export type MockDigest = {
@@ -39,6 +40,7 @@ export function buildMockDigest(): MockDigest {
         sources: [],
         bucket: b,
         isBreaking: n.isBreaking,
+        isLive: n.isLive ?? false,
       });
     }
   }

@@ -1,0 +1,16 @@
+name: Daily Digest
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger digest pipeline
+        run: |
+          curl -sf "${{ secrets.APP_URL }}/api/digest?secret=${{ secrets.CRON_SECRET }}" \
+            -o /dev/null \
+            --max-time 60

@@ -23,6 +23,7 @@ export type DigestCard = {
   sources: unknown[];
   bucket: Bucket;
   isBreaking: boolean;
+  isLive: boolean;
 };
 
 function parseFuseThreshold(raw: string | undefined): number {
@@ -73,6 +74,7 @@ export const load = async () => {
         sources: Array.isArray(s.sources) ? s.sources : [],
         bucket: b,
         isBreaking: false,
+        isLive: false,
       });
     return acc;
   }, {});

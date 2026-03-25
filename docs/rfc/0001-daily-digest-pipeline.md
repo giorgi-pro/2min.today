@@ -543,11 +543,11 @@ npx tsx scripts/seed-bucket-anchors.ts
 
 ## 8. Entry Point (`+server.ts`)
 
-Vercel Cron always sends `GET` — the handler must be `export const GET`.
+> **Updated:** Trigger moved from Vercel Cron to GitHub Actions (`.github/workflows/daily-digest.yml`) to consolidate both pipeline triggers (nightly digest + breaking news from RFC-005) in one place. `vercel.json` has no cron configuration. The endpoint contract is unchanged.
 
 A `CRON_SECRET` env var guards the endpoint against accidental or malicious triggers
-(Gemini calls cost quota even on the free tier). The secret is appended to the cron path
-in `vercel.json` and stored in the Vercel dashboard environment variables.
+(Gemini calls cost quota even on the free tier). The secret is passed as a query param
+by the GitHub Actions workflow and stored in Vercel dashboard environment variables.
 
 Idempotency uses UTC day boundary range filters — `eq('published_at::date', ...)` is invalid in
 the Supabase JS client (it treats the left side as a literal column name). `.gte` / `.lt` against
@@ -583,13 +583,28 @@ export const GET = async ({ url }: RequestEvent) => {
 };
 ```
 
-`vercel.json` cron path includes the secret:
+The pipeline is triggered by a GitHub Actions scheduled workflow (`.github/workflows/daily-digest.yml`) rather than Vercel Cron. `vercel.json` has no cron configuration.
 
-```json
-{
-  "crons": [{ "path": "/api/digest?secret=YOUR_CRON_SECRET", "schedule": "0 0 * * *" }]
-}
+```yaml
+name: Daily Digest
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger digest pipeline
+        run: |
+          curl -sf "${{ secrets.APP_URL }}/api/digest?secret=${{ secrets.CRON_SECRET }}" \
+            -o /dev/null \
+            --max-time 60
 ```
+
+Both pipeline triggers (nightly digest + breaking news) use the same two GitHub secrets: `APP_URL` and their respective `CRON_SECRET` / `BREAKING_SECRET`.
 
 ## 9. Homepage: Supabase read (SSR, mock → live)
 
@@ -705,7 +720,7 @@ Until the pipeline ships, keep `mockData` behind a guard or feature flag if need
 ## 11. Local vs Production
 
 - Local: `pnpm dev` + `GET /api/digest?secret=<CRON_SECRET>` (browser or curl).
-- Production: Vercel Cron only.
+- Production: GitHub Actions (`daily-digest.yml`) — see §8. Both the nightly digest and breaking news pipeline (RFC-005) use the same `APP_URL` GitHub secret.
 
 ## 12. One-Time Setup
 
@@ -714,6 +729,7 @@ Until the pipeline ships, keep `mockData` behind a guard or feature flag if need
 3. Run migration `001-pgvector.sql` (creates `clusters` + `bucket_anchors` tables).
 4. Run `npx tsx scripts/seed-bucket-anchors.ts` to embed and store the 5 anchor vectors.
 5. Configure Supabase **RLS** so anonymous (or your chosen role) can `SELECT` the `clusters` rows the homepage should show.
+6. Add `APP_URL` and `CRON_SECRET` to GitHub repository secrets (Settings → Secrets → Actions). `APP_URL` is shared with the breaking news workflow (RFC-005).
 
 ## References
 

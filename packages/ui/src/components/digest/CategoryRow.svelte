@@ -8,6 +8,7 @@
     whyItMatters: string;
     source: string;
     isBreaking: boolean;
+    isLive: boolean;
     tags: string[];
   };
 
@@ -118,6 +119,7 @@
             whyItMatters={item.whyItMatters}
             source={item.source}
             isBreaking={item.isBreaking}
+            isLive={item.isLive}
             tags={item.tags}
           />
         {/each}

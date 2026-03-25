@@ -6,6 +6,7 @@ export interface NewsItem {
   whyItMatters: string
   source: string
   isBreaking: boolean
+  isLive?: boolean
   region: Region
 }
 
@@ -26,6 +27,16 @@ export const mockData: Category[] = [
       'UN deploys peacekeepers to Sudan after genocide ruling',
     ],
     news: [
+      {
+        title: 'Magnitude 7.4 Earthquake Strikes Southern Japan',
+        content:
+          'A 7.4-magnitude earthquake struck off the coast of Kyushu at 03:17 local time. JMA has issued a tsunami advisory for coastal prefectures. Shinkansen services on the Kagoshima line are suspended and authorities report power outages affecting 40,000 households.',
+        whyItMatters: '',
+        source: 'Reuters',
+        isBreaking: false,
+        isLive: true,
+        region: 'global',
+      },
       {
         title: 'Ukraine and Russia Hold First Direct Ceasefire Talks in Three Years',
         content:
@@ -88,6 +99,16 @@ export const mockData: Category[] = [
       'Container shipping rates drop 38%',
     ],
     news: [
+      {
+        title: 'Fed Chair Powell Resigns Effective Immediately',
+        content:
+          'Jerome Powell submitted his resignation citing personal reasons. The White House confirmed it will name an interim chair within 48 hours. US futures dropped 1.4% on the news; the dollar weakened against major currencies in early Asian trading.',
+        whyItMatters: '',
+        source: 'AP',
+        isBreaking: false,
+        isLive: true,
+        region: 'usa',
+      },
       {
         title: 'Federal Reserve Signals Extended Pause on Rate Cuts Through Mid-Year',
         content:

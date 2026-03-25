@@ -1,0 +1,16 @@
+name: Breaking News Check
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping breaking news endpoint
+        run: |
+          curl -sf "${{ secrets.APP_URL }}/api/breaking?secret=${{ secrets.BREAKING_SECRET }}" \
+            -o /dev/null \
+            --max-time 30
