@@ -18,20 +18,19 @@
 .news-scroll {
   overflow-x: scroll;
   overflow-y: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: #000000 #e5e5e5;
 }
 
 .news-scroll::-webkit-scrollbar {
   -webkit-appearance: none;
+  background-color: #ffffff;
   height: 6px;
-}
-
-.news-scroll::-webkit-scrollbar-track {
-  background-color: #e5e5e5;
+  width: 8px;
 }
 
 .news-scroll::-webkit-scrollbar-thumb {
+  background-clip: padding-box;
   background-color: #000000;
-  border-radius: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 1px;
 }
