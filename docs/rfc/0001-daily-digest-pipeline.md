@@ -226,18 +226,147 @@ Return `RawItem[]` (deduplicate by URL/tweet ID inside this function).
 
 ### `cluster.ts`
 
-- Insert all embeddings into a temporary table or use in-memory cosine.
-- Run single SQL:
+**Purpose:** group today's `EmbeddedItem[]` into semantically related `Cluster[]`, each representing one news story told by multiple sources. Also deduplicate against any clusters already persisted for today (idempotent re-run safety).
 
-```sql
-SELECT id, embedding <=> $1 AS similarity
-FROM clusters
-WHERE published_at::date = CURRENT_DATE
-ORDER BY similarity LIMIT 1;
+**Algorithm: greedy single-linkage clustering (in-memory).**
+
+All work happens in-memory — no temporary tables, no DB writes. The only DB read is the optional deduplication check against already-persisted clusters from an earlier same-day run.
+
+#### Constants
+
+```ts
+const SIMILARITY_THRESHOLD = 0.85;
 ```
 
-- Threshold: `0.85` for deduplication → group into `Cluster[]`.
-- Return clusters with centroid embedding.
+#### Cosine similarity helper
+
+```ts
+function cosineSimilarity(a: number[], b: number[]): number {
+  let dot = 0, normA = 0, normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot   += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+```
+
+#### Centroid computation
+
+The centroid of a cluster is the **element-wise mean** of all member embeddings. It is recomputed every time a new item joins the cluster.
+
+```ts
+function computeCentroid(items: EmbeddedItem[]): number[] {
+  const dim = items[0].embedding.length; // 768
+  const centroid = new Array<number>(dim).fill(0);
+  for (const item of items) {
+    for (let i = 0; i < dim; i++) centroid[i] += item.embedding[i];
+  }
+  for (let i = 0; i < dim; i++) centroid[i] /= items.length;
+  return centroid;
+}
+```
+
+#### Main loop (pseudo-code, then full TypeScript)
+
+```
+clusters ← []
+for each item in embeddedItems:
+    bestCluster ← null
+    bestSimilarity ← -1
+    for each cluster in clusters:
+        sim ← cosineSimilarity(item.embedding, cluster.centroidEmbedding)
+        if sim > bestSimilarity:
+            bestSimilarity ← sim
+            bestCluster ← cluster
+    if bestSimilarity ≥ SIMILARITY_THRESHOLD:
+        bestCluster.items.push(item)
+        bestCluster.centroidEmbedding ← computeCentroid(bestCluster.items)
+    else:
+        clusters.push(new Cluster { items: [item], centroidEmbedding: item.embedding })
+return clusters
+```
+
+#### Full TypeScript
+
+```ts
+import { v4 as uuidv4 } from 'uuid';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { EmbeddedItem, Cluster } from '../types/digest';
+
+const SIMILARITY_THRESHOLD = 0.85;
+
+function cosineSimilarity(a: number[], b: number[]): number {
+  let dot = 0, normA = 0, normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot   += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+function computeCentroid(items: EmbeddedItem[]): number[] {
+  const dim = items[0].embedding.length;
+  const centroid = new Array<number>(dim).fill(0);
+  for (const item of items) {
+    for (let i = 0; i < dim; i++) centroid[i] += item.embedding[i];
+  }
+  for (let i = 0; i < dim; i++) centroid[i] /= items.length;
+  return centroid;
+}
+
+export async function clusterItems(
+  items: EmbeddedItem[],
+  supabase: SupabaseClient,
+): Promise<Cluster[]> {
+  const clusters: Cluster[] = [];
+
+  for (const item of items) {
+    let bestIdx = -1;
+    let bestSim = -1;
+
+    for (let i = 0; i < clusters.length; i++) {
+      const sim = cosineSimilarity(item.embedding, clusters[i].centroidEmbedding);
+      if (sim > bestSim) {
+        bestSim = sim;
+        bestIdx = i;
+      }
+    }
+
+    if (bestSim >= SIMILARITY_THRESHOLD && bestIdx !== -1) {
+      clusters[bestIdx].items.push(item);
+      clusters[bestIdx].centroidEmbedding = computeCentroid(clusters[bestIdx].items);
+    } else {
+      clusters.push({
+        id: uuidv4(),
+        items: [item],
+        centroidEmbedding: [...item.embedding],
+      });
+    }
+  }
+
+  return clusters;
+}
+```
+
+#### Why greedy single-linkage is the right choice here
+
+- **O(n × k)** where n = items (~60–100/day) and k = clusters (~15–30). Runs in < 5 ms for realistic daily volumes — no fancy data structures needed.
+- Deterministic: item order from `fetch.ts` determines cluster assignment. RSS items arrive in published-date order, so closely related stories (published minutes apart) naturally cluster together.
+- Centroid recomputation on every merge keeps the cluster center stable as more sources join, preventing drift toward the first item only.
+- The 0.85 threshold is deliberately high — it groups *the same story told by different outlets* (e.g. "Fed raises rates" from Reuters, AP, Bloomberg) while keeping genuinely distinct stories apart (e.g. "Fed raises rates" vs "Tech layoffs").
+
+#### Deduplication against already-persisted clusters
+
+The entry point (`+server.ts` §8) already checks for existing rows and returns early if today's digest exists. Therefore `cluster.ts` does **not** need its own DB dedup query — it operates purely on fresh in-memory data from `embed.ts`. The SQL query shown in the original spec is handled by the idempotency guard in the entry point, not inside clustering.
+
+#### Edge cases
+
+- **Zero items** from `fetch.ts` → return `[]` (pipeline completes with no clusters; `upsert.ts` writes nothing).
+- **Single item** → one cluster with that item as both sole member and centroid.
+- **All items identical** (similarity = 1.0) → one big cluster. Gemini summarize still works; it just has redundant input.
 
 ### `summarize.ts`
 
