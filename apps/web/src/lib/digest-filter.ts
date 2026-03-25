@@ -12,3 +12,6 @@ searchQuery.subscribe((q) => {
     debounceTimer = null;
   }, 150);
 });
+
+export type TimeMode = 'local' | 'utc';
+export const timeMode = writable<TimeMode>('local');
