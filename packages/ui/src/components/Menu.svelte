@@ -8,17 +8,18 @@
   type Region = 'global' | 'europe' | 'americas' | 'middle-east' | 'usa';
 
   interface Props {
-    activeRegion?: Region;
-    onRegionChange?: (r: Region) => void;
+    activeRegions?: Set<Region>;
+    onRegionToggle?: (r: Region) => void;
+    onRegionClear?: () => void;
   }
 
-  const { activeRegion = 'global', onRegionChange }: Props = $props();
+  const { activeRegions = new Set(), onRegionToggle, onRegionClear }: Props = $props();
 </script>
 
 <nav class="flex flex-row items-center gap-2" aria-label="Region">
-  <GlobalSwitch onclick={() => onRegionChange?.('global')} />
-  <EuropeSwitch active={activeRegion === 'europe'} onclick={() => onRegionChange?.('europe')} />
-  <AmericasSwitch active={activeRegion === 'americas'} onclick={() => onRegionChange?.('americas')} />
-  <MiddleEastSwitch active={activeRegion === 'middle-east'} onclick={() => onRegionChange?.('middle-east')} />
-  <USASwitch active={activeRegion === 'usa'} onclick={() => onRegionChange?.('usa')} />
+  <GlobalSwitch onclick={onRegionClear} />
+  <EuropeSwitch active={activeRegions.has('europe')} onclick={() => onRegionToggle?.('europe')} />
+  <AmericasSwitch active={activeRegions.has('americas')} onclick={() => onRegionToggle?.('americas')} />
+  <MiddleEastSwitch active={activeRegions.has('middle-east')} onclick={() => onRegionToggle?.('middle-east')} />
+  <USASwitch active={activeRegions.has('usa')} onclick={() => onRegionToggle?.('usa')} />
 </nav>

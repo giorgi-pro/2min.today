@@ -6,15 +6,10 @@
   }
 
   const { onclick }: Props = $props();
-
-  let hovered = $state(false);
 </script>
 
 <div
-  class="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-black"
-  style={(hovered) ? 'outline: 2px solid #FF6347; outline-offset: 0px;' : ''}
-  onmouseenter={() => (hovered = true)}
-  onmouseleave={() => (hovered = false)}
+  class="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-black transition-colors hover:text-black/60"
   {onclick}
   onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && onclick?.()}
   role="button"

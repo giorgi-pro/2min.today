@@ -1,7 +1,7 @@
 <script lang="ts">
   import { BUCKET_ORDER, type Bucket } from '$lib/config/buckets.constants';
   import { buildMockDigest } from '$lib/mock-digest';
-  import { debouncedSearchQuery, activeRegion } from '$lib/digest-filter';
+  import { debouncedSearchQuery, activeRegions } from '$lib/digest-filter';
   import { SearchHandler, ThresholdStrategy } from '$lib/search/search-handler';
   import type { DigestCard } from './+page.server';
   import type { Region } from '$lib/types/digest';
@@ -25,7 +25,7 @@
   }>();
 
   let debouncedQ = $state('');
-  let region = $state<Region>('global');
+  let regions = $state<Set<Region>>(new Set());
 
   $effect(() => {
     const u = debouncedSearchQuery.subscribe((v) => { debouncedQ = v; });
@@ -33,7 +33,7 @@
   });
 
   $effect(() => {
-    const u = activeRegion.subscribe((v) => { region = v; });
+    const u = activeRegions.subscribe((v) => { regions = v; });
     return () => u();
   });
 
@@ -68,7 +68,7 @@
   const searchedCards = $derived(handler.handle(debouncedQ, allCards));
 
   const filteredCards = $derived(
-    region === 'global' ? searchedCards : searchedCards.filter((c) => c.region === region),
+    regions.size === 0 ? searchedCards : searchedCards.filter((c) => regions.has(c.region)),
   );
 
   const filteredDigest = $derived(

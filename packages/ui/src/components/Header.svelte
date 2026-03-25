@@ -7,14 +7,16 @@
 
   interface Props {
     searchQuery?: string;
-    activeRegion?: Region;
-    onRegionChange?: (r: Region) => void;
+    activeRegions?: Set<Region>;
+    onRegionToggle?: (r: Region) => void;
+    onRegionClear?: () => void;
   }
 
   let {
     searchQuery = $bindable(''),
-    activeRegion = 'global',
-    onRegionChange,
+    activeRegions = new Set(),
+    onRegionToggle,
+    onRegionClear,
   }: Props = $props();
 </script>
 
@@ -26,6 +28,6 @@
     <div class="flex min-w-0 justify-center px-2 md:px-4">
       <GlobalSearch bind:value={searchQuery} />
     </div>
-    <Menu {activeRegion} {onRegionChange} />
+    <Menu {activeRegions} {onRegionToggle} {onRegionClear} />
   </div>
 </header>

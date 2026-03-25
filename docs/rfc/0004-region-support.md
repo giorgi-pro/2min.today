@@ -157,19 +157,25 @@ Applied in `filteredCards` in `+page.svelte`, after Fuse search results.
 
 ### State
 
-`activeRegion` is added to `digest-filter.ts` as a custom store backed by `localStorage` under the key `region`. Rules:
+`activeRegions` is a custom store in `digest-filter.ts` holding a `Set<Region>`. It is backed by `localStorage` under the key `regions` (JSON array). Rules:
 
-- On init: read `localStorage.getItem('region')`. If the value is a valid non-`global` region, use it; otherwise default to `'global'`.
-- On change to a non-`global` region: write to `localStorage`.
-- On change to `'global'` (clear): remove the key from `localStorage` entirely — nothing is persisted.
+- On init: parse `localStorage.getItem('regions')` as a JSON array. Keep only valid non-`global` region values. If the result is empty, start with an empty set (no filter).
+- On every change: if the set is empty, remove the `regions` key from `localStorage`. Otherwise write `JSON.stringify([...set])`.
 - URL does not change. No query param, no hash fragment.
 - SSR-safe: `localStorage` is only accessed in the browser (`typeof window !== 'undefined'`).
 
+### Toggle behaviour
+
+- Each named region (`europe`, `americas`, `middle-east`, `usa`) is an **independent toggle**. Clicking a region that is already active deselects it; clicking an inactive region adds it to the active set.
+- **Multiple regions can be active simultaneously.** The filter shows cards whose `region` matches *any* of the active regions.
+- Empty active set = no filter = full digest shown (equivalent to "global").
+
 ### Global switch behaviour
 
-- `global` means "no filter active" — selecting it clears the active filter.
-- The Globe icon is **not selectable** in the same sense as the other regions: it has no active/pressed state. It is purely a clear/reset affordance. Its visual style never shows the tomato outline.
-- All other region switches (`europe`, `americas`, `middle-east`, `usa`) are mutually exclusive toggles. Selecting an already-active region has no effect (idempotent).
+- The Globe icon is a **clear/reset affordance**, not a selectable region. It empties the active set.
+- It has no active/selected visual state — no tomato outline ever appears on it.
+- It renders at reduced opacity with a hover transition to signal it is a secondary action.
+- When the active set is already empty, the Globe is still clickable but has no effect.
 
 ### `RegionSwitch` wiring
 
