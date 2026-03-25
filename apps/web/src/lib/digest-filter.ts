@@ -12,8 +12,3 @@ searchQuery.subscribe((q) => {
     debounceTimer = null;
   }, 150);
 });
-
-export function clearAllFilters() {
-  searchQuery.set('');
-  debouncedSearchQuery.set('');
-}

@@ -28,9 +28,9 @@
   {onclick}
 >
   <span class="m-6 whitespace-nowrap text-xl font-black uppercase leading-none tracking-tight">{name}</span>
-  <ul class="m-3 space-y-1 text-right">
+  <ul class="summary-text m-3 space-y-1 text-right">
     {#each summary as line}
-      <li class="summary-text">{line}.</li>
+      <li>{line}.</li>
     {/each}
   </ul>
 </div>

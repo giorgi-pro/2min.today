@@ -1,15 +1,15 @@
 # RFC-002: Client-Side Global Search + Per-Cluster Tagging (Display)
 
-**Status:** Approved for Implementation (amended: tag **filtering** removed on homepage)  
+**Status:** Approved for Implementation (amended: tag **filtering** removed; **search** is header-only — no secondary digest chrome or `clearAllFilters`)  
 **Date:** 2026-03-25  
 **Author:** Grok (detailed spec) / Project Owner  
-**Target files:** `apps/web/src/lib/types/digest.ts` + `apps/web/src/lib/pipeline/summarize.ts` + `apps/web/src/lib/pipeline/upsert.ts` + `apps/web/src/lib/digest-filter.ts` + `apps/web/src/lib/mock-tags.ts` + `apps/web/src/lib/mock-digest.ts` + `apps/web/src/routes/+page.server.ts` + `apps/web/src/routes/+page.svelte` + `apps/web/src/routes/+layout.svelte` + `packages/ui/src/components/GlobalSearch.svelte` + `packages/ui/src/components/Header.svelte` + `apps/web/package.json` + `apps/web/.env.example` + `packages/ui` digest tile components (`NewsTag` / `NewsTags` / `NewsCard` / `CategoryRow`)
+**Target files:** `apps/web/src/lib/types/digest.ts` + `apps/web/src/lib/pipeline/summarize.ts` + `apps/web/src/lib/pipeline/upsert.ts` + `apps/web/src/lib/digest-filter.ts` + `apps/web/src/lib/mock-tags.ts` + `apps/web/src/lib/mock-digest.ts` + `apps/web/src/routes/+page.server.ts` + `apps/web/src/routes/+page.svelte` + `apps/web/src/routes/+layout.svelte` + `apps/web/src/app.css` (e.g. `.summary-text`) + `packages/ui/src/components/GlobalSearch.svelte` + `packages/ui/src/components/Header.svelte` + `apps/web/package.json` + `apps/web/.env.example` + `packages/ui` digest tile components (`NewsTags` / `NewsCard` / `CategoryRow` / `CategoryPanel`)
 
 ## Purpose
 
 This RFC **extends [RFC-001: Daily Digest Pipeline](0001-daily-digest-pipeline.md)**. It adds client-side fuzzy search and pipeline-generated tags on top of the existing digest shape, SSR `load`, and cron pipeline. It does **not** redefine ingestion, clustering, classification, or Supabase layout except where `summary` jsonb gains a `tags` field.
 
-Add a **global fuzzy search** (client-side) and **per-cluster tags** (pipeline-generated, **display only** on tiles — bottom-right, muted chips).
+Add a **global fuzzy search** (client-side) and **per-cluster tags** (pipeline-generated, **display only** on tiles — own row under “Why it matters”, shared **`.summary-text`** styling with category panel **summary** lines in `app.css`).
 
 The interface remains brutalist: one search field wired to the existing header control, tiles stay typography-first, zero images, rigid grid. Filtering runs on SSR data already on the page — **no extra API calls**, no client-side database. Target sub-10 ms feel on a ~30-tile digest after debounced search.
 
@@ -33,7 +33,7 @@ Production: leave `USE_MOCK_DATA` unset, empty, or any value other than exactly 
 ## Exact Behaviour Rules
 
 1. **Search**
-   - Input lives in [`packages/ui` `GlobalSearch`](../../packages/ui/src/components/GlobalSearch.svelte), centered in the header; value is **bound** into shared app state (see **§4 Shared client state** and **§5 Header wiring**).
+   - Input lives in [`packages/ui` `GlobalSearch`](../../packages/ui/src/components/GlobalSearch.svelte), centered in the header; value is **bound** into shared app state (see **§4 Shared client state** and **§5 Header wiring**). **No** secondary strip below the header (no duplicate “search: …” line or extra clear button — the field itself is the single source of truth; user clears by editing or clearing the input, including native `type="search"` affordances where available).
    - **Debounce 150 ms** after typing before updating the string used for Fuse (keeps work off the critical path).
    - Fuse runs on `headline`, `bullets`, and `whyItMatters` (confirm Fuse v7 `keys` / nested behaviour so **array `bullets`** participate).
    - Empty debounced search string ⇒ **no** search filter (full card set).
@@ -42,9 +42,8 @@ Production: leave `USE_MOCK_DATA` unset, empty, or any value other than exactly 
    - Generated **only** in `summarize.ts` (same Gemini structured output as headline / bullets / why).
    - Stored in `summary` jsonb as `tags: string[]` (prefer up to **5** entries; single words or short phrases).
    - **Normalization after parse (required):** coerce to array; trim strings; drop empties; **cap at 5**; accept **fewer than 3** tags if the model returns fewer (do **not** fail the pipeline on short `tags`).
-   - Rendered **bottom-right** of each tile (monospace, small, muted — use Tailwind / tokens from `apps/web/DESIGN.md`, **no** border-radius on chrome).
-   - **No** global selected set, **`localStorage`**, or click-to-filter on tags. Chips are **presentational** (e.g. `<span>`, container may use **`pointer-events-none`** so they do not intercept pointer events).
-   - **Clear** (digest chrome when search is active): clears **search** only — **`clearAllFilters()`** resets `searchQuery` and `debouncedSearchQuery` (no tag state to clear).
+   - Rendered in a **row below** “Why it matters”, right-aligned **`#tag`** tokens, **`.summary-text`** in [`app.css`](../../apps/web/src/app.css) (size/opacity + `cursor-text` on the tag container).
+   - **No** global selected set, **`localStorage`**, or click-to-filter on tags. Chips are **presentational** (`<span>`).
 
 3. **Search-only filtering**
 
@@ -76,8 +75,9 @@ apps/web/
 ├── .env.example
 ├── package.json                              ← fuse.js
 ├── src/
+│   ├── app.css                               ← .summary-text, .news-tile, scrollbars
 │   ├── lib/
-│   │   ├── digest-filter.ts                  ← writable stores: searchQuery, debouncedSearchQuery; clearAllFilters (search only)
+│   │   ├── digest-filter.ts                  ← writable stores: searchQuery, debouncedSearchQuery (150 ms debounce)
 │   │   ├── config/buckets.constants.ts       ← BUCKET_ORDER + Bucket (client-safe; no fs — see note below)
 │   │   ├── config/buckets.ts                 ← YAML + fs: BUCKET_ANCHORS (server / scripts only)
 │   │   ├── mock-tags.ts                      ← deduceMockTags + bulletsFromMockContent
@@ -94,10 +94,10 @@ packages/ui/src/components/
 ├── GlobalSearch.svelte                       ← $bindable value
 ├── Header.svelte                             ← $bindable searchQuery → GlobalSearch
 └── digest/
-    ├── NewsTag.svelte                        ← presentational chip (not a filter control)
     ├── NewsTags.svelte
     ├── NewsCard.svelte
-    └── CategoryRow.svelte
+    ├── CategoryRow.svelte
+    └── CategoryPanel.svelte
 ```
 
 **Note:** [`buckets.ts`](../../apps/web/src/lib/config/buckets.ts) uses Node **`fs`** to read `buckets.yaml`. Client code (e.g. **`+page.svelte`**) must import **`BUCKET_ORDER`** / **`Bucket`** from [`buckets.constants.ts`](../../apps/web/src/lib/config/buckets.constants.ts) only so Vite does not bundle `fs` in the browser.
@@ -188,15 +188,14 @@ Exports:
 
 - **`searchQuery`** — `writable('')`, two-way bound to header input
 - **`debouncedSearchQuery`** — `writable('')`, updated from `searchQuery` via **`subscribe`** + **150 ms** `setTimeout` debounce (clear previous timer on each keystroke)
-- **`clearAllFilters()`** — resets **`searchQuery`** and **`debouncedSearchQuery`** (search only)
 
 **Homepage:** [`+page.svelte`](../../apps/web/src/routes/+page.svelte) **`subscribe`**s to **`debouncedSearchQuery`** inside **`$effect`**, copies into local **`$state`** (`debouncedQ`) so **`$derived.by`** for **`filteredCards`** re-runs when the debounced query changes.
 
 ## 5. Header wiring (`packages/ui` + `+layout.svelte`)
 
-- **`GlobalSearch.svelte`:** `value = $bindable('')`, **`bind:value`** on the input; optional **`placeholder`** prop (app passes **`SEARCH DIGEST`**).
+- **`GlobalSearch.svelte`:** `value = $bindable('')`, **`bind:value`** on the input; optional **`placeholder`** prop (app passes **`SEARCH DIGEST`**). Use **`type="search"`** so browsers may show a native clear control.
 - **`Header.svelte`:** `searchQuery = $bindable('')`, **`searchPlaceholder`** prop forwarded to `GlobalSearch`.
-- **`+layout.svelte`:** `import { searchQuery } from '$lib/digest-filter'` and **`<Header bind:searchQuery={$searchQuery} searchPlaceholder="SEARCH DIGEST" />`**.
+- **`+layout.svelte`:** `import { searchQuery } from '$lib/digest-filter'` and **`<Header bind:searchQuery={$searchQuery} searchPlaceholder="SEARCH DIGEST" />`**. Clearing the input updates **`searchQuery`**; **`debouncedSearchQuery`** follows after the debounce.
 
 ## 6. Homepage UI and filtering (`routes/+page.svelte`)
 
@@ -207,8 +206,8 @@ Merged with the **existing** marquee / bucket layout. Implemented behaviour:
 - **`Fuse`:** `$derived` when `allCards` or **`data.fuseThreshold`** changes. **`bullets`** are searched via a **`getFn`** that **`join(' ')`**s the array (Fuse v7 does not treat `bullets[]` as text by default).
 - **`filteredCards`:** read **`debouncedQ`**; if trimmed query non-empty, Fuse search over **`allCards`**; else all cards. **`filteredDigest`** regroups by **`bucket`** using a local list reference after `if (!acc[b]) acc[b] = []` (no non-null assertion).
 - **`liveToCategories(filteredDigest)`** with fixed **`BUCKET_ORDER`**.
-- **Chrome when search active:** show current query label (e.g. **Search: …**) + **Clear search** (**`clearAllFilters`**).
-- **Tiles:** tags as **presentational** chips (no **`aria-pressed`**, no filter **`onclick`**).
+- **No** digest-level search chrome beyond the header field and optional empty state (see below).
+- **Tiles:** tags as **presentational** **`#`**-prefixed tokens under “Why it matters” (no filter behaviour).
 - **`showFilteredEmpty`:** *No matches. Try broadening your search.*
 
 Illustrative core (abbreviated):
@@ -218,7 +217,7 @@ Illustrative core (abbreviated):
   import Fuse from 'fuse.js';
   import { BUCKET_ORDER, type Bucket } from '$lib/config/buckets.constants';
   import { buildMockDigest } from '$lib/mock-digest';
-  import { debouncedSearchQuery, clearAllFilters } from '$lib/digest-filter';
+  import { debouncedSearchQuery } from '$lib/digest-filter';
   import type { DigestCard } from './+page.server';
 
   let debouncedQ = $state('');
@@ -269,7 +268,7 @@ After deploy, the **next** pipeline run fills `tags` for new writes; **no backfi
 
 ## 8. Error handling and edge cases
 
-- **Zero results** after search: copy above (broaden search / clear search).
+- **Zero results** after search: show *No matches. Try broadening your search.* User broadens or clears the **header** search field.
 - **Empty `tags` on a card:** render no tag row for that tile.
 - **Pipeline parse errors on `tags`:** treat as `[]` for that cluster; still persist headline / bullets / why when possible.
 - **Invalid `DIGEST_FUSE_THRESHOLD`:** fallback `0.4`.
