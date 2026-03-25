@@ -113,7 +113,7 @@ export const mockData: Category[] = [
     ],
   },
   {
-    name: 'Technology',
+    name: 'Tech',
     news: [
       {
         title: 'OpenAI Releases GPT-5 With Native Reasoning and 1M Token Context Window',
