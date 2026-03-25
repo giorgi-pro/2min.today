@@ -1,0 +1,9 @@
+# 2min.today Core Buckets
+# Single source of truth for bucket names and anchor definitions.
+# Used by: lib/pipeline/classify.ts, scripts/seed-bucket-anchors.ts
+buckets:
+  World: "global geopolitics international relations diplomacy conflicts treaties"
+  Business: "financial markets economy business corporate earnings monetary policy"
+  Tech: "technology innovation AI hardware software digital breakthroughs"
+  Science: "scientific discoveries research physics biology space exploration"
+  Health: "health medicine public health biomedical research wellness"
