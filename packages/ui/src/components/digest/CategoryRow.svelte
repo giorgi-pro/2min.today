@@ -29,6 +29,16 @@
   let marqueeSpeed = 0;
   let marqueeEnabled = $state(true);
   let pressed = $state(false);
+  let scrollable = $state(false);
+
+  $effect(() => {
+    if (!scrollEl) return;
+    const observer = new ResizeObserver(() => {
+      scrollable = (scrollEl as HTMLElement).scrollWidth > (scrollEl as HTMLElement).clientWidth;
+    });
+    observer.observe(scrollEl);
+    return () => observer.disconnect();
+  });
 
   function onScroll(e: Event) {
     const el = e.currentTarget as HTMLElement;
@@ -39,13 +49,13 @@
   }
 
   function onCategoryMouseMove(e: MouseEvent) {
-    if (!marqueeEnabled || !categoryEl) return;
+    if (!marqueeEnabled || !categoryEl || !scrollable) return;
     const rect = categoryEl.getBoundingClientRect();
     marqueeSpeed = ((e.clientX - rect.left) / rect.width - 0.5) * 2 * MAX_SPEED;
   }
 
   function startMarquee() {
-    if (!marqueeEnabled || !scrollEl) return;
+    if (!marqueeEnabled || !scrollEl || !scrollable) return;
     function tick() {
       (scrollEl as HTMLElement).scrollLeft += marqueeSpeed;
       marqueeFrame = requestAnimationFrame(tick);
@@ -96,20 +106,28 @@
       bind:this={scrollEl}
       onscroll={onScroll}
     >
-      {#each news as item}
-        <NewsCard
-          title={item.title}
-          bullets={item.bullets}
-          whyItMatters={item.whyItMatters}
-          source={item.source}
-          isBreaking={item.isBreaking}
-          tags={item.tags}
-        />
-      {/each}
+      {#if news.length === 0}
+        <div class="flex h-full w-full items-center justify-center px-6">
+          <p class="font-mono text-[0.65rem] uppercase tracking-widest text-black/30">No news found</p>
+        </div>
+      {:else}
+        {#each news as item}
+          <NewsCard
+            title={item.title}
+            bullets={item.bullets}
+            whyItMatters={item.whyItMatters}
+            source={item.source}
+            isBreaking={item.isBreaking}
+            tags={item.tags}
+          />
+        {/each}
+      {/if}
     </div>
 
-    <div class="pointer-events-none absolute bottom-[1px] left-[1px] right-0 h-[4px]">
-      <div class="absolute top-0 h-full bg-black" style="left: {thumbPosition}px; width: 20vw"></div>
-    </div>
+    {#if scrollable}
+      <div class="pointer-events-none absolute bottom-[1px] left-[1px] right-0 h-[4px]">
+        <div class="absolute top-0 h-full bg-black" style="left: {thumbPosition}px; width: 20vw"></div>
+      </div>
+    {/if}
   </div>
 </div>

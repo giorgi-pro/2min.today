@@ -3,7 +3,6 @@
   import { buildMockDigest } from '$lib/mock-digest';
   import { debouncedSearchQuery } from '$lib/digest-filter';
   import { SearchHandler, ThresholdStrategy } from '$lib/search/search-handler';
-  import { parseQuery } from '$lib/search/query-parser';
   import type { DigestCard } from './+page.server';
   import CategoryRow from '@2min.today/ui/components/digest/CategoryRow.svelte';
 
@@ -73,13 +72,13 @@
     }, {}),
   );
 
-  function liveToCategories(digest: Partial<Record<string, DigestCard[]>>): Category[] {
-    return BUCKET_ORDER
-      .filter((b) => digest[b]?.length)
+  const categories: Category[] = $derived(
+    BUCKET_ORDER
+      .filter((b) => sourceDigest[b]?.length)
       .map((b) => ({
         name: b,
-        summary: data.summaries?.[b] ?? (digest[b] ?? []).slice(0, 5).map((c) => c.headline),
-        news: (digest[b] ?? []).map((c) => ({
+        summary: data.summaries?.[b] ?? (sourceDigest[b] ?? []).slice(0, 5).map((c) => c.headline),
+        news: (filteredDigest[b] ?? []).map((c) => ({
           title: c.headline,
           bullets: c.bullets,
           whyItMatters: c.whyItMatters,
@@ -87,14 +86,9 @@
           isBreaking: c.isBreaking,
           tags: c.tags,
         })),
-      }));
-  }
-
-  const categories: Category[] = $derived(liveToCategories(filteredDigest));
-
-  const showFilteredEmpty = $derived(
-    parseQuery(debouncedQ, data.fuseThreshold) !== null && allCards.length > 0 && filteredCards.length === 0,
+      })),
   );
+
 </script>
 
 <svelte:head>
@@ -104,12 +98,6 @@
     content="2min.today is a daily, informationally dense Global Digest that summarizes the world's most significant news into a precise two-minute read."
   />
 </svelte:head>
-
-{#if showFilteredEmpty}
-  <p class="border-b-2 border-black px-6 py-10 text-center text-sm text-black/55 md:px-8">
-    No matches. Try broadening your search.
-  </p>
-{/if}
 
 <div>
   {#each categories as category, i}
