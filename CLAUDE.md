@@ -44,13 +44,13 @@ The digest API is the core of the product:
 1. Fetch RSS feeds (Reuters, AP, TechCrunch)
 2. Generate Gemini embeddings per story
 3. Deduplicate via cosine similarity against existing Supabase pgvector entries
-4. Summarize unique stories with Gemini 1.5 Flash (3 bullets + "Why it Matters")
+4. Summarize unique stories with Gemini 2.5 Flash (3 bullets + "Why it Matters")
 5. Persist to Supabase
 
 Protected by cron auth. Triggered by Vercel cron.
 
 Model constants are in `apps/web/src/lib/server/digest/models.ts`:
-- `FLASH_MODEL` = Gemini 1.5 Flash
+- `FLASH_MODEL` = Gemini 2.5 Flash (`gemini-2.5-flash`; `gemini-1.5-flash` is removed from the current API)
 - `EMBEDDING_MODEL` = Gemini Embedding 2 Preview
 
 ### Tech Stack Decisions (from ADR)

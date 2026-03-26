@@ -7,7 +7,7 @@
 
 `2min.today` must produce **one single daily edition** at 00:00 UTC that:
 - ingests RSS feeds + X API v2 Recent Search tweets,
-- runs Gemini-powered summarization (`gemini-1.5-flash`),
+- runs Gemini-powered summarization (`gemini-2.5-flash`),
 - generates embeddings (`gemini-embedding-2-preview`),
 - performs vector deduplication + cosine similarity,
 - applies hybrid classification (Core 5 buckets + Emerging outliers < 0.65 similarity),
@@ -103,7 +103,7 @@ create table if not exists bucket_anchors (
 
 ### Gemini summarization (structured JSON)
 
-Summaries use **`gemini-1.5-flash`** with **`generationConfig.responseMimeType: 'application/json'`** and a **`responseSchema`** (`headline`, `bullets` length 3, `whyItMatters`) via `@google/generative-ai` — no free-form prose to parse. Prompt reinforces word limits; **`JSON.parse(response.text())`** only. Full snippet lives in RFC-001 §5 `summarize.ts`.
+Summaries use **`gemini-2.5-flash`** with **`generationConfig.responseMimeType: 'application/json'`** and a **`responseSchema`** (`headline`, `bullets` length 3, `whyItMatters`) via `@google/generative-ai` — no free-form prose to parse. Prompt reinforces word limits; **`JSON.parse(response.text())`** only. Full snippet lives in RFC-001 §5 `summarize.ts`.
 
 ### Persistence (no partial daily rows)
 

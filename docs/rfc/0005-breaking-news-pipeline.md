@@ -20,7 +20,7 @@
 
 Run a lightweight breaking-news check every 15 minutes. When a headline scores above the breaking threshold, generate a compact card (headline + 2 bullets) with a single Gemini Flash call and publish it immediately. Mundane stories are ignored until the nightly full pipeline (RFC-001).
 
-**Cost target: $0.** No embeddings. No clustering. One Flash call per confirmed breaking story, at most a handful per day.
+**Cost target: $0.** No embeddings. No clustering. One Flash call per confirmed breaking story, at most a handful per day. (Nightly digest embeddings — **`vector(768)`** in Postgres and Gemini **`outputDimensionality: 768`** — are specified in RFC-001; this pipeline does not call the embedding model.)
 
 ---
 
@@ -30,7 +30,7 @@ Run a lightweight breaking-news check every 15 minutes. When a headline scores a
 2. Fetches only items published in the **last 20 minutes** (prevents reprocessing stale headlines).
 3. Scores headlines with **heuristics only** — zero AI calls for scoring.
 4. For each headline that passes the threshold, checks Supabase for an existing row with the same `source_url`. If one exists, skips it.
-5. Generates a live card with **one** `gemini-1.5-flash` call per story (headline + 2 bullets).
+5. Generates a live card with **one** `gemini-2.5-flash` call per story (headline + 2 bullets).
 6. Persists as a row in the `clusters` table with `is_live = true` and no `bucket` — same table as the nightly digest.
 7. The nightly pipeline (RFC-001) is unaffected — its idempotency check only skips rows where `is_live = false` for today's UTC window.
 8. Live cards appear **mixed into their relevant category row** on the homepage, visually distinguished by an inset gray panel (headline + bullets only) on the same white tile as regular cards, plus a `LIVE` label. Tags sit outside that panel, matching regular cards. No "Why it Matters".
@@ -170,7 +170,7 @@ import type { BreakingCandidate } from '$lib/types/breaking';
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 
 const model = genAI.getGenerativeModel({
-  model: 'gemini-1.5-flash',
+  model: 'gemini-2.5-flash',
   generationConfig: {
     responseMimeType: 'application/json',
     responseSchema: {
@@ -398,6 +398,6 @@ isLive: row.is_live ?? false,
 ## References
 
 - RFC-001 (Daily Digest Pipeline) — `fetch.ts` is reused as-is
-- Gemini Node SDK — `gemini-1.5-flash` structured JSON output
+- Gemini Node SDK — `gemini-2.5-flash` structured JSON output
 - GitHub Actions cron syntax
 - Supabase JS v2 — `.insert()`, `.select()`, `.eq()`

@@ -27,8 +27,10 @@ Requires [02-setup-gemini.md](./02-setup-gemini.md) (`GEMINI_API_KEY`) and the S
 From the **repository root**:
 
 ```bash
-set -a && source apps/web/.env && set +a && pnpm exec tsx scripts/seed-bucket-anchors.ts
+pnpm --filter @2min.today/web run seed:anchors
 ```
+
+(`apps/web/.env` is loaded by the script’s `dotenv` import; dependencies resolve from `apps/web`, not the monorepo root.)
 
 This upserts embedding rows in `bucket_anchors` from `apps/web/src/lib/config/buckets`.
 

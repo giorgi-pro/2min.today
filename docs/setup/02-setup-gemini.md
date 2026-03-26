@@ -17,7 +17,7 @@ GEMINI_API_KEY="AIzaSy..."
 ## 3. Models (pipeline defaults)
 
 - Embeddings: `gemini-embedding-2-preview`
-- Summarization: `gemini-1.5-flash` (structured JSON)
+- Summarization: `gemini-2.5-flash` (structured JSON; `FLASH_MODEL` in `lib/server/digest/models.ts`)
 
 ## 4. Quotas
 

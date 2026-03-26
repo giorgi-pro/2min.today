@@ -1,18 +1,24 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { env } from '$env/dynamic/private';
+import { FLASH_MODEL } from '$lib/server/digest/models';
 import type { BreakingCandidate } from '$lib/types/breaking';
 
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 
 const model = genAI.getGenerativeModel({
-  model: 'gemini-1.5-flash',
+  model: FLASH_MODEL,
   generationConfig: {
     responseMimeType: 'application/json',
     responseSchema: {
-      type: 'object' as const,
+      type: SchemaType.OBJECT,
       properties: {
-        headline: { type: 'string' as const },
-        bullets: { type: 'array' as const, items: { type: 'string' as const }, minItems: 2, maxItems: 2 },
+        headline: { type: SchemaType.STRING },
+        bullets: {
+          type: SchemaType.ARRAY,
+          items: { type: SchemaType.STRING },
+          minItems: 2,
+          maxItems: 2,
+        },
       },
       required: ['headline', 'bullets'],
     },

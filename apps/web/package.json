@@ -9,7 +9,8 @@
     "postinstall": "svelte-kit sync",
     "preview": "vite preview --port 3000",
     "lint": "biome lint .",
-    "check-types": "svelte-check --tsconfig ./tsconfig.json"
+    "check-types": "svelte-check --tsconfig ./tsconfig.json",
+    "seed:anchors": "tsx ../../scripts/seed-bucket-anchors.ts"
   },
   "dependencies": {
     "@2min.today/ui": "workspace:*",
@@ -39,6 +40,7 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.19.4",
     "typescript": "5.9.2",
     "vite": "8.0.1"
   }

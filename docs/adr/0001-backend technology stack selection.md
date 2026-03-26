@@ -6,7 +6,7 @@
 ## Context
 `2min.today` requires a daily pipeline that:
 - ingests RSS + X semantic streams,
-- runs Gemini-powered summarization (`gemini-1.5-flash`),
+- runs Gemini-powered summarization (`gemini-2.5-flash`),
 - generates embeddings (`gemini-embedding-2-preview`),
 - performs vector deduplication + cosine similarity,
 - applies the hybrid classification logic (Core 5 buckets + Emerging outliers < 0.65 similarity),

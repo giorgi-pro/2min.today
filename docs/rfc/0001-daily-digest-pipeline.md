@@ -20,6 +20,13 @@ The pipeline must always produce **exactly one daily edition** at 00:00 UTC, zer
 5. Classification: **only** the 5 fixed buckets or `Emerging`.
 6. No images, no HTML, no extra fields.
 
+### Embedding vector size (Gemini + pgvector)
+
+- **Schema:** `clusters.embedding` and `bucket_anchors.embedding` use **`vector(768)`** in `apps/web/supabase/migrations/001-pgvector.sql`. Every stored vector must be exactly **768** floats or Postgres/pgvector rejects the write.
+- **API default:** `gemini-embedding-2-preview` returns **3072** dimensions unless configured otherwise.
+- **Implementation:** all `embedContent` calls ( **`embed.ts`** and **`scripts/seed-bucket-anchors.ts`** ) set the Gemini request field **`outputDimensionality: 768`** (constant **`EMBEDDING_DIMENSION`** in `lib/server/digest/models.ts`), which the API documents as a supported reduced size (truncation from the end for supported models).
+- **Why not 3072 in the DB:** at this product’s volume, **768** reduces storage, HNSW index size, and per-query cosine work versus **3072**, with quality that remains sufficient for deduplication and bucket routing. Adopting full **3072** would require a migration to `vector(3072)`, re-seeding `bucket_anchors`, and re-embedding or invalidating existing `clusters` rows.
+
 ## File Layout
 
 ```
@@ -221,6 +228,7 @@ Return `RawItem[]` (deduplicate by URL/tweet ID inside this function).
 
 - Use official `@google/generative-ai` Node SDK.
 - Model: `gemini-embedding-2-preview`.
+- **`outputDimensionality: 768`** on every `embedContent` request so vectors match `vector(768)` in Supabase (see *Embedding vector size* above).
 - Batch size: 20 (max per call).
 - Return `EmbeddedItem[]`.
 
@@ -370,12 +378,12 @@ The entry point (`+server.ts` §8) already checks for existing rows and returns 
 
 ### `summarize.ts`
 
-- Model: `gemini-1.5-flash`.
+- Model: `gemini-2.5-flash`.
 - **Structured output:** use the official Gemini JSON mode (`generationConfig.responseMimeType` + `responseSchema` on the model) so the model cannot return prose, markdown fences, or extra keys. Parse with `JSON.parse(result.response.text())` — no regex fallbacks.
 
 ```ts
 const model = genAI.getGenerativeModel({
-  model: 'gemini-1.5-flash',
+  model: 'gemini-2.5-flash',
   generationConfig: {
     responseMimeType: 'application/json',
     responseSchema: {
@@ -517,7 +525,10 @@ const supabase = createClient(
 
 async function seedAnchors() {
   for (const [bucket, text] of Object.entries(BUCKET_ANCHORS)) {
-    const result = await model.embedContent(text);
+    const result = await model.embedContent({
+      content: { role: 'user', parts: [{ text }] },
+      outputDimensionality: 768,
+    });
     const embedding = result.embedding.values;
 
     await supabase

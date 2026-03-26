@@ -21,6 +21,3 @@ From the **repository root**, you can:
 
 <!-- 5 — Depends on APP_URL and BREAKING_SECRET from the Vercel step. -->
 **GitHub Actions** — breaking-news workflow and repository secrets — [05-setup-github-breaking.md](./05-setup-github-breaking.md)
-
-<!-- 6 — Run anytime keys are present; validates install and API routes. -->
-**Local dev** — install, `pnpm dev`, curl checks, mock mode — [06-setup-local-dev.md](./06-setup-local-dev.md)
