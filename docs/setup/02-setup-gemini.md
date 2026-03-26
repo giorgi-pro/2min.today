@@ -24,6 +24,7 @@ Set in `apps/web/.env` (see `.env.example`). Code reads them in `lib/server/dige
 | `EMBEDDING_MODEL` | `gemini-embedding-2-preview` | Digest + bucket-anchor embeddings |
 | `EMBEDDING_DIMENSION` | `768` | Gemini `outputDimensionality`; must match `vector(N)` in SQL |
 | `FLASH_GENERATION_MIN_INTERVAL_MS` | *(empty)* | See below |
+| `CLASSIFY_SIMILARITY_THRESHOLD` | `0.65` | Centroid vs bucket-anchor cosine; below → `Emerging` (`lib/server/digest/models.ts`) |
 
 ## 4. Flash pacing (ConstrainedFlow / UnconstrainedFlow)
 

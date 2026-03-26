@@ -2,7 +2,11 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { Logger } from 'pino';
 import { env } from '$env/dynamic/private';
 import { withFlashGenerationRetry } from '$lib/server/digest/flash-generate';
-import { getFlashModel } from '$lib/server/digest/models';
+import {
+  getClassifySimilarityThreshold,
+  getFlashModel,
+  mergeFlashGenerationConfig,
+} from '$lib/server/digest/models';
 import { silentLogger } from '$lib/server/digest/logger';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Bucket } from '$lib/config/buckets';
@@ -19,8 +23,6 @@ function cosineSimilarity(a: number[], b: number[]): number {
   }
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
-
-const SIMILARITY_THRESHOLD = 0.65;
 
 export async function classifyClusters(
   clusters: SummarizedCluster[],
@@ -41,8 +43,13 @@ export async function classifyClusters(
 
   l.info({ anchorCount: anchors.length }, 'classify anchors loaded');
 
+  const similarityThreshold = getClassifySimilarityThreshold();
+
   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY ?? '');
-  const model = genAI.getGenerativeModel({ model: getFlashModel() });
+  const model = genAI.getGenerativeModel({
+    model: getFlashModel(),
+    generationConfig: mergeFlashGenerationConfig({}),
+  });
 
   const results: ClassifiedCluster[] = [];
 
@@ -58,7 +65,7 @@ export async function classifyClusters(
       }
     }
 
-    if (bestSim >= SIMILARITY_THRESHOLD) {
+    if (bestSim >= similarityThreshold) {
       results.push({
         ...cluster,
         bucket: bestBucket as Bucket,

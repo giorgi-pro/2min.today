@@ -62,6 +62,7 @@ export const load = async () => {
 
   const digest = (data ?? []).reduce<Partial<Record<Bucket, DigestCard[]>>>((acc, row) => {
     const b = row.bucket as Bucket;
+    if (b === 'Emerging') return acc;
     const s = row.summary as SummaryJson;
     if (!acc[b]) acc[b] = [];
       acc[b]?.push({

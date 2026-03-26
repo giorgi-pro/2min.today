@@ -78,7 +78,7 @@ apps/web/
 │   ├── app.css                               ← .summary-text, .news-tile, scrollbars
 │   ├── lib/
 │   │   ├── digest-filter.ts                  ← writable stores: searchQuery, debouncedSearchQuery (150 ms debounce)
-│   │   ├── config/buckets.constants.ts       ← BUCKET_ORDER + Bucket (client-safe; no fs — see note below)
+│   │   ├── config/buckets.constants.ts       ← DIGEST_DISPLAY_BUCKETS, BUCKET_ORDER, Bucket (client-safe; no fs — see note below)
 │   │   ├── config/buckets.ts                 ← YAML + fs: BUCKET_ANCHORS (server / scripts only)
 │   │   ├── mock-tags.ts                      ← deduceMockTags + bulletsFromMockContent
 │   │   ├── mock-digest.ts                    ← buildMockDigest() for USE_MOCK_DATA + client fallback
@@ -100,7 +100,7 @@ packages/ui/src/components/
     └── CategoryPanel.svelte
 ```
 
-**Note:** [`buckets.ts`](../../apps/web/src/lib/config/buckets.ts) uses Node **`fs`** to read `buckets.yaml`. Client code (e.g. **`+page.svelte`**) must import **`BUCKET_ORDER`** / **`Bucket`** from [`buckets.constants.ts`](../../apps/web/src/lib/config/buckets.constants.ts) only so Vite does not bundle `fs` in the browser.
+**Note:** [`buckets.ts`](../../apps/web/src/lib/config/buckets.ts) uses Node **`fs`** to read `buckets.yaml`. Client code (e.g. **`+page.svelte`**) must import from [`buckets.constants.ts`](../../apps/web/src/lib/config/buckets.constants.ts) only so Vite does not bundle `fs` in the browser. Use **`DIGEST_DISPLAY_BUCKETS`** for **homepage section order** and filtering (five YAML buckets; **`Emerging`** is not shown on the main digest). **`BUCKET_ORDER`** is the full ordered list including **`Emerging`** for the **`Bucket`** type and pipeline; the homepage uses **`DIGEST_DISPLAY_BUCKETS`** for **`presentBuckets`** / **`liveToCategories`** ordering.
 
 ## TypeScript types
 
@@ -202,10 +202,10 @@ Exports:
 Merged with the **existing** marquee / bucket layout. Implemented behaviour:
 
 - **`sourceDigest`:** if `data.digest` has keys, use it; else **`buildMockDigest()`** (same shape as mock server path).
-- **`allCards`:** flatten `sourceDigest` with **`Object.entries`** (each card already has **`bucket`** on the server; mock cards include it too). Import **`BUCKET_ORDER`** from **`$lib/config/buckets.constants`** (not **`buckets.ts`** — avoids bundling **`fs`**).
+- **`allCards`:** flatten `sourceDigest` with **`Object.entries`** (each card already has **`bucket`** on the server; mock cards include it too). Import **`DIGEST_DISPLAY_BUCKETS`** from **`$lib/config/buckets.constants`** (not **`buckets.ts`** — avoids bundling **`fs`**). Only include cards whose **`bucket`** is in **`DIGEST_DISPLAY_BUCKETS`** (SSR already omits **`Emerging`**; this is a client-side safety net).
 - **`Fuse`:** `$derived` when `allCards` or **`data.fuseThreshold`** changes. **`bullets`** are searched via a **`getFn`** that **`join(' ')`**s the array (Fuse v7 does not treat `bullets[]` as text by default).
 - **`filteredCards`:** read **`debouncedQ`**; if trimmed query non-empty, Fuse search over **`allCards`**; else all cards. **`filteredDigest`** regroups by **`bucket`** using a local list reference after `if (!acc[b]) acc[b] = []` (no non-null assertion).
-- **`liveToCategories(filteredDigest)`** with fixed **`BUCKET_ORDER`**.
+- **`liveToCategories(filteredDigest)`** with fixed **`DIGEST_DISPLAY_BUCKETS`** order (not full **`BUCKET_ORDER`**).
 - **No** digest-level search chrome beyond the header field and optional empty state (see below).
 - **Tiles:** tags as **presentational** **`#`**-prefixed tokens under “Why it matters” (no filter behaviour).
 - **`showFilteredEmpty`:** *No matches. Try broadening your search.*
@@ -215,7 +215,7 @@ Illustrative core (abbreviated):
 ```svelte
 <script lang="ts">
   import Fuse from 'fuse.js';
-  import { BUCKET_ORDER, type Bucket } from '$lib/config/buckets.constants';
+  import { DIGEST_DISPLAY_BUCKETS, type Bucket } from '$lib/config/buckets.constants';
   import { buildMockDigest } from '$lib/mock-digest';
   import { debouncedSearchQuery } from '$lib/digest-filter';
   import type { DigestCard } from './+page.server';

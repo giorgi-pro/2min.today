@@ -49,9 +49,9 @@ graph TD
 - **YAML dependency:** add the [`yaml`](https://www.npmjs.com/package/yaml) package only — on the order of **~4 KB gzipped**, **installed once**. The file is parsed when `buckets.ts` first loads; afterwards anchors are ordinary in-memory objects with **full TypeScript** types at call sites, so there is **no YAML work on the digest hot path** (clustering, Gemini, DB).
 - YAML can evolve later (e.g. user-chosen topics or more sections) without splitting pipeline vs. product naming.
 - Each cluster embedding compared (cosine) to 5 pre-embedded bucket anchors.
-- ≥ 0.65 → assign to best bucket.
-- < 0.65 → route to `Emerging`; Gemini generates one crisp category line.
-- `Emerging` auto-archives after 24 h unless trend repeats.
+- **Threshold** is **`CLASSIFY_SIMILARITY_THRESHOLD`** (env, 0–1, **default 0.65**). At or above → assign best bucket; below → route to **`Emerging`**; Gemini generates one crisp **category line**.
+- **`Emerging`** rows are **stored** like other clusters; the **homepage digest** (`+page.server.ts` / `DIGEST_DISPLAY_BUCKETS` in `buckets.constants.ts`) **lists only the five YAML buckets**, so `Emerging` does not appear as a section in the main UI.
+- *Product note:* “auto-archives after 24 h” for Emerging remains a future/optional behaviour if not implemented in `upsert` / cron.
 
 ### File Layout
 

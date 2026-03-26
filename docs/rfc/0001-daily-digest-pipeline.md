@@ -154,14 +154,14 @@ export const BUCKET_ANCHORS = parse(raw).buckets as Record<string, string>;
 export type Bucket = 'World' | 'Business' | 'Tech' | 'Science' | 'Health' | 'Emerging';
 ```
 
-`Emerging` is a runtime classification outcome only; it is not a row in `buckets.yaml` and is not stored in `bucket_anchors`.
+`Emerging` is a runtime classification outcome only; it is not a row in `buckets.yaml` and is not stored in `bucket_anchors`. Rows with `bucket = 'Emerging'` are still **upserted** to `clusters`, but the homepage **`load`** in `+page.server.ts` **omits** them so the digest UI shows only the five YAML buckets (`DIGEST_DISPLAY_BUCKETS` in `buckets.constants.ts`; full `BUCKET_ORDER` still includes `Emerging` for typing and pipeline).
 
 > The seed script uses `process.env` directly (not `$env/dynamic/private`) because it runs outside SvelteKit, as a plain Node script via `tsx`.
 
 ## 4. Pipeline Barrel (`lib/pipeline/index.ts`)
 
-Glue layer that wires all steps in order and exports `pipeline.run(supabase)`.
-The Supabase client is passed down to every step that needs DB access — no step imports it globally.
+Glue layer that wires all steps in order and exports `pipeline.run(supabase, opts?)`.
+The Supabase client is passed to **classify** and **upsert** only; **clustering** is in-memory. An optional Pino **`log`** on **`opts`** is threaded through **fetch → embed → summarize → classify** for structured phase logs (see `lib/pipeline/index.ts`).
 
 ```ts
 import { fetchRawItems } from './fetch';
@@ -170,16 +170,18 @@ import { clusterItems } from './cluster';
 import { summarizeClusters } from './summarize';
 import { classifyClusters } from './classify';
 import { upsertClusters } from './upsert';
+import type { Logger } from 'pino';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ClassifiedCluster } from '../types/digest';
 
 export const pipeline = {
-  async run(supabase: SupabaseClient): Promise<ClassifiedCluster[]> {
-    const rawItems    = await fetchRawItems();
-    const embedded    = await embedItems(rawItems);
-    const clusters    = await clusterItems(embedded, supabase);
-    const summarized  = await summarizeClusters(clusters);
-    const classified  = await classifyClusters(summarized, supabase);
+  async run(supabase: SupabaseClient, opts?: { log?: Logger }): Promise<ClassifiedCluster[]> {
+    const log = opts?.log;
+    const rawItems = await fetchRawItems(log);
+    const embedded = await embedItems(rawItems, log);
+    const clusters = await clusterItems(embedded);
+    const summarized = await summarizeClusters(clusters, log);
+    const classified = await classifyClusters(summarized, supabase, log);
     return upsertClusters(classified, supabase);
   },
 };
@@ -294,7 +296,6 @@ return clusters
 
 ```ts
 import { v4 as uuidv4 } from 'uuid';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { EmbeddedItem, Cluster } from '../types/digest';
 
 const SIMILARITY_THRESHOLD = 0.85;
@@ -319,10 +320,9 @@ function computeCentroid(items: EmbeddedItem[]): number[] {
   return centroid;
 }
 
-export async function clusterItems(
-  items: EmbeddedItem[],
-  supabase: SupabaseClient,
-): Promise<Cluster[]> {
+export async function clusterItems(items: EmbeddedItem[]): Promise<Cluster[]> {
+  if (items.length === 0) return [];
+
   const clusters: Cluster[] = [];
 
   for (const item of items) {
@@ -428,8 +428,9 @@ FROM bucket_anchors
 ORDER BY similarity DESC LIMIT 1;
 ```
 
-- If max similarity ≥ 0.65 → assign bucket.
-- Else → `bucket = 'Emerging'`, call Gemini once for `categoryLine` (max 8 words).
+- **Threshold:** compare max cosine similarity to **`CLASSIFY_SIMILARITY_THRESHOLD`** in env (`apps/web/.env`), a float in **0–1**, **default 0.65** if unset or invalid (`getClassifySimilarityThreshold()` in `lib/server/digest/models.ts`).
+- If max similarity ≥ threshold → assign best bucket.
+- Else → `bucket = 'Emerging'`, call Gemini once for `categoryLine` (max 8 words). **Homepage SSR** does not surface `Emerging` cards (see §3 `buckets` / `DIGEST_DISPLAY_BUCKETS` note); rows remain in `clusters` for ops or future product use.
 
 ### `upsert.ts`
 

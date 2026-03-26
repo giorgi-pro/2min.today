@@ -16,13 +16,13 @@ sources:
 
   - id: ap
     type: rss
-    enabled: false
+    enabled: true
     url: https://rss.app/feeds/v1.1/tAjLcDBcVDkSVOUI.xml
     label: AP
 
   - id: techcrunch
     type: rss
-    enabled: false
+    enabled: true
     url: https://techcrunch.com/feed/
     label: TechCrunch
 

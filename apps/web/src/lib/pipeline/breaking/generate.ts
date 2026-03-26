@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { env } from '$env/dynamic/private';
 import { withFlashGenerationRetry } from '$lib/server/digest/flash-generate';
-import { getFlashModel } from '$lib/server/digest/models';
+import { getFlashModel, mergeFlashGenerationConfig } from '$lib/server/digest/models';
 import type { BreakingCandidate } from '$lib/types/breaking';
 
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
@@ -9,7 +9,7 @@ const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 function breakingFlashModel() {
   return genAI.getGenerativeModel({
     model: getFlashModel(),
-    generationConfig: {
+    generationConfig: mergeFlashGenerationConfig({
       responseMimeType: 'application/json',
       responseSchema: {
         type: SchemaType.OBJECT,
@@ -24,7 +24,7 @@ function breakingFlashModel() {
         },
         required: ['headline', 'bullets'],
       },
-    },
+    }),
   });
 }
 

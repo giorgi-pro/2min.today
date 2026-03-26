@@ -1,9 +1,9 @@
 import type { Bucket } from '$lib/config/buckets.constants';
-import { BUCKET_ORDER } from '$lib/config/buckets.constants';
+import { DIGEST_DISPLAY_BUCKETS } from '$lib/config/buckets.constants';
 
 export const CATEGORY_ORDER_STORAGE_KEY = '2min.today/category-order';
 
-const bucketSet = new Set<string>(BUCKET_ORDER);
+const displayBucketSet = new Set<string>(DIGEST_DISPLAY_BUCKETS);
 
 export function resolveCategoryOrder(saved: string[] | null | undefined, present: Bucket[]): Bucket[] {
   const presentSet = new Set(present);
@@ -12,12 +12,12 @@ export function resolveCategoryOrder(saved: string[] | null | undefined, present
   const used = new Set<Bucket>();
   for (const x of saved) {
     const b = x as Bucket;
-    if (presentSet.has(b) && bucketSet.has(b)) {
+    if (presentSet.has(b) && displayBucketSet.has(b)) {
       out.push(b);
       used.add(b);
     }
   }
-  for (const b of BUCKET_ORDER) {
+  for (const b of DIGEST_DISPLAY_BUCKETS) {
     if (presentSet.has(b) && !used.has(b)) out.push(b);
   }
   return out;

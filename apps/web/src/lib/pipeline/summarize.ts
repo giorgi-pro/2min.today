@@ -2,7 +2,11 @@ import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import type { Logger } from 'pino';
 import { env } from '$env/dynamic/private';
 import { withFlashGenerationRetry } from '$lib/server/digest/flash-generate';
-import { getDigestSummarizeMaxClusters, getFlashModel } from '$lib/server/digest/models';
+import {
+  getDigestSummarizeMaxClusters,
+  getFlashModel,
+  mergeFlashGenerationConfig,
+} from '$lib/server/digest/models';
 import { silentLogger } from '$lib/server/digest/logger';
 import { parseRegion } from '$lib/types/digest';
 import type { Cluster, SummarizedCluster, Credit, EmbeddedItem } from '$lib/types/digest';
@@ -50,7 +54,7 @@ export async function summarizeClusters(clusters: Cluster[], log?: Logger): Prom
   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY ?? '');
   const model = genAI.getGenerativeModel({
     model: getFlashModel(),
-    generationConfig: {
+    generationConfig: mergeFlashGenerationConfig({
       responseMimeType: 'application/json',
       responseSchema: {
         type: SchemaType.OBJECT,
@@ -63,7 +67,7 @@ export async function summarizeClusters(clusters: Cluster[], log?: Logger): Prom
         },
         required: ['headline', 'bullets', 'whyItMatters', 'tags', 'region'],
       },
-    },
+    }),
   });
 
   const results: SummarizedCluster[] = [];

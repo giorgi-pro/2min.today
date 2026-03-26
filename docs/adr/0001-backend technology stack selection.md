@@ -9,7 +9,7 @@
 - runs Gemini-powered summarization (`gemini-2.5-flash`),
 - generates embeddings (`gemini-embedding-2-preview`),
 - performs vector deduplication + cosine similarity,
-- applies the hybrid classification logic (Core 5 buckets + Emerging outliers < 0.65 similarity),
+- applies the hybrid classification logic (Core 5 buckets + Emerging when centroid–anchor cosine similarity is below **`CLASSIFY_SIMILARITY_THRESHOLD`**, default **0.65**); Emerging rows persist but the homepage shows only the five fixed sections,
 - stores results in Supabase for the SvelteKit frontend.
 
 The entire system must stay at **$0 operational cost** (Vercel + Supabase free tier), compile to near-zero bundle, and keep the full project inside **one repo** to maximise the portfolio flex of a single-language, high-performance stack.

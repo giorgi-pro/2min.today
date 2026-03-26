@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
-  import { BUCKET_ORDER, type Bucket } from '$lib/config/buckets.constants';
+  import { DIGEST_DISPLAY_BUCKETS, type Bucket } from '$lib/config/buckets.constants';
   import {
     CATEGORY_ORDER_STORAGE_KEY,
     reorderCategoryBuckets,
@@ -56,9 +56,11 @@
   type CardRow = DigestCard & { bucket: Bucket };
 
   const allCards = $derived(
-    Object.entries(sourceDigest).flatMap(([bucket, cards]) =>
-      (cards ?? []).map((c) => ({ ...c, bucket: bucket as Bucket })),
-    ) as CardRow[],
+    Object.entries(sourceDigest)
+      .filter(([bucket]) => bucket !== 'Emerging')
+      .flatMap(([bucket, cards]) =>
+        (cards ?? []).map((c) => ({ ...c, bucket: bucket as Bucket })),
+      ) as CardRow[],
   );
 
   const handler = $derived(
@@ -91,7 +93,9 @@
     }, {}),
   );
 
-  const presentBuckets = $derived(BUCKET_ORDER.filter((b) => sourceDigest[b]?.length) as Bucket[]);
+  const presentBuckets = $derived(
+    DIGEST_DISPLAY_BUCKETS.filter((b) => sourceDigest[b]?.length) as Bucket[],
+  );
 
   let savedBucketOrder = $state<Bucket[]>([]);
 
@@ -102,7 +106,8 @@
       const parsed = JSON.parse(raw) as unknown;
       if (!Array.isArray(parsed)) return;
       savedBucketOrder = parsed.filter(
-        (x): x is Bucket => typeof x === 'string' && (BUCKET_ORDER as readonly string[]).includes(x),
+        (x): x is Bucket =>
+          typeof x === 'string' && (DIGEST_DISPLAY_BUCKETS as readonly string[]).includes(x),
       );
     } catch {
       /* ignore */
