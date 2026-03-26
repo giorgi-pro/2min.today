@@ -71,10 +71,10 @@ Groups items that cover the same story into clusters. This step is **entirely in
 
 For each item in order:
 1. Compute cosine similarity between the item's embedding and each existing cluster's **centroid** embedding.
-2. If the best similarity ≥ **0.85** (`SIMILARITY_THRESHOLD`, hardcoded), add the item to that cluster and recompute the centroid as the mean of all member embeddings.
+2. If the best similarity ≥ **`CLUSTER_SIMILARITY_THRESHOLD`** (env, **0–1**, **default 0.85**), add the item to that cluster and recompute the centroid as the mean of all member embeddings.
 3. Otherwise, start a new single-item cluster.
 
-The 0.85 threshold is deliberately high — it groups "Fed raises rates" from Reuters, AP, and Bloomberg into one cluster while keeping "Fed raises rates" and "Tech layoffs" apart.
+The default **0.85** is deliberately high — it groups "Fed raises rates" from Reuters, AP, and Bloomberg into one cluster while keeping "Fed raises rates" and "Tech layoffs" apart. Lower the env var to merge more aggressively when cluster counts are too high.
 
 Output: `Cluster[]` — typically 15–35 clusters from a full day's feed.
 
@@ -205,6 +205,7 @@ The **total wall time** is dominated by summarize. If the `curl` call appears to
 | `FLASH_THINKING_BUDGET` | unset | Gemini 2.5 thinking token budget |
 | `EMBEDDING_MODEL` | `gemini-embedding-2-preview` | Embedding model |
 | `EMBEDDING_DIMENSION` | `768` | Must match `vector(N)` in SQL migration |
+| `CLUSTER_SIMILARITY_THRESHOLD` | `0.85` | Item-to-centroid merge cutoff; lower → fewer clusters |
 | `CLASSIFY_SIMILARITY_THRESHOLD` | `0.65` | Cosine cutoff: below → Emerging |
 | `DIGEST_SUMMARIZE_MAX_CLUSTERS` | unset | Cap Flash calls for debugging |
 | `DIGEST_FUSE_THRESHOLD` | `0.4` | Homepage search fuziness |

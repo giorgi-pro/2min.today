@@ -99,3 +99,12 @@ export function getClassifySimilarityThreshold(): number {
   if (!Number.isFinite(n) || n < 0 || n > 1) return 0.65;
   return n;
 }
+
+/** Cosine similarity for merging items into the same story cluster (0–1). Default 0.85. Lower = fewer, larger clusters. */
+export function getClusterSimilarityThreshold(): number {
+  const raw = env.CLUSTER_SIMILARITY_THRESHOLD;
+  if (raw === undefined || raw === '') return 0.85;
+  const n = Number.parseFloat(raw);
+  if (!Number.isFinite(n) || n < 0 || n > 1) return 0.85;
+  return n;
+}

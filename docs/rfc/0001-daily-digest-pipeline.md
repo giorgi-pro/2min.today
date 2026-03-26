@@ -230,17 +230,15 @@ Return `RawItem[]` from `fetchRawItems` (deduplicate by URL/tweet ID inside this
 
 ### `cluster.ts`
 
-**Purpose:** group today's `EmbeddedItem[]` into semantically related `Cluster[]`, each representing one news story told by multiple sources. Also deduplicate against any clusters already persisted for today (idempotent re-run safety).
+**Purpose:** group today's `EmbeddedItem[]` into semantically related `Cluster[]`, each representing one news story told by multiple sources. Same-day idempotency is enforced in **`+server.ts`** (skip if today's window already has rows), not inside clustering.
 
 **Algorithm: greedy single-linkage clustering (in-memory).**
 
-All work happens in-memory — no temporary tables, no DB writes. The only DB read is the optional deduplication check against already-persisted clusters from an earlier same-day run.
+All work happens in-memory — no temporary tables, no DB reads or writes.
 
-#### Constants
+#### Merge threshold
 
-```ts
-const SIMILARITY_THRESHOLD = 0.85;
-```
+Compare each incoming item's embedding to existing cluster **centroids** using cosine similarity. If the best match is at or above **`CLUSTER_SIMILARITY_THRESHOLD`** in env (`apps/web/.env`), a float in **0–1**, **default 0.85** if unset or invalid (`getClusterSimilarityThreshold()` in `lib/server/digest/models.ts`), merge into that cluster; otherwise start a new cluster. **Lower values** merge more aggressively (fewer clusters, larger bundles); **higher values** keep more separate clusters.
 
 #### Cosine similarity helper
 
@@ -284,7 +282,7 @@ for each item in embeddedItems:
         if sim > bestSimilarity:
             bestSimilarity ← sim
             bestCluster ← cluster
-    if bestSimilarity ≥ SIMILARITY_THRESHOLD:
+    if bestSimilarity ≥ clusterSimilarityThreshold:
         bestCluster.items.push(item)
         bestCluster.centroidEmbedding ← computeCentroid(bestCluster.items)
     else:
@@ -296,9 +294,8 @@ return clusters
 
 ```ts
 import { v4 as uuidv4 } from 'uuid';
+import { getClusterSimilarityThreshold } from '$lib/server/digest/models';
 import type { EmbeddedItem, Cluster } from '../types/digest';
-
-const SIMILARITY_THRESHOLD = 0.85;
 
 function cosineSimilarity(a: number[], b: number[]): number {
   let dot = 0, normA = 0, normB = 0;
@@ -323,6 +320,7 @@ function computeCentroid(items: EmbeddedItem[]): number[] {
 export async function clusterItems(items: EmbeddedItem[]): Promise<Cluster[]> {
   if (items.length === 0) return [];
 
+  const similarityThreshold = getClusterSimilarityThreshold();
   const clusters: Cluster[] = [];
 
   for (const item of items) {
@@ -337,7 +335,7 @@ export async function clusterItems(items: EmbeddedItem[]): Promise<Cluster[]> {
       }
     }
 
-    if (bestSim >= SIMILARITY_THRESHOLD && bestIdx !== -1) {
+    if (bestSim >= similarityThreshold && bestIdx !== -1) {
       clusters[bestIdx].items.push(item);
       clusters[bestIdx].centroidEmbedding = computeCentroid(clusters[bestIdx].items);
     } else {
@@ -358,7 +356,7 @@ export async function clusterItems(items: EmbeddedItem[]): Promise<Cluster[]> {
 - **O(n × k)** where n = items (~60–100/day) and k = clusters (~15–30). Runs in < 5 ms for realistic daily volumes — no fancy data structures needed.
 - Deterministic: item order from `fetch.ts` determines cluster assignment. RSS items arrive in published-date order, so closely related stories (published minutes apart) naturally cluster together.
 - Centroid recomputation on every merge keeps the cluster center stable as more sources join, preventing drift toward the first item only.
-- The 0.85 threshold is deliberately high — it groups *the same story told by different outlets* (e.g. "Fed raises rates" from Reuters, AP, Bloomberg) while keeping genuinely distinct stories apart (e.g. "Fed raises rates" vs "Tech layoffs").
+- The **default 0.85** is deliberately high — it groups *the same story told by different outlets* (e.g. "Fed raises rates" from Reuters, AP, Bloomberg) while keeping genuinely distinct stories apart (e.g. "Fed raises rates" vs "Tech layoffs"). Tune **`CLUSTER_SIMILARITY_THRESHOLD`** when feed volume produces too many clusters (e.g. try **0.78–0.82**).
 
 #### Deduplication against already-persisted clusters
 

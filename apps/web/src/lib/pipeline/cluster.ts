@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
+import { getClusterSimilarityThreshold } from '$lib/server/digest/models';
 import type { EmbeddedItem, Cluster } from '$lib/types/digest';
-
-const SIMILARITY_THRESHOLD = 0.85;
 
 function cosineSimilarity(a: number[], b: number[]): number {
   let dot = 0;
@@ -28,6 +27,7 @@ function computeCentroid(items: EmbeddedItem[]): number[] {
 export async function clusterItems(items: EmbeddedItem[]): Promise<Cluster[]> {
   if (items.length === 0) return [];
 
+  const similarityThreshold = getClusterSimilarityThreshold();
   const clusters: Cluster[] = [];
 
   for (const item of items) {
@@ -42,7 +42,7 @@ export async function clusterItems(items: EmbeddedItem[]): Promise<Cluster[]> {
       }
     }
 
-    if (bestSim >= SIMILARITY_THRESHOLD && bestIdx !== -1) {
+    if (bestSim >= similarityThreshold && bestIdx !== -1) {
       clusters[bestIdx].items.push(item);
       clusters[bestIdx].centroidEmbedding = computeCentroid(clusters[bestIdx].items);
     } else {

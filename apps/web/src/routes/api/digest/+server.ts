@@ -26,10 +26,10 @@ export const GET: RequestHandler = async ({ url }) => {
     .lt('published_at', todayEnd.toISOString())
     .limit(1);
 
-  if (existing?.length) {
-    log.info('digest skipped: already run today');
-    return json({ status: 'already-run-today' });
-  }
+  // if (existing?.length) {
+  //   log.info('digest skipped: already run today');
+  //   return json({ status: 'already-run-today' });
+  // }
 
   const handlerT0 = Date.now();
   try {

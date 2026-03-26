@@ -10,7 +10,7 @@ sources:
 
   - id: bbc-world
     type: rss
-    enabled: false
+    enabled: true
     url: https://feeds.bbci.co.uk/news/world/rss.xml
     label: BBC
 
@@ -22,7 +22,7 @@ sources:
 
   - id: techcrunch
     type: rss
-    enabled: true
+    enabled: false
     url: https://techcrunch.com/feed/
     label: TechCrunch
 
