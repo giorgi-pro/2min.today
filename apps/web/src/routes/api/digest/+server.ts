@@ -5,6 +5,9 @@ import { env } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url }) => {
+  console.log('[digest] FLASH_GENERATION_MIN_INTERVAL_MS =', env.FLASH_GENERATION_MIN_INTERVAL_MS ?? '(unset)');
+  console.log('[digest] FLASH_MODEL =', env.FLASH_MODEL ?? '(unset)');
+
   if (url.searchParams.get('secret') !== env.CRON_SECRET) {
     return new Response('Unauthorized', { status: 401 });
   }

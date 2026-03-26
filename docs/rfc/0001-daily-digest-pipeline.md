@@ -24,7 +24,7 @@ The pipeline must always produce **exactly one daily edition** at 00:00 UTC, zer
 
 - **Schema:** `clusters.embedding` and `bucket_anchors.embedding` use **`vector(768)`** in `apps/web/supabase/migrations/001-pgvector.sql`. Every stored vector must be exactly **768** floats or Postgres/pgvector rejects the write.
 - **API default:** `gemini-embedding-2-preview` returns **3072** dimensions unless configured otherwise.
-- **Implementation:** all `embedContent` calls ( **`embed.ts`** and **`scripts/seed-bucket-anchors.ts`** ) set the Gemini request field **`outputDimensionality: 768`** (constant **`EMBEDDING_DIMENSION`** in `lib/server/digest/models.ts`), which the API documents as a supported reduced size (truncation from the end for supported models).
+- **Implementation:** all `embedContent` calls ( **`embed.ts`** and **`scripts/seed-bucket-anchors.ts`** ) set **`outputDimensionality`** from env **`EMBEDDING_DIMENSION`** (default **768** via `getEmbeddingDimension()` in `lib/server/digest/models.ts`), which the API documents as a supported reduced size (truncation from the end for supported models).
 - **Why not 3072 in the DB:** at this product’s volume, **768** reduces storage, HNSW index size, and per-query cosine work versus **3072**, with quality that remains sufficient for deduplication and bucket routing. Adopting full **3072** would require a migration to `vector(3072)`, re-seeding `bucket_anchors`, and re-embedding or invalidating existing `clusters` rows.
 
 ## File Layout

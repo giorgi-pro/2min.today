@@ -1,7 +1,7 @@
 import type { EmbedContentRequest } from '@google/generative-ai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { env } from '$env/dynamic/private';
-import { EMBEDDING_DIMENSION, EMBEDDING_MODEL } from '$lib/server/digest/models';
+import { getEmbeddingDimension, getEmbeddingModel } from '$lib/server/digest/models';
 import type { RawItem, EmbeddedItem } from '$lib/types/digest';
 
 type EmbedRequest = EmbedContentRequest & { outputDimensionality?: number };
@@ -12,7 +12,7 @@ export async function embedItems(items: RawItem[]): Promise<EmbeddedItem[]> {
   if (items.length === 0) return [];
 
   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY ?? '');
-  const model = genAI.getGenerativeModel({ model: EMBEDDING_MODEL });
+  const model = genAI.getGenerativeModel({ model: getEmbeddingModel() });
 
   const embedded: EmbeddedItem[] = [];
 
@@ -23,7 +23,7 @@ export async function embedItems(items: RawItem[]): Promise<EmbeddedItem[]> {
       batch.map(async (item) => {
         const req: EmbedRequest = {
           content: { role: 'user', parts: [{ text: `${item.title}\n${item.content}` }] },
-          outputDimensionality: EMBEDDING_DIMENSION,
+          outputDimensionality: getEmbeddingDimension(),
         };
         const result = await model.embedContent(req);
         return { ...item, embedding: result.embedding.values };

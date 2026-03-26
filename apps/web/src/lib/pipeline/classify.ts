@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { env } from '$env/dynamic/private';
-import { FLASH_MODEL } from '$lib/server/digest/models';
+import { withFlashGenerationRetry } from '$lib/server/digest/flash-generate';
+import { getFlashModel } from '$lib/server/digest/models';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Bucket } from '$lib/config/buckets';
 import type { SummarizedCluster, ClassifiedCluster } from '$lib/types/digest';
@@ -32,7 +33,7 @@ export async function classifyClusters(
   }
 
   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY ?? '');
-  const model = genAI.getGenerativeModel({ model: FLASH_MODEL });
+  const model = genAI.getGenerativeModel({ model: getFlashModel() });
 
   const results: ClassifiedCluster[] = [];
 
@@ -57,8 +58,10 @@ export async function classifyClusters(
     } else {
       const prompt = `Generate a concise category label (max 8 words) for this news cluster:\n\nHeadline: ${cluster.headline}\nBullets: ${cluster.bullets.join('; ')}\n\nReturn ONLY the label, no quotes, no explanation.`;
 
-      const result = await model.generateContent(prompt);
-      const categoryLine = result.response.text().trim().slice(0, 80);
+      const categoryLine = await withFlashGenerationRetry(async () => {
+        const result = await model.generateContent(prompt);
+        return result.response.text().trim().slice(0, 80);
+      });
 
       results.push({
         ...cluster,

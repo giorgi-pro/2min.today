@@ -1,10 +1,9 @@
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { env } from '$env/dynamic/private';
-import { FLASH_MODEL } from '$lib/server/digest/models';
+import { withFlashGenerationRetry } from '$lib/server/digest/flash-generate';
+import { getFlashModel } from '$lib/server/digest/models';
 import { parseRegion } from '$lib/types/digest';
 import type { Cluster, SummarizedCluster, Credit, EmbeddedItem } from '$lib/types/digest';
-
-const MAX_RETRIES = 3;
 
 function extractCredits(items: EmbeddedItem[]): Credit[] {
   const seen = new Set<string>();
@@ -30,30 +29,12 @@ function normalizeSummaryTags(raw: unknown): string[] {
   return out;
 }
 
-async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
-  let delay = 1000;
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    try {
-      return await fn();
-    } catch (e: any) {
-      if (attempt === MAX_RETRIES - 1) throw e;
-      if (e?.status === 429 || e?.message?.includes('rate')) {
-        await new Promise((r) => setTimeout(r, delay));
-        delay *= 2;
-      } else {
-        throw e;
-      }
-    }
-  }
-  throw new Error('Unreachable');
-}
-
 export async function summarizeClusters(clusters: Cluster[]): Promise<SummarizedCluster[]> {
   if (clusters.length === 0) return [];
 
   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY ?? '');
   const model = genAI.getGenerativeModel({
-    model: FLASH_MODEL,
+    model: getFlashModel(),
     generationConfig: {
       responseMimeType: 'application/json',
       responseSchema: {
@@ -93,7 +74,7 @@ Rules: "usa" = US-domestic stories only. "americas" = multi-country Americas or 
 
     const feedRegion = cluster.items.find((i) => i.feedRegion)?.feedRegion;
 
-    const parsed = await withRetry(async () => {
+    const parsed = await withFlashGenerationRetry(async () => {
       const result = await model.generateContent(prompt);
       return JSON.parse(result.response.text()) as {
         headline: string;

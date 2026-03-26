@@ -14,11 +14,24 @@
 GEMINI_API_KEY="AIzaSy..."
 ```
 
-## 3. Models (pipeline defaults)
+## 3. Models (env vars)
 
-- Embeddings: `gemini-embedding-2-preview`
-- Summarization: `gemini-2.5-flash` (structured JSON; `FLASH_MODEL` in `lib/server/digest/models.ts`)
+Set in `apps/web/.env` (see `.env.example`). Code reads them in `lib/server/digest/models.ts` (`getFlashModel`, `getEmbeddingModel`, `getEmbeddingDimension`).
 
-## 4. Quotas
+| Variable | Default (if unset) | Role |
+|----------|--------------------|------|
+| `FLASH_MODEL` | `gemini-2.5-flash` | Summarize, Emerging label, breaking cards |
+| `EMBEDDING_MODEL` | `gemini-embedding-2-preview` | Digest + bucket-anchor embeddings |
+| `EMBEDDING_DIMENSION` | `768` | Gemini `outputDimensionality`; must match `vector(N)` in SQL |
+| `FLASH_GENERATION_MIN_INTERVAL_MS` | *(empty)* | See below |
 
-Free tier is usually enough for a daily digest (on the order of tens of stories) plus breaking-news checks; no billing is required for early experiments.
+## 4. Flash pacing (ConstrainedFlow / UnconstrainedFlow)
+
+Two strategies for Flash `generateContent` calls, controlled by **`FLASH_GENERATION_MIN_INTERVAL_MS`** (see `lib/server/digest/flash-generate.ts`):
+
+- **ConstrainedFlow** — set to a **positive integer** (e.g. `15000` = one call every 15s, ~4 RPM). Spaces Flash calls and retries on 429 with exponential backoff. Use on **free tier** or any quota-limited plan.
+- **UnconstrainedFlow** — **unset or empty**. No inter-call delay, no 429 retry loop — each Flash call runs once. Use with **billing** or high RPM limits.
+
+## 5. Quotas
+
+The **free tier** limits **`generateContent`** per model — e.g. **`gemini-2.5-flash`** is often on the order of **~5 requests per minute** per project. The digest issues **one Flash call per cluster** plus **`Emerging`** calls, so either enable **ConstrainedFlow** (e.g. `FLASH_GENERATION_MIN_INTERVAL_MS=15000`), or use a **paid** plan; see [Gemini rate limits](https://ai.google.dev/gemini-api/docs/rate-limits). **Embeddings** use a separate quota.

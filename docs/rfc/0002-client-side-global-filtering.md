@@ -143,7 +143,7 @@ tags: { type: 'array', items: { type: 'string' } }
 // required: include 'tags' in required[]; do not rely on minItems: 3 for runtime safety
 ```
 
-Prompt JSON example must include the `tags` array line. Use **`FLASH_MODEL`** from `lib/server/digest/models.ts`.
+Prompt JSON example must include the `tags` array line. Use **`getFlashModel()`** from `lib/server/digest/models.ts` (env **`FLASH_MODEL`**).
 
 ## 2. Persist tags (`lib/pipeline/upsert.ts`)
 

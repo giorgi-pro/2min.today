@@ -50,8 +50,8 @@ The digest API is the core of the product:
 Protected by cron auth. Triggered by Vercel cron.
 
 Model constants are in `apps/web/src/lib/server/digest/models.ts`:
-- `FLASH_MODEL` = Gemini 2.5 Flash (`gemini-2.5-flash`; `gemini-1.5-flash` is removed from the current API)
-- `EMBEDDING_MODEL` = Gemini Embedding 2 Preview
+- `FLASH_MODEL`, `EMBEDDING_MODEL`, `EMBEDDING_DIMENSION` — see `apps/web/.env.example` (defaults in `lib/server/digest/models.ts` getters)
+- `FLASH_GENERATION_MIN_INTERVAL_MS` — optional; unset = **UnconstrainedFlow** (no pacing, no 429 retries); set to e.g. `15000` = **ConstrainedFlow** (one Flash call every 15s + 429 retries with backoff)
 
 ### Tech Stack Decisions (from ADR)
 
