@@ -39,3 +39,8 @@ export function getEmbeddingModel(): string {
 export function getEmbeddingDimension(): number {
   return readPositiveInt('EMBEDDING_DIMENSION', 768);
 }
+
+/** Unset = summarize all clusters. Set (e.g. 3) to cap Flash summarize calls for debugging. */
+export function getDigestSummarizeMaxClusters(): number | null {
+  return readOptionalPositiveInt('DIGEST_SUMMARIZE_MAX_CLUSTERS');
+}
