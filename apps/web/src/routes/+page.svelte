@@ -1,11 +1,20 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { browser } from '$app/environment';
   import { BUCKET_ORDER, type Bucket } from '$lib/config/buckets.constants';
+  import {
+    CATEGORY_ORDER_STORAGE_KEY,
+    reorderCategoryBuckets,
+    resolveCategoryOrder,
+  } from '$lib/category-order';
   import { buildMockDigest } from '$lib/mock-digest';
   import { debouncedSearchQuery, activeRegions } from '$lib/digest-filter';
   import { SearchHandler, ThresholdStrategy } from '$lib/search/search-handler';
   import type { DigestCard } from './+page.server';
   import type { Region, Credit } from '$lib/types/digest';
   import CategoryRow from '@2min.today/ui/components/digest/CategoryRow.svelte';
+
+  const BUCKET_MIME = 'application/x-2min-bucket';
 
   type Category = {
     name: string;
@@ -82,10 +91,87 @@
     }, {}),
   );
 
-  const categories: Category[] = $derived(
-    BUCKET_ORDER
-      .filter((b) => sourceDigest[b]?.length)
-      .map((b) => ({
+  const presentBuckets = $derived(BUCKET_ORDER.filter((b) => sourceDigest[b]?.length) as Bucket[]);
+
+  let savedBucketOrder = $state<Bucket[]>([]);
+
+  onMount(() => {
+    try {
+      const raw = localStorage.getItem(CATEGORY_ORDER_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed)) return;
+      savedBucketOrder = parsed.filter(
+        (x): x is Bucket => typeof x === 'string' && (BUCKET_ORDER as readonly string[]).includes(x),
+      );
+    } catch {
+      /* ignore */
+    }
+  });
+
+  const displayOrder = $derived(resolveCategoryOrder(savedBucketOrder, presentBuckets));
+
+  function persistBucketOrder(next: Bucket[]) {
+    savedBucketOrder = next;
+    if (browser) {
+      localStorage.setItem(CATEGORY_ORDER_STORAGE_KEY, JSON.stringify(next));
+    }
+  }
+
+  let draggingBucket = $state<Bucket | null>(null);
+  let dragOverBucket = $state<Bucket | null>(null);
+
+  function onPanelDragStart(bucket: Bucket) {
+    return (e: DragEvent) => {
+      const dt = e.dataTransfer;
+      if (!dt) return;
+      dt.setData(BUCKET_MIME, bucket);
+      dt.setData('text/plain', bucket);
+      dt.effectAllowed = 'move';
+      draggingBucket = bucket;
+    };
+  }
+
+  function onPanelDragEnd() {
+    draggingBucket = null;
+    dragOverBucket = null;
+  }
+
+  function onRowDragOver(bucket: Bucket) {
+    return (e: DragEvent) => {
+      e.preventDefault();
+      const dt = e.dataTransfer;
+      if (dt) dt.dropEffect = 'move';
+      dragOverBucket = bucket;
+    };
+  }
+
+  function onRowDragLeave(bucket: Bucket) {
+    return (e: DragEvent) => {
+      const rel = e.relatedTarget as Node | null;
+      const cur = e.currentTarget as HTMLElement;
+      if (rel && cur.contains(rel)) return;
+      if (dragOverBucket === bucket) dragOverBucket = null;
+    };
+  }
+
+  function onRowDrop(onto: Bucket) {
+    return (e: DragEvent) => {
+      e.preventDefault();
+      const dt = e.dataTransfer;
+      const raw = dt?.getData(BUCKET_MIME) || dt?.getData('text/plain');
+      dragOverBucket = null;
+      draggingBucket = null;
+      if (!raw) return;
+      const from = raw as Bucket;
+      if (from === onto) return;
+      persistBucketOrder(reorderCategoryBuckets(displayOrder, from, onto));
+    };
+  }
+
+  const categoryByBucket = $derived(
+    presentBuckets.reduce<Partial<Record<Bucket, Category>>>((acc, b) => {
+      acc[b] = {
         name: b,
         summary: data.summaries?.[b] ?? (sourceDigest[b] ?? []).slice(0, 5).map((c) => c.headline),
         news: (filteredDigest[b] ?? []).map((c) => ({
@@ -97,7 +183,9 @@
           isLive: c.isLive,
           tags: c.tags,
         })),
-      })),
+      };
+      return acc;
+    }, {}),
   );
 
 </script>
@@ -111,7 +199,22 @@
 </svelte:head>
 
 <div>
-  {#each categories as category, i}
-    <CategoryRow name={category.name} summary={category.summary} news={category.news} index={i} />
+  {#each displayOrder as bucket, i (bucket)}
+    {@const category = categoryByBucket[bucket]}
+    {#if category}
+      <CategoryRow
+        name={category.name}
+        summary={category.summary}
+        news={category.news}
+        index={i}
+        dragSource={draggingBucket === bucket}
+        dragOver={dragOverBucket === bucket}
+        onPanelDragStart={onPanelDragStart(bucket)}
+        onPanelDragEnd={onPanelDragEnd}
+        onRowDragOver={onRowDragOver(bucket)}
+        onRowDragLeave={onRowDragLeave(bucket)}
+        onRowDrop={onRowDrop(bucket)}
+      />
+    {/if}
   {/each}
 </div>

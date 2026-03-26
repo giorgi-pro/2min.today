@@ -19,9 +19,30 @@
     summary: string[];
     news: NewsItem[];
     index: number;
+    onPanelDragStart?: (e: DragEvent) => void;
+    onPanelDragEnd?: (e: DragEvent) => void;
+    onRowDragOver?: (e: DragEvent) => void;
+    onRowDragLeave?: (e: DragEvent) => void;
+    onRowDrop?: (e: DragEvent) => void;
+    dragSource?: boolean;
+    dragOver?: boolean;
   };
 
-  const { name, summary, news, index }: Props = $props();
+  const {
+    name,
+    summary,
+    news,
+    index,
+    onPanelDragStart,
+    onPanelDragEnd,
+    onRowDragOver,
+    onRowDragLeave,
+    onRowDrop,
+    dragSource = false,
+    dragOver = false,
+  }: Props = $props();
+
+  const panelDraggable = $derived(Boolean(onPanelDragStart));
 
   const MAX_SPEED = 2.5;
 
@@ -51,14 +72,20 @@
     thumbPosition = ratio * Math.max(0, el.clientWidth - thumbWidth - 1);
   }
 
+  function rowCanMarquee(): boolean {
+    const el = scrollEl;
+    return Boolean(el && el.scrollWidth > el.clientWidth);
+  }
+
   function onCategoryMouseMove(e: MouseEvent) {
-    if (!marqueeEnabled || !categoryEl || !scrollable) return;
+    if (!marqueeEnabled || !categoryEl || !rowCanMarquee()) return;
     const rect = categoryEl.getBoundingClientRect();
     marqueeSpeed = ((e.clientX - rect.left) / rect.width - 0.5) * 2 * MAX_SPEED;
   }
 
   function startMarquee() {
-    if (!marqueeEnabled || !scrollEl || !scrollable) return;
+    if (!marqueeEnabled || !scrollEl || !rowCanMarquee()) return;
+    stopMarquee();
     function tick() {
       (scrollEl as HTMLElement).scrollLeft += marqueeSpeed;
       marqueeFrame = requestAnimationFrame(tick);
@@ -74,7 +101,23 @@
     marqueeSpeed = 0;
   }
 
+  let suppressPanelClick = $state(false);
+
+  function handlePanelDragStart(e: DragEvent) {
+    stopMarquee();
+    onPanelDragStart?.(e);
+  }
+
+  function handlePanelDragEnd(e: DragEvent) {
+    onPanelDragEnd?.(e);
+    suppressPanelClick = true;
+    setTimeout(() => {
+      suppressPanelClick = false;
+    }, 400);
+  }
+
   function toggleMarquee(e: MouseEvent) {
+    if (suppressPanelClick) return;
     marqueeEnabled = !marqueeEnabled;
     if (marqueeEnabled) {
       onCategoryMouseMove(e);
@@ -89,13 +132,26 @@
   }
 </script>
 
-<div class="grid border-b-2 border-black" style="grid-template-columns: 30vh 1fr">
+<div
+  class="grid border-b-2 border-black"
+  style="grid-template-columns: 30vh 1fr"
+  role={panelDraggable ? 'group' : undefined}
+  aria-label={panelDraggable ? `${name} category row` : undefined}
+  ondragover={onRowDragOver}
+  ondragleave={onRowDragLeave}
+  ondrop={onRowDrop}
+>
   <CategoryPanel
     {name}
     {summary}
     inverted={index % 2 === 0}
     {pressed}
     {marqueeEnabled}
+    draggable={panelDraggable}
+    dragging={dragSource}
+    dropTarget={dragOver}
+    ondragstart={handlePanelDragStart}
+    ondragend={handlePanelDragEnd}
     bind:el={categoryEl}
     onmouseenter={startMarquee}
     onmouseleave={stopMarquee}
@@ -103,7 +159,11 @@
     onclick={toggleMarquee}
   />
 
-  <div class="relative overflow-hidden">
+  <div
+    class="relative overflow-hidden"
+    role={panelDraggable ? 'presentation' : undefined}
+    ondragover={onRowDragOver}
+  >
     <div
       class="news-scroll flex h-[30vh] overflow-x-scroll overflow-y-hidden divide-x divide-black/10"
       bind:this={scrollEl}
