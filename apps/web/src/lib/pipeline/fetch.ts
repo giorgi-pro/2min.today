@@ -1,21 +1,25 @@
 import { XMLParser } from 'fast-xml-parser';
 import { TwitterApi } from 'twitter-api-v2';
 import { env } from '$env/dynamic/private';
-import type { RawItem, Region } from '$lib/types/digest';
+import { getNewsSources, type NewsSourceRss, type NewsSourceX, type NewsSourceType } from '$lib/config/news-sources';
+import type { NewsSource } from '$lib/config/news-sources';
+import type { RawItem } from '$lib/types/digest';
 
-const RSS_FEEDS: { url: string; source: string; region?: Region }[] = [
-  { url: 'https://feeds.reuters.com/reuters/topNews', source: 'Reuters' },
-  { url: 'https://feeds.reuters.com/reuters/worldNews', source: 'Reuters' },
-  { url: 'https://feeds.reuters.com/reuters/USNews', source: 'Reuters', region: 'usa' },
-  { url: 'https://feeds.reuters.com/reuters/europeanNews', source: 'Reuters', region: 'europe' },
-  { url: 'https://rss.app/feeds/v1.1/tAjLcDBcVDkSVOUI.xml', source: 'AP' },
-  { url: 'https://techcrunch.com/feed/', source: 'TechCrunch' },
-  { url: 'https://feeds.bloomberg.com/markets/news.rss', source: 'Bloomberg' },
-  { url: 'https://feeds.content.dowjones.io/public/rss/mw_topstories', source: 'WSJ' },
-];
+export interface FetchSourceResult {
+  id: string;
+  type: NewsSourceType;
+  enabled: boolean;
+  ok: boolean;
+  itemCount: number;
+  durationMs: number;
+  error?: string;
+}
 
-const X_SEARCH_QUERY =
-  '(news OR breaking OR update OR analysis) lang:en -filter:replies -filter:quote min_faves:50';
+export interface FetchWithDiagnostics {
+  items: RawItem[];
+  sources: FetchSourceResult[];
+  dedupedCount: number;
+}
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -52,84 +56,127 @@ function extractLink(entry: Record<string, any>): string {
   return entry.guid ?? '';
 }
 
-async function fetchRss(): Promise<RawItem[]> {
-  const items: RawItem[] = [];
+async function fetchOneRss(source: NewsSourceRss): Promise<RawItem[]> {
+  const res = await fetch(source.url, { signal: AbortSignal.timeout(10_000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const xml = await res.text();
+  const parsed = parser.parse(xml);
 
-  const results = await Promise.allSettled(
-    RSS_FEEDS.map(async ({ url, source, region }) => {
-      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
-      if (!res.ok) return [];
-      const xml = await res.text();
-      const parsed = parser.parse(xml);
+  const entries: Record<string, any>[] = parsed?.rss?.channel?.item ?? parsed?.feed?.entry ?? [];
 
-      const entries: Record<string, any>[] =
-        parsed?.rss?.channel?.item ??
-        parsed?.feed?.entry ??
-        [];
+  const arr = Array.isArray(entries) ? entries : [entries];
 
-      const arr = Array.isArray(entries) ? entries : [entries];
-
-      return arr.map((entry): RawItem => ({
-        id: extractLink(entry) || `${source}-${entry.title}`,
-        title: typeof entry.title === 'string' ? entry.title : entry.title?.['#text'] ?? '',
-        content: extractContent(entry),
-        source,
-        url: extractLink(entry),
-        published: entry.pubDate ? new Date(entry.pubDate) : entry.published ? new Date(entry.published) : new Date(),
-        ...(region ? { feedRegion: region } : {}),
-      }));
-    }),
-  );
-
-  for (const result of results) {
-    if (result.status === 'fulfilled' && result.value) {
-      items.push(...result.value);
-    }
-  }
-
-  return items;
+  return arr.map((entry): RawItem => ({
+    id: extractLink(entry) || `${source.label}-${entry.title}`,
+    title: typeof entry.title === 'string' ? entry.title : entry.title?.['#text'] ?? '',
+    content: extractContent(entry),
+    source: source.label,
+    url: extractLink(entry),
+    published: entry.pubDate ? new Date(entry.pubDate) : entry.published ? new Date(entry.published) : new Date(),
+    ...(source.region ? { feedRegion: source.region } : {}),
+  }));
 }
 
-async function fetchTweets(): Promise<RawItem[]> {
+async function fetchOneX(source: NewsSourceX): Promise<RawItem[]> {
   const bearerToken = env.X_BEARER_TOKEN;
-  if (!bearerToken) return [];
+  if (!bearerToken) throw new Error('X_BEARER_TOKEN not set');
+
+  const client = new TwitterApi(bearerToken).readOnly;
+  const since = new Date();
+  since.setUTCDate(since.getUTCDate() - source.since_days);
+  const sinceDate = since.toISOString().split('T')[0];
+
+  const result = await client.v2.search(source.query, {
+    max_results: source.max_results,
+    sort_order: 'relevancy',
+    'tweet.fields': ['created_at', 'author_id', 'text'],
+    start_time: `${sinceDate}T00:00:00Z`,
+  });
+
+  return (result.data?.data ?? []).map((tweet): RawItem => ({
+    id: tweet.id,
+    title: tweet.text.slice(0, 120),
+    content: stripHtml(tweet.text).slice(0, 800),
+    source: 'X',
+    url: `https://x.com/i/status/${tweet.id}`,
+    published: tweet.created_at ? new Date(tweet.created_at) : new Date(),
+  }));
+}
+
+async function runSource(source: NewsSource): Promise<{ items: RawItem[]; diag: FetchSourceResult }> {
+  const t0 = Date.now();
+  if (!source.enabled) {
+    return {
+      items: [],
+      diag: {
+        id: source.id,
+        type: source.type,
+        enabled: false,
+        ok: true,
+        itemCount: 0,
+        durationMs: 0,
+      },
+    };
+  }
 
   try {
-    const client = new TwitterApi(bearerToken).readOnly;
-
-    const yesterday = new Date();
-    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-    const sinceDate = yesterday.toISOString().split('T')[0];
-
-    const result = await client.v2.search(X_SEARCH_QUERY, {
-      max_results: 20,
-      sort_order: 'relevancy',
-      'tweet.fields': ['created_at', 'author_id', 'text'],
-      start_time: `${sinceDate}T00:00:00Z`,
-    });
-
-    return (result.data?.data ?? []).map((tweet): RawItem => ({
-      id: tweet.id,
-      title: tweet.text.slice(0, 120),
-      content: stripHtml(tweet.text).slice(0, 800),
-      source: 'X',
-      url: `https://x.com/i/status/${tweet.id}`,
-      published: tweet.created_at ? new Date(tweet.created_at) : new Date(),
-    }));
+    const items =
+      source.type === 'rss' ? await fetchOneRss(source) : await fetchOneX(source);
+    const durationMs = Date.now() - t0;
+    return {
+      items,
+      diag: {
+        id: source.id,
+        type: source.type,
+        enabled: true,
+        ok: true,
+        itemCount: items.length,
+        durationMs,
+      },
+    };
   } catch (e) {
-    console.error('X API fetch failed:', e);
-    return [];
+    const durationMs = Date.now() - t0;
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(`[fetch] ${source.id} failed:`, e);
+    return {
+      items: [],
+      diag: {
+        id: source.id,
+        type: source.type,
+        enabled: true,
+        ok: false,
+        itemCount: 0,
+        durationMs,
+        error: msg,
+      },
+    };
   }
 }
 
-export async function fetchRawItems(): Promise<RawItem[]> {
-  const [rssItems, tweets] = await Promise.all([fetchRss(), fetchTweets()]);
-  const all = [...rssItems, ...tweets];
+export async function fetchRawItemsWithDiagnostics(): Promise<FetchWithDiagnostics> {
+  const allSources = getNewsSources();
+  const settled = await Promise.all(allSources.map((s) => runSource(s)));
+
+  const items: RawItem[] = [];
+  const sources: FetchSourceResult[] = [];
+  for (const { items: chunk, diag } of settled) {
+    items.push(...chunk);
+    sources.push(diag);
+  }
 
   const seen = new Set<string>();
-  return all.filter((item) => {
+  const deduped = items.filter((item) => {
     if (seen.has(item.id)) return false;
     seen.add(item.id);
     return true;
   });
+
+  return { items: deduped, sources, dedupedCount: deduped.length };
+}
+
+export async function fetchRawItems(): Promise<RawItem[]> {
+  const { items, sources, dedupedCount } = await fetchRawItemsWithDiagnostics();
+  const rawItemSum = sources.reduce((a, s) => a + s.itemCount, 0);
+  console.log('[fetch]', JSON.stringify({ sources, rawItemSum, dedupedCount }));
+  return items;
 }

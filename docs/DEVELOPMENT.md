@@ -53,6 +53,16 @@ curl "http://localhost:3000/api/digest?secret=${CRON_SECRET}"
 
 Use the same `CRON_SECRET` as in `.env`.
 
+### Inspect ingestion only (no embeddings / pipeline)
+
+Runs the same fetch as the digest but returns per-source stats and does not write to the database:
+
+```bash
+curl "http://localhost:3000/api/digest/sources?secret=${CRON_SECRET}"
+```
+
+Edit **`apps/web/src/lib/config/news-sources.yaml`** to enable or disable RSS/X sources; restart dev if the loader was already cached.
+
 ## 5. Test the breaking route
 
 ```bash

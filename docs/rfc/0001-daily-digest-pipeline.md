@@ -39,8 +39,10 @@ The pipeline must always produce **exactly one daily edition** at 00:00 UTC, zer
     ├── lib/supabase/server.ts                ← server-only Supabase client (service role; pipeline + cron)
     ├── lib/supabase/client.ts                ← anon + public URL (homepage `load`; same module is browser-safe if needed later)
     ├── lib/config/
-    │   ├── buckets.yaml  ← single source of truth for bucket names + anchor text
-    │   └── buckets.ts    ← YAML loader; exports BUCKET_ANCHORS + Bucket type
+    │   ├── buckets.yaml       ← bucket names + anchor text
+    │   ├── buckets.ts       ← YAML loader; exports BUCKET_ANCHORS + Bucket type
+    │   ├── news-sources.yaml ← RSS + X sources; per-source `enabled`
+    │   └── news-sources.ts  ← YAML loader; exports NEWS_SOURCES + types
     ├── lib/pipeline/
     │   ├── index.ts      ← wires all steps into pipeline.run(supabase)
     │   ├── fetch.ts      ← returns RawItem[]
@@ -76,7 +78,7 @@ export const supabase = createClient(
 
 > Public reads use **`PUBLIC_SUPABASE_URL`** + **`PUBLIC_SUPABASE_ANON_KEY`** via `lib/supabase/client.ts` (see §9). Those variables are safe to expose to the browser; the cron pipeline uses **only** `server.ts` and must never import the anon client.
 
-> RSS feed URLs are hardcoded inside `lib/pipeline/fetch.ts` — they are static, public, and never change. Putting them in env would add noise with no benefit.
+> RSS and X ingestion are configured in **`lib/config/news-sources.yaml`** (loaded by `lib/config/news-sources.ts`). Each entry has `enabled`, `type` (`rss` | `x`), and type-specific fields. `lib/pipeline/fetch.ts` reads that list, merges results, dedupes by `id`, and logs per-source diagnostics. **`GET /api/digest/sources?secret=CRON_SECRET`** runs fetch only (no embed/summarize/upsert) and returns JSON diagnostics for debugging.
 
 ## 2. Types (`lib/types/digest.ts`)
 
@@ -208,21 +210,13 @@ const cleanContent = itemContent
 
 Feeds that ship `content:encoded` or Atom full text (Reuters, AP, TechCrunch, Bloomberg, etc., **when available**) yield richer `content`; teaser-only feeds remain **usable** thanks to **clustering + X** in the same pool.
 
-**RSS sources** (hard-coded URLs, no env var needed):
-- Reuters, AP, TechCrunch, WSJ, Bloomberg.
+**Source list** — `news-sources.yaml`: default entries mirror the former hard-coded feeds (Reuters, AP, TechCrunch, Bloomberg, WSJ) plus one `type: x` block (query, `max_results`, `since_days`). Toggle `enabled: false` on any row to skip that source without code changes.
 
-**X / Twitter** — Official X API v2 Basic tier (free, no credit card).
-- Library: `@twitter-api-v2` (zero extra deps beyond existing stack).
-- Endpoint: Recent Search (last 7 days window, filter to yesterday via `since`).
-- Exact query:
-  ```
-  (news OR breaking OR update OR analysis) lang:en -filter:replies -filter:quote min_faves:50
-  ```
-- Pull top 20 results sorted by relevance/recency.
-- Budget: ~20–40 items/day well within the 10,000 tweet/month Basic tier limit.
-- Each tweet is mapped to a `RawItem` identically to RSS items — no special handling, feeds straight into embed → cluster.
+**X / Twitter** — Official X API v2 Basic tier. Library: `@twitter-api-v2`. Recent Search with `start_time` derived from `since_days` on the YAML `x` entry. Requires `X_BEARER_TOKEN` in env.
 
-Return `RawItem[]` (deduplicate by URL/tweet ID inside this function).
+**Exports:** `fetchRawItems()` returns deduped `RawItem[]`. `fetchRawItemsWithDiagnostics()` returns `{ items, sources, dedupedCount }` with per-source timing, counts, and errors for logs and **`GET /api/digest/sources`**.
+
+Return `RawItem[]` from `fetchRawItems` (deduplicate by URL/tweet ID inside this module).
 
 ### `embed.ts`
 

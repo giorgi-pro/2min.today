@@ -41,7 +41,7 @@ cd apps/web && pnpm check-types   # runs svelte-check
 ### Backend Pipeline (`apps/web/src/routes/api/digest/+server.ts`)
 
 The digest API is the core of the product:
-1. Fetch RSS feeds (Reuters, AP, TechCrunch)
+1. Fetch RSS + X from `apps/web/src/lib/config/news-sources.yaml` via `lib/pipeline/fetch.ts` (fetch-only diagnostics: `GET /api/digest/sources?secret=` same as digest cron)
 2. Generate Gemini embeddings per story
 3. Deduplicate via cosine similarity against existing Supabase pgvector entries
 4. Summarize unique stories with Gemini 2.5 Flash (3 bullets + "Why it Matters")

@@ -1,0 +1,60 @@
+# News ingestion for digest + breaking pipelines (fetch.ts).
+# Toggle `enabled` per source without code changes.
+
+sources:
+  - id: reuters-top
+    type: rss
+    enabled: false
+    url: https://feeds.reuters.com/reuters/topNews
+    label: Reuters
+
+  - id: reuters-world
+    type: rss
+    enabled: false
+    url: https://feeds.reuters.com/reuters/worldNews
+    label: Reuters
+
+  - id: reuters-us
+    type: rss
+    enabled: false
+    url: https://feeds.reuters.com/reuters/USNews
+    label: Reuters
+    region: usa
+
+  - id: reuters-europe
+    type: rss
+    enabled: false
+    url: https://feeds.reuters.com/reuters/europeanNews
+    label: Reuters
+    region: europe
+
+  - id: ap
+    type: rss
+    enabled: false
+    url: https://rss.app/feeds/v1.1/tAjLcDBcVDkSVOUI.xml
+    label: AP
+
+  - id: techcrunch
+    type: rss
+    enabled: false
+    url: https://techcrunch.com/feed/
+    label: TechCrunch
+
+  - id: bloomberg
+    type: rss
+    enabled: false
+    url: https://feeds.bloomberg.com/markets/news.rss
+    label: Bloomberg
+
+  - id: wsj
+    type: rss
+    enabled: false
+    url: https://feeds.content.dowjones.io/public/rss/mw_topstories
+    label: WSJ
+
+  - id: x-search
+    type: x
+    enabled: true
+    query: '(news OR breaking OR update OR analysis) lang:en -filter:replies -filter:quote min_faves:50'
+    max_results: 20
+    since_days: 1

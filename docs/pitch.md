@@ -16,7 +16,7 @@ Aligned with [ADR-001](./adr/0001-backend%20technology%20stack%20selection.md), 
 | :--- | :--- |
 | **App shell** | **SvelteKit 5** (`apps/web`): server routes for APIs, SSR `load` for the homepage digest — one TypeScript codebase, no separate backend service. |
 | **UI** | **Tailwind** + shared **`@2min.today/ui`** (`packages/ui`). Editorial palette and surfaces in `apps/web/tailwind.config.ts` (tomato / teal / slate, tonal layers); **Inter** as the primary face (variable opsz/weight via Google Fonts in `app.html`). |
-| **Ingestion** | **RSS** (agencies wired in `lib/pipeline/fetch.ts`, e.g. Reuters, AP, TechCrunch) plus **X API v2** recent search for short-form signal — same fetch path the RFC describes. |
+| **Ingestion** | **RSS** + **X API v2** recent search, configured in `apps/web/src/lib/config/news-sources.yaml` (per-source `enabled`); `lib/pipeline/fetch.ts` merges and dedupes. |
 | **Deduping** | Per-item **Gemini embeddings** (`gemini-embedding-2-preview`), **cosine similarity**, and **Supabase `pgvector`** so multiple articles about one event collapse into a single cluster. |
 | **Synthesis** | **Gemini 2.5 Flash** (`gemini-2.5-flash`) with **structured JSON** (`headline`, exactly **three** bullets, **`why_it_matters`**) — no ad-hoc prose parsing. |
 | **Persistence** | **Supabase** `clusters` (+ `bucket_anchors` seeded from `apps/web/src/lib/config/buckets.yaml`). Service role for the pipeline; anon + RLS for public reads. |
