@@ -2,31 +2,17 @@
 # Toggle `enabled` per source without code changes.
 
 sources:
-  - id: reuters-top
+  - id: reuters-google
     type: rss
-    enabled: false
-    url: https://feeds.reuters.com/reuters/topNews
+    enabled: true
+    url: 'https://news.google.com/rss/search?q=site:reuters.com&hl=en-US&gl=US&ceid=US:en'
     label: Reuters
 
-  - id: reuters-world
+  - id: bbc-world
     type: rss
     enabled: false
-    url: https://feeds.reuters.com/reuters/worldNews
-    label: Reuters
-
-  - id: reuters-us
-    type: rss
-    enabled: false
-    url: https://feeds.reuters.com/reuters/USNews
-    label: Reuters
-    region: usa
-
-  - id: reuters-europe
-    type: rss
-    enabled: false
-    url: https://feeds.reuters.com/reuters/europeanNews
-    label: Reuters
-    region: europe
+    url: https://feeds.bbci.co.uk/news/world/rss.xml
+    label: BBC
 
   - id: ap
     type: rss
@@ -54,7 +40,7 @@ sources:
 
   - id: x-search
     type: x
-    enabled: true
+    enabled: false
     query: '(news OR breaking OR update OR analysis) lang:en -filter:replies -filter:quote min_faves:50'
     max_results: 20
     since_days: 1
