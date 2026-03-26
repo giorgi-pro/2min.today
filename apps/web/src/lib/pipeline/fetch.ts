@@ -1,8 +1,10 @@
 import { XMLParser } from 'fast-xml-parser';
 import { TwitterApi } from 'twitter-api-v2';
+import type { Logger } from 'pino';
 import { env } from '$env/dynamic/private';
 import { getNewsSources, type NewsSourceRss, type NewsSourceX, type NewsSourceType } from '$lib/config/news-sources';
 import type { NewsSource } from '$lib/config/news-sources';
+import { silentLogger } from '$lib/server/digest/logger';
 import type { RawItem } from '$lib/types/digest';
 
 export interface FetchSourceResult {
@@ -103,7 +105,10 @@ async function fetchOneX(source: NewsSourceX): Promise<RawItem[]> {
   }));
 }
 
-async function runSource(source: NewsSource): Promise<{ items: RawItem[]; diag: FetchSourceResult }> {
+async function runSource(
+  source: NewsSource,
+  log: Logger,
+): Promise<{ items: RawItem[]; diag: FetchSourceResult }> {
   const t0 = Date.now();
   if (!source.enabled) {
     return {
@@ -137,7 +142,7 @@ async function runSource(source: NewsSource): Promise<{ items: RawItem[]; diag: 
   } catch (e) {
     const durationMs = Date.now() - t0;
     const msg = e instanceof Error ? e.message : String(e);
-    console.error(`[fetch] ${source.id} failed:`, e);
+    log.error({ sourceId: source.id, errMessage: msg }, 'fetch source failed');
     return {
       items: [],
       diag: {
@@ -153,9 +158,10 @@ async function runSource(source: NewsSource): Promise<{ items: RawItem[]; diag: 
   }
 }
 
-export async function fetchRawItemsWithDiagnostics(): Promise<FetchWithDiagnostics> {
+export async function fetchRawItemsWithDiagnostics(log?: Logger): Promise<FetchWithDiagnostics> {
+  const l = log ?? silentLogger;
   const allSources = getNewsSources();
-  const settled = await Promise.all(allSources.map((s) => runSource(s)));
+  const settled = await Promise.all(allSources.map((s) => runSource(s, l)));
 
   const items: RawItem[] = [];
   const sources: FetchSourceResult[] = [];
@@ -174,9 +180,10 @@ export async function fetchRawItemsWithDiagnostics(): Promise<FetchWithDiagnosti
   return { items: deduped, sources, dedupedCount: deduped.length };
 }
 
-export async function fetchRawItems(): Promise<RawItem[]> {
-  const { items, sources, dedupedCount } = await fetchRawItemsWithDiagnostics();
+export async function fetchRawItems(log?: Logger): Promise<RawItem[]> {
+  const l = log ?? silentLogger;
+  const { items, sources, dedupedCount } = await fetchRawItemsWithDiagnostics(l);
   const rawItemSum = sources.reduce((a, s) => a + s.itemCount, 0);
-  console.log('[fetch]', JSON.stringify({ sources, rawItemSum, dedupedCount }));
+  l.info({ sources, rawItemSum, dedupedCount }, 'fetch complete');
   return items;
 }

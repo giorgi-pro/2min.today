@@ -1,27 +1,36 @@
+import { randomUUID } from 'node:crypto';
 import { json } from '@sveltejs/kit';
 import { fetchRawItemsWithDiagnostics } from '$lib/pipeline/fetch';
+import { digestLogger } from '$lib/server/digest/logger';
 import { env } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url }) => {
   if (url.searchParams.get('secret') !== env.CRON_SECRET) {
+    digestLogger.debug('digest/sources unauthorized');
     return new Response('Unauthorized', { status: 401 });
   }
 
+  const runId = randomUUID();
+  const log = digestLogger.child({ runId, route: 'digest-sources' });
+
   try {
-    const { items, sources, dedupedCount } = await fetchRawItemsWithDiagnostics();
+    const { sources, dedupedCount } = await fetchRawItemsWithDiagnostics(log);
+    const rawItemSum = sources.reduce((a, s) => a + s.itemCount, 0);
+    log.info({ rawItemSum, dedupedItems: dedupedCount }, 'digest/sources fetch done');
     return json({
       status: 'ok',
       sources,
-      rawItemSum: sources.reduce((a, s) => a + s.itemCount, 0),
+      rawItemSum,
       dedupedItems: dedupedCount,
     });
   } catch (e) {
-    console.error('[digest/sources] fetch failed:', e);
+    const errMessage = e instanceof Error ? e.message : 'Unknown error';
+    log.error({ err: errMessage }, 'digest/sources fetch failed');
     return json(
       {
         status: 'error',
-        message: e instanceof Error ? e.message : 'Unknown error',
+        message: errMessage,
       },
       { status: 500 },
     );

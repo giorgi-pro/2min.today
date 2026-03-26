@@ -1,7 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import type { Logger } from 'pino';
 import { env } from '$env/dynamic/private';
 import { withFlashGenerationRetry } from '$lib/server/digest/flash-generate';
 import { getFlashModel } from '$lib/server/digest/models';
+import { silentLogger } from '$lib/server/digest/logger';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Bucket } from '$lib/config/buckets';
 import type { SummarizedCluster, ClassifiedCluster } from '$lib/types/digest';
@@ -23,8 +25,13 @@ const SIMILARITY_THRESHOLD = 0.65;
 export async function classifyClusters(
   clusters: SummarizedCluster[],
   supabase: SupabaseClient,
+  log?: Logger,
 ): Promise<ClassifiedCluster[]> {
+  const l = log ?? silentLogger;
   if (clusters.length === 0) return [];
+
+  const t0 = Date.now();
+  l.info({ clusterCount: clusters.length }, 'classify start');
 
   const { data: anchors, error } = await supabase.from('bucket_anchors').select('bucket, embedding');
 
@@ -32,12 +39,14 @@ export async function classifyClusters(
     throw new Error(`Failed to load bucket anchors: ${error?.message ?? 'no rows'}`);
   }
 
+  l.info({ anchorCount: anchors.length }, 'classify anchors loaded');
+
   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY ?? '');
   const model = genAI.getGenerativeModel({ model: getFlashModel() });
 
   const results: ClassifiedCluster[] = [];
 
-  for (const cluster of clusters) {
+  for (const [clusterIndex, cluster] of clusters.entries()) {
     let bestBucket = '';
     let bestSim = -1;
 
@@ -56,6 +65,8 @@ export async function classifyClusters(
         categoryLine: null,
       });
     } else {
+      l.debug({ clusterIndex, clusterId: cluster.id }, 'classify emerging flash');
+
       const prompt = `Generate a concise category label (max 8 words) for this news cluster:\n\nHeadline: ${cluster.headline}\nBullets: ${cluster.bullets.join('; ')}\n\nReturn ONLY the label, no quotes, no explanation.`;
 
       const categoryLine = await withFlashGenerationRetry(async () => {
@@ -71,5 +82,6 @@ export async function classifyClusters(
     }
   }
 
+  l.info({ classifiedCount: results.length, durationMs: Date.now() - t0 }, 'classify complete');
   return results;
 }

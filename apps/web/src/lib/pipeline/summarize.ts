@@ -1,7 +1,9 @@
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
+import type { Logger } from 'pino';
 import { env } from '$env/dynamic/private';
 import { withFlashGenerationRetry } from '$lib/server/digest/flash-generate';
 import { getFlashModel } from '$lib/server/digest/models';
+import { silentLogger } from '$lib/server/digest/logger';
 import { parseRegion } from '$lib/types/digest';
 import type { Cluster, SummarizedCluster, Credit, EmbeddedItem } from '$lib/types/digest';
 
@@ -29,8 +31,12 @@ function normalizeSummaryTags(raw: unknown): string[] {
   return out;
 }
 
-export async function summarizeClusters(clusters: Cluster[]): Promise<SummarizedCluster[]> {
+export async function summarizeClusters(clusters: Cluster[], log?: Logger): Promise<SummarizedCluster[]> {
+  const l = log ?? silentLogger;
   if (clusters.length === 0) return [];
+
+  const t0 = Date.now();
+  l.info({ clusterCount: clusters.length, model: getFlashModel() }, 'summarize start');
 
   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY ?? '');
   const model = genAI.getGenerativeModel({
@@ -53,7 +59,9 @@ export async function summarizeClusters(clusters: Cluster[]): Promise<Summarized
 
   const results: SummarizedCluster[] = [];
 
-  for (const cluster of clusters) {
+  for (const [clusterIndex, cluster] of clusters.entries()) {
+    l.debug({ clusterIndex, clusterId: cluster.id }, 'summarize cluster');
+
     const prompt = `You are a brutalist news editor for 2min.today.
 
 Cluster of reports:
@@ -96,5 +104,6 @@ Rules: "usa" = US-domestic stories only. "americas" = multi-country Americas or 
     });
   }
 
+  l.info({ summarizedCount: results.length, durationMs: Date.now() - t0 }, 'summarize complete');
   return results;
 }
