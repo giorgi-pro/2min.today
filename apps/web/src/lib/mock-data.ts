@@ -1,10 +1,11 @@
-import type { Region } from '$lib/types/digest';
+import type { Region, Credit } from '$lib/types/digest';
 
 export interface NewsItem {
   title: string
   content: string
   whyItMatters: string
   source: string
+  credits: Credit[]
   isBreaking: boolean
   isLive?: boolean
   region: Region
@@ -33,6 +34,10 @@ export const mockData: Category[] = [
           'A 7.4-magnitude earthquake struck off the coast of Kyushu at 03:17 local time. JMA has issued a tsunami advisory for coastal prefectures. Shinkansen services on the Kagoshima line are suspended and authorities report power outages affecting 40,000 households.',
         whyItMatters: '',
         source: 'Reuters',
+        credits: [
+          { source: 'Reuters', url: 'https://reuters.com/world/asia-pacific/earthquake-japan-2026' },
+          { source: 'AP', url: 'https://apnews.com/article/japan-earthquake-kyushu-2026' },
+        ],
         isBreaking: false,
         isLive: true,
         region: 'global',
@@ -44,6 +49,11 @@ export const mockData: Category[] = [
         whyItMatters:
           'Even a temporary halt to hostilities could unlock humanitarian corridors and set the framework for broader peace negotiations backed by the G7.',
         source: 'Reuters',
+        credits: [
+          { source: 'Reuters', url: 'https://reuters.com/world/europe/ukraine-russia-ceasefire-talks-istanbul-2026' },
+          { source: 'AP', url: 'https://apnews.com/article/ukraine-russia-ceasefire-istanbul' },
+          { source: 'Bloomberg', url: 'https://bloomberg.com/news/articles/ukraine-russia-talks' },
+        ],
         isBreaking: true,
         region: 'europe',
       },
@@ -54,6 +64,10 @@ export const mockData: Category[] = [
         whyItMatters:
           'Any sustained escalation between two nuclear-armed states would destabilize the entire South Asian region and draw immediate responses from China and the US.',
         source: 'AP',
+        credits: [
+          { source: 'AP', url: 'https://apnews.com/article/india-pakistan-kashmir-airstrike' },
+          { source: 'Reuters', url: 'https://reuters.com/world/india/india-recalls-ambassador-pakistan' },
+        ],
         isBreaking: false,
         region: 'global',
       },
@@ -64,6 +78,10 @@ export const mockData: Category[] = [
         whyItMatters:
           "The crisis is fueling far-right electoral momentum across Europe and straining the EU's Schengen framework, which faces border-closure threats from Italy and Greece.",
         source: 'AP',
+        credits: [
+          { source: 'AP', url: 'https://apnews.com/article/eu-migration-summit-libya-drownings' },
+          { source: 'Reuters', url: 'https://reuters.com/world/europe/eu-emergency-migration-summit' },
+        ],
         isBreaking: false,
         region: 'europe',
       },
@@ -74,6 +92,10 @@ export const mockData: Category[] = [
         whyItMatters:
           'The exercise is widely read as a direct signal to Manila and Washington ahead of planned US-Philippines bilateral defense treaty talks next month.',
         source: 'Reuters',
+        credits: [
+          { source: 'Reuters', url: 'https://reuters.com/world/china/pla-navy-south-china-sea-drills-2026' },
+          { source: 'AP', url: 'https://apnews.com/article/china-south-china-sea-naval-drills' },
+        ],
         isBreaking: false,
         region: 'global',
       },
@@ -84,6 +106,11 @@ export const mockData: Category[] = [
         whyItMatters:
           "It is the Council's first unanimous genocide designation since Rwanda and sets a precedent for faster multilateral intervention in ongoing conflicts.",
         source: 'Reuters',
+        credits: [
+          { source: 'Reuters', url: 'https://reuters.com/world/africa/un-security-council-sudan-peacekeepers' },
+          { source: 'AP', url: 'https://apnews.com/article/un-sudan-darfur-genocide-peacekeepers' },
+          { source: 'Bloomberg', url: 'https://bloomberg.com/news/articles/un-sudan-genocide-ruling' },
+        ],
         isBreaking: false,
         region: 'global',
       },
@@ -105,6 +132,10 @@ export const mockData: Category[] = [
           'Jerome Powell submitted his resignation citing personal reasons. The White House confirmed it will name an interim chair within 48 hours. US futures dropped 1.4% on the news; the dollar weakened against major currencies in early Asian trading.',
         whyItMatters: '',
         source: 'AP',
+        credits: [
+          { source: 'AP', url: 'https://apnews.com/article/powell-resigns-fed-chair' },
+          { source: 'WSJ', url: 'https://wsj.com/economy/central-banking/powell-resignation' },
+        ],
         isBreaking: false,
         isLive: true,
         region: 'usa',
@@ -116,6 +147,11 @@ export const mockData: Category[] = [
         whyItMatters:
           'A longer hold keeps mortgage rates elevated, pressures commercial real estate refinancing, and delays relief for over-leveraged corporate borrowers facing wall-of-maturity deadlines.',
         source: 'WSJ',
+        credits: [
+          { source: 'WSJ', url: 'https://wsj.com/economy/central-banking/fed-rate-cut-pause' },
+          { source: 'Bloomberg', url: 'https://bloomberg.com/news/articles/fed-powell-rate-pause' },
+          { source: 'Reuters', url: 'https://reuters.com/business/finance/fed-signals-rate-cut-pause' },
+        ],
         isBreaking: true,
         region: 'usa',
       },
@@ -126,6 +162,11 @@ export const mockData: Category[] = [
         whyItMatters:
           "NVIDIA's dominance in AI training hardware is now so entrenched that its valuation is effectively a proxy for market confidence in the entire AI buildout cycle.",
         source: 'Bloomberg',
+        credits: [
+          { source: 'Bloomberg', url: 'https://bloomberg.com/news/articles/nvidia-4-trillion-market-cap' },
+          { source: 'Reuters', url: 'https://reuters.com/technology/nvidia-crosses-4-trillion' },
+          { source: 'TechCrunch', url: 'https://techcrunch.com/2026/nvidia-4t-valuation' },
+        ],
         isBreaking: false,
         region: 'usa',
       },
@@ -136,6 +177,10 @@ export const mockData: Category[] = [
         whyItMatters:
           "The acquisition closes the last major gap in Amazon's fulfillment stack and sharpens its competitive edge against Shopify and TikTok Shop, both of which have been poaching third-party merchants.",
         source: 'AP',
+        credits: [
+          { source: 'AP', url: 'https://apnews.com/article/amazon-deliverr-acquisition' },
+          { source: 'Bloomberg', url: 'https://bloomberg.com/news/articles/amazon-deliverr-deal' },
+        ],
         isBreaking: false,
         region: 'usa',
       },
@@ -146,6 +191,10 @@ export const mockData: Category[] = [
         whyItMatters:
           'Lower oil prices feed directly into transport and manufacturing costs, providing central banks with additional room to cut rates without stoking energy-driven inflation.',
         source: 'Reuters',
+        credits: [
+          { source: 'Reuters', url: 'https://reuters.com/business/energy/opec-output-increase-april' },
+          { source: 'Bloomberg', url: 'https://bloomberg.com/energy/opec-production-hike' },
+        ],
         isBreaking: false,
         region: 'middle-east',
       },
@@ -156,6 +205,10 @@ export const mockData: Category[] = [
         whyItMatters:
           'Normalized shipping rates will ease goods inflation in Europe and reduce inventory costs for manufacturers who spent 2024 over-ordering to buffer against transit delays.',
         source: 'Bloomberg',
+        credits: [
+          { source: 'Bloomberg', url: 'https://bloomberg.com/news/articles/shipping-rates-drop-red-sea' },
+          { source: 'Reuters', url: 'https://reuters.com/business/shipping-rates-suez-return' },
+        ],
         isBreaking: false,
         region: 'global',
       },
@@ -178,6 +231,12 @@ export const mockData: Category[] = [
         whyItMatters:
           'A 1M-token context window enables entire codebases, legal contracts, and research corpora to be processed in a single query, fundamentally altering enterprise software workflows.',
         source: 'TechCrunch',
+        credits: [
+          { source: 'TechCrunch', url: 'https://techcrunch.com/2026/openai-gpt5-launch' },
+          { source: 'Bloomberg', url: 'https://bloomberg.com/news/articles/openai-gpt5-release' },
+          { source: 'Reuters', url: 'https://reuters.com/technology/openai-gpt5-announcement' },
+          { source: 'WSJ', url: 'https://wsj.com/tech/ai/openai-gpt5-context-window' },
+        ],
         isBreaking: true,
         region: 'usa',
       },
@@ -188,6 +247,10 @@ export const mockData: Category[] = [
         whyItMatters:
           'Apple entering the foldable segment will mainstream the form factor and pressure Samsung and Google to accelerate next-generation Galaxy and Pixel Fold updates.',
         source: 'TechCrunch',
+        credits: [
+          { source: 'TechCrunch', url: 'https://techcrunch.com/2026/apple-foldable-iphone-production' },
+          { source: 'Bloomberg', url: 'https://bloomberg.com/news/articles/apple-foldable-iphone-clover' },
+        ],
         isBreaking: false,
         region: 'global',
       },
@@ -198,6 +261,10 @@ export const mockData: Category[] = [
         whyItMatters:
           'The enforcement phase sets the first binding global legal standard for AI deployment, compelling multinationals to update model governance practices worldwide to satisfy EU requirements.',
         source: 'Reuters',
+        credits: [
+          { source: 'Reuters', url: 'https://reuters.com/technology/eu-ai-act-enforcement-begins' },
+          { source: 'AP', url: 'https://apnews.com/article/eu-ai-act-high-risk-enforcement' },
+        ],
         isBreaking: false,
         region: 'europe',
       },
@@ -208,6 +275,11 @@ export const mockData: Category[] = [
         whyItMatters:
           'It is the largest successful SWIFT breach since Bangladesh Bank in 2016 and demonstrates that critical financial infrastructure remains vulnerable despite a decade of post-incident hardening.',
         source: 'AP',
+        credits: [
+          { source: 'AP', url: 'https://apnews.com/article/swift-hack-lazarus-central-banks' },
+          { source: 'Reuters', url: 'https://reuters.com/technology/swift-breach-340-million-stolen' },
+          { source: 'Bloomberg', url: 'https://bloomberg.com/news/articles/north-korea-swift-hack' },
+        ],
         isBreaking: false,
         region: 'global',
       },
@@ -218,6 +290,11 @@ export const mockData: Category[] = [
         whyItMatters:
           'Full reusability of both stages is the engineering prerequisite for the cost structure that makes Mars missions and NASA Artemis lunar contracts commercially viable.',
         source: 'TechCrunch',
+        credits: [
+          { source: 'TechCrunch', url: 'https://techcrunch.com/2026/spacex-starship-orbital-mission' },
+          { source: 'Reuters', url: 'https://reuters.com/science/spacex-starship-full-orbital-success' },
+          { source: 'AP', url: 'https://apnews.com/article/starship-orbital-both-stages-caught' },
+        ],
         isBreaking: false,
         region: 'usa',
       },
@@ -240,6 +317,10 @@ export const mockData: Category[] = [
         whyItMatters:
           'An affordable early-detection blood test could enable preventive drug interventions to begin well before irreversible neurodegeneration, fundamentally changing clinical trial design.',
         source: 'Nature',
+        credits: [
+          { source: 'Nature', url: 'https://nature.com/articles/alzheimers-blood-biomarker-2026' },
+          { source: 'Reuters', url: 'https://reuters.com/science/alzheimers-blood-test-15-years-early' },
+        ],
         isBreaking: false,
         region: 'europe',
       },
@@ -250,6 +331,11 @@ export const mockData: Category[] = [
         whyItMatters:
           'If current rates persist, sea-level rise projections for 2100 must be revised upward by 15–25 cm, redrawing flood-risk maps for 300 million coastal residents.',
         source: 'Science',
+        credits: [
+          { source: 'Science', url: 'https://science.org/doi/antarctic-ice-loss-2026' },
+          { source: 'NASA', url: 'https://nasa.gov/science/icesat2-antarctic-findings' },
+          { source: 'AP', url: 'https://apnews.com/article/antarctic-ice-sheet-accelerating-loss' },
+        ],
         isBreaking: false,
         region: 'global',
       },
@@ -260,6 +346,11 @@ export const mockData: Category[] = [
         whyItMatters:
           'While not confirmation of life, preserved organics in a site with ancient water exposure significantly raises the scientific probability that Mars once harbored microbial life.',
         source: 'NASA',
+        credits: [
+          { source: 'NASA', url: 'https://nasa.gov/perseverance/jezero-organics-confirmed' },
+          { source: 'Science', url: 'https://science.org/doi/mars-organic-molecules-jezero' },
+          { source: 'Reuters', url: 'https://reuters.com/science/perseverance-mars-organics' },
+        ],
         isBreaking: false,
         region: 'usa',
       },
@@ -270,6 +361,11 @@ export const mockData: Category[] = [
         whyItMatters:
           'A confirmed fifth fundamental force would be the most significant revision to particle physics since the Standard Model was formalized in the 1970s.',
         source: 'CERN',
+        credits: [
+          { source: 'CERN', url: 'https://home.cern/news/muon-g2-fifth-force-discovery' },
+          { source: 'Nature', url: 'https://nature.com/articles/muon-anomaly-fifth-force' },
+          { source: 'AP', url: 'https://apnews.com/article/fermilab-muon-fifth-force-five-sigma' },
+        ],
         isBreaking: true,
         region: 'global',
       },
@@ -280,6 +376,10 @@ export const mockData: Category[] = [
         whyItMatters:
           'A durable functional cure for Type 1 diabetes would eliminate the $6,000–$15,000 annual insulin and device cost burden for approximately 8.4 million patients worldwide.',
         source: 'NEJM',
+        credits: [
+          { source: 'NEJM', url: 'https://nejm.org/doi/gene-therapy-type1-diabetes-2026' },
+          { source: 'Reuters', url: 'https://reuters.com/science/gene-therapy-diabetes-insulin-independence' },
+        ],
         isBreaking: false,
         region: 'global',
       },
@@ -302,6 +402,11 @@ export const mockData: Category[] = [
         whyItMatters:
           'The PHEIC designation unlocks emergency vaccine sharing agreements and fast-tracks modified MVA-BN vaccine trials, but supply constraints mean doses will be scarce for at least six months.',
         source: 'WHO',
+        credits: [
+          { source: 'WHO', url: 'https://who.int/news/mpox-clade-ib-pheic-2026' },
+          { source: 'Reuters', url: 'https://reuters.com/science/who-mpox-clade-ib-emergency' },
+          { source: 'AP', url: 'https://apnews.com/article/mpox-clade-ib-global-emergency' },
+        ],
         isBreaking: true,
         region: 'global',
       },
@@ -312,6 +417,10 @@ export const mockData: Category[] = [
         whyItMatters:
           'AMR-resistant infections are projected to kill 10 million people annually by 2050; a novel drug class effective against pan-resistant strains would be one of the most significant medical advances in decades.',
         source: 'Lancet',
+        credits: [
+          { source: 'Lancet', url: 'https://thelancet.com/journals/zosurabalpin-trial-2026' },
+          { source: 'Reuters', url: 'https://reuters.com/science/new-antibiotic-drug-resistant-bacteria' },
+        ],
         isBreaking: false,
         region: 'europe',
       },
@@ -322,6 +431,10 @@ export const mockData: Category[] = [
         whyItMatters:
           'The scale of evidence will likely force regulatory action in the EU and UK, including mandatory front-of-pack warning labels and restrictions on advertising to children.',
         source: 'BMJ',
+        credits: [
+          { source: 'BMJ', url: 'https://bmj.com/content/ultra-processed-food-32-conditions' },
+          { source: 'AP', url: 'https://apnews.com/article/ultra-processed-food-health-risks-study' },
+        ],
         isBreaking: false,
         region: 'europe',
       },
@@ -332,6 +445,11 @@ export const mockData: Category[] = [
         whyItMatters:
           'An oral formulation removes the injection barrier that limits adoption, potentially expanding the addressable patient population from millions to tens of millions globally.',
         source: 'FDA',
+        credits: [
+          { source: 'FDA', url: 'https://fda.gov/drugs/drug-approvals/orforglipron-approval-2026' },
+          { source: 'Reuters', url: 'https://reuters.com/science/fda-oral-glp1-orforglipron-approval' },
+          { source: 'Bloomberg', url: 'https://bloomberg.com/news/articles/eli-lilly-oral-glp1-fda' },
+        ],
         isBreaking: false,
         region: 'usa',
       },
@@ -342,6 +460,11 @@ export const mockData: Category[] = [
         whyItMatters:
           'A generation entering the workforce with disproportionate mental health burdens will have compounding economic consequences, with the WHO estimating $1 trillion in lost productivity annually by 2030.',
         source: 'WHO',
+        credits: [
+          { source: 'WHO', url: 'https://who.int/news/youth-anxiety-report-2026' },
+          { source: 'AP', url: 'https://apnews.com/article/youth-anxiety-doubled-who-report' },
+          { source: 'Reuters', url: 'https://reuters.com/science/youth-anxiety-pandemic-levels-who' },
+        ],
         isBreaking: false,
         region: 'global',
       },

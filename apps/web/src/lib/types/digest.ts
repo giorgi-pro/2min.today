@@ -2,6 +2,11 @@ import type { Bucket } from '$lib/config/buckets';
 
 export type Region = 'global' | 'europe' | 'americas' | 'middle-east' | 'usa';
 
+export interface Credit {
+  source: string;
+  url: string;
+}
+
 export const VALID_REGIONS = new Set<Region>(['global', 'europe', 'americas', 'middle-east', 'usa']);
 
 export function parseRegion(value: unknown): Region {
@@ -35,6 +40,7 @@ export interface SummarizedCluster extends Cluster {
   whyItMatters: string;
   tags: string[];
   region: Region;
+  credits: Credit[];
 }
 
 export interface ClassifiedCluster extends SummarizedCluster {

@@ -22,6 +22,7 @@ export async function upsertLiveStory(
       headline: card.headline,
       bullets: card.bullets,
       why_it_matters: '',
+      credits: [{ source: candidate.source, url: candidate.url }],
     },
     published_at: candidate.published.toISOString(),
   });

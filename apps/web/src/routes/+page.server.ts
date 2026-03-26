@@ -2,13 +2,13 @@ import { env } from '$env/dynamic/private';
 import { getSupabaseClient } from '$lib/supabase/client';
 import { buildMockDigest } from '$lib/mock-digest';
 import type { Bucket } from '$lib/config/buckets';
-import { parseRegion, type Region } from '$lib/types/digest';
+import { parseRegion, type Region, type Credit } from '$lib/types/digest';
 
 type SummaryJson = {
   headline: string;
   bullets: string[];
   why_it_matters: string;
-  sources?: unknown;
+  credits?: { source: string; url: string }[];
   tags?: unknown;
   region?: unknown;
 };
@@ -20,7 +20,7 @@ export type DigestCard = {
   tags: string[];
   region: Region;
   categoryLine: string | null;
-  sources: unknown[];
+  credits: Credit[];
   bucket: Bucket;
   isBreaking: boolean;
   isLive: boolean;
@@ -71,7 +71,9 @@ export const load = async () => {
         tags: Array.isArray(s.tags) ? (s.tags as string[]).filter((t) => typeof t === 'string') : [],
         region: parseRegion(s.region),
         categoryLine: row.category_line,
-        sources: Array.isArray(s.sources) ? s.sources : [],
+        credits: Array.isArray(s.credits)
+          ? s.credits.filter((c): c is Credit => typeof c?.source === 'string' && typeof c?.url === 'string')
+          : [],
         bucket: b,
         isBreaking: false,
         isLive: false,

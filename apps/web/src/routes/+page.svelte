@@ -4,7 +4,7 @@
   import { debouncedSearchQuery, activeRegions } from '$lib/digest-filter';
   import { SearchHandler, ThresholdStrategy } from '$lib/search/search-handler';
   import type { DigestCard } from './+page.server';
-  import type { Region } from '$lib/types/digest';
+  import type { Region, Credit } from '$lib/types/digest';
   import CategoryRow from '@2min.today/ui/components/digest/CategoryRow.svelte';
 
   type Category = {
@@ -14,7 +14,7 @@
       title: string;
       bullets: string[];
       whyItMatters: string;
-      source: string;
+      credits: Credit[];
       isBreaking: boolean;
       isLive: boolean;
       tags: string[];
@@ -92,7 +92,7 @@
           title: c.headline,
           bullets: c.bullets,
           whyItMatters: c.whyItMatters,
-          source: c.categoryLine ?? b,
+          credits: c.credits,
           isBreaking: c.isBreaking,
           isLive: c.isLive,
           tags: c.tags,

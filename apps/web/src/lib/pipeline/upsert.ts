@@ -28,6 +28,7 @@ export async function upsertClusters(
         why_it_matters: c.whyItMatters,
         tags: c.tags,
         region: c.region,
+        credits: c.credits,
       },
       bucket: c.bucket,
       category_line: c.categoryLine,

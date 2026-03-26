@@ -2,9 +2,21 @@ import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { env } from '$env/dynamic/private';
 import { FLASH_MODEL } from '$lib/server/digest/models';
 import { parseRegion } from '$lib/types/digest';
-import type { Cluster, SummarizedCluster } from '$lib/types/digest';
+import type { Cluster, SummarizedCluster, Credit, EmbeddedItem } from '$lib/types/digest';
 
 const MAX_RETRIES = 3;
+
+function extractCredits(items: EmbeddedItem[]): Credit[] {
+  const seen = new Set<string>();
+  const credits: Credit[] = [];
+  for (const item of items) {
+    if (item.url && !seen.has(item.url)) {
+      seen.add(item.url);
+      credits.push({ source: item.source, url: item.url });
+    }
+  }
+  return credits;
+}
 
 function normalizeSummaryTags(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [];
@@ -99,6 +111,7 @@ Rules: "usa" = US-domestic stories only. "americas" = multi-country Americas or 
       whyItMatters: parsed.whyItMatters,
       tags: normalizeSummaryTags(parsed.tags),
       region: feedRegion ?? parseRegion(parsed.region),
+      credits: extractCredits(cluster.items),
     });
   }
 

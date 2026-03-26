@@ -1,5 +1,5 @@
 import type { Bucket } from '$lib/config/buckets';
-import type { Region } from '$lib/types/digest';
+import type { Region, Credit } from '$lib/types/digest';
 import { mockData } from '$lib/mock-data';
 import { bulletsFromMockContent, deduceMockTags } from '$lib/mock-tags';
 
@@ -10,7 +10,7 @@ export type MockDigestCard = {
   tags: string[];
   region: Region;
   categoryLine: string | null;
-  sources: unknown[];
+  credits: Credit[];
   bucket: Bucket;
   isBreaking: boolean;
   isLive: boolean;
@@ -37,7 +37,7 @@ export function buildMockDigest(): MockDigest {
         tags: deduceMockTags(n.title, n.source, b),
         region: n.region,
         categoryLine: n.source,
-        sources: [],
+        credits: n.credits,
         bucket: b,
         isBreaking: n.isBreaking,
         isLive: n.isLive ?? false,

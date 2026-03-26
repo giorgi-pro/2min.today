@@ -2,11 +2,13 @@
   import CategoryPanel from './CategoryPanel.svelte';
   import NewsCard from './NewsCard.svelte';
 
+  type Credit = { source: string; url: string };
+
   type NewsItem = {
     title: string;
     bullets: string[];
     whyItMatters: string;
-    source: string;
+    credits: Credit[];
     isBreaking: boolean;
     isLive: boolean;
     tags: string[];
@@ -117,7 +119,7 @@
             title={item.title}
             bullets={item.bullets}
             whyItMatters={item.whyItMatters}
-            source={item.source}
+            credits={item.credits}
             isBreaking={item.isBreaking}
             isLive={item.isLive}
             tags={item.tags}
