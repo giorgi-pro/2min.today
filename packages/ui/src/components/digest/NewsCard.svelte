@@ -37,8 +37,7 @@
 
 <div
   bind:this={cardEl}
-  class="news-tile relative flex h-full min-w-[min(100%,280px)] flex-col p-2 pb-[4px]
-    {isLive ? 'bg-[#F0F2F4]' : ''}"
+  class="news-tile relative flex h-full min-w-[min(100%,280px)] flex-col p-2 pb-[4px] {isLive ? 'bg-white' : ''}"
   onclick={onCardClick}
   role="presentation"
 >
@@ -87,22 +86,26 @@
     </div>
   {/if}
 
-  <h2
-    class="mb-3 flex-none text-lg font-bold leading-snug tracking-tight
-      {isLive ? 'text-[#181c20]' : 'text-black'}"
-  >{title}</h2>
-
-  <ul class="min-h-0 w-0 min-w-full flex-1 space-y-1.5 overflow-hidden">
-    {#each bullets as bullet}
-      <li class="flex gap-2 text-[0.8rem] leading-snug {isLive ? 'text-[#3d4754]' : 'text-black'}">
-        <span class="mt-[0.35rem] block h-[3px] w-[3px] shrink-0 {isLive ? 'bg-[#637588]' : 'bg-black'}"></span>
-        <span>{bullet}</span>
-      </li>
-    {/each}
-  </ul>
+  <div
+    class={isLive
+      ? 'mt-1 flex min-h-0 w-0 min-w-full flex-1 flex-col border border-black/15 bg-[#F0F2F4] p-2'
+      : 'contents'}
+  >
+    <h2
+      class="mb-3 flex-none text-lg font-bold leading-snug tracking-tight {isLive ? 'text-[#181c20]' : 'text-black'}"
+    >{title}</h2>
+    <ul class="min-h-0 w-0 min-w-full flex-1 space-y-1.5 overflow-hidden">
+      {#each bullets as bullet}
+        <li class="flex gap-2 text-[0.8rem] leading-snug {isLive ? 'text-[#3d4754]' : 'text-black'}">
+          <span class="mt-[0.35rem] block h-[3px] w-[3px] shrink-0 {isLive ? 'bg-[#637588]' : 'bg-black'}"></span>
+          <span>{bullet}</span>
+        </li>
+      {/each}
+    </ul>
+  </div>
 
   <div class="mt-3 w-0 min-w-full flex-none">
-    <div class="mb-2 border-t {isLive ? 'border-[#637588]/20' : 'border-black/15'}"></div>
+    <div class="mb-2 border-t border-black/15"></div>
     {#if !isLive}
       <p class="mb-1 font-mono text-[0.55rem] uppercase tracking-widest text-black/30">Why it matters</p>
       <p class="border-l border-black/20 pl-2 text-[0.7rem] italic leading-tight text-black/55">{whyItMatters}</p>

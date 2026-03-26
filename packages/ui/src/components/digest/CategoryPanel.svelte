@@ -17,9 +17,8 @@
 
 <div
   role="presentation"
-  class="flex h-[30vh] flex-col justify-between transition-transform duration-150 ease-out
-    {inverted ? 'bg-black text-white' : 'bg-white text-black border-r-2 border-black'}
-    {marqueeEnabled ? 'cursor-grab' : 'cursor-pointer'}"
+  class="flex h-[30vh] flex-col justify-between transition-transform duration-150 ease-out cursor-grab
+    {inverted ? 'bg-black text-white' : 'bg-white text-black border-r-2 border-black'}"
   style:transform={pressed ? 'translate(-1px, 1px)' : ''}
   bind:this={el}
   {onmouseenter}

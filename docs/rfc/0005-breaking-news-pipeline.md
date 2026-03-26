@@ -33,7 +33,7 @@ Run a lightweight breaking-news check every 15 minutes. When a headline scores a
 5. Generates a live card with **one** `gemini-1.5-flash` call per story (headline + 2 bullets).
 6. Persists as a row in the `clusters` table with `is_live = true` and no `bucket` — same table as the nightly digest.
 7. The nightly pipeline (RFC-001) is unaffected — its idempotency check only skips rows where `is_live = false` for today's UTC window.
-8. Live cards appear **mixed into their relevant category row** on the homepage, visually distinguished by a gray background and `LIVE` label. No "Why it Matters".
+8. Live cards appear **mixed into their relevant category row** on the homepage, visually distinguished by an inset gray panel (headline + bullets only) on the same white tile as regular cards, plus a `LIVE` label. Tags sit outside that panel, matching regular cards. No "Why it Matters".
 
 ---
 
@@ -343,12 +343,14 @@ Live breaking cards are mixed **directly into their relevant category rows** alo
 
 ### Visual Language
 
-- **Background:** `#F0F2F4` — one step darker than the page surface, signals provisional/live content
-- **Label:** `LIVE` in bold Slate mono uppercase (`#637588`), replacing the normal source label position
-- **Source:** Slate/60 opacity, right-aligned in the header row
-- **Bullet markers:** Slate square instead of black
-- **No "Why it Matters"** — two bullets only; the absence signals it's an unfinished story
-- **`isBreaking`** (editorial flag, separate concern) renders a pulsing Tomato dot and is unaffected by `isLive`
+- **Card shell:** Same white tile and outer `p-2` padding as a regular digest card (`bg-white` on the tile root for live rows).
+- **Live content inset:** Headline and bullets only sit inside a nested panel: `bg-[#F0F2F4]`, `border border-black/15`, inner `p-2`, inset from the tile edge by the tile’s own padding (so a white margin frames the panel).
+- **Label:** `LIVE` in bold Slate mono uppercase (`#637588`), replacing the normal source label position — **outside** the gray inset, in the white header strip.
+- **Source control (`©`):** Slate/60 opacity when live, unchanged position.
+- **Bullet markers:** Slate square instead of black (inside the inset only).
+- **Tags:** Rendered **below** the inset with the same `NewsTags` treatment as ordinary cards (not inside the gray panel).
+- **No "Why it Matters"** — two bullets only; the absence signals it's an unfinished story.
+- **`isBreaking`** (editorial flag, separate concern) renders a pulsing Tomato dot and is unaffected by `isLive`.
 
 ### Data shape
 
@@ -362,7 +364,7 @@ isLive: row.is_live ?? false,
 
 ### `NewsCard` prop
 
-`isLive` is a boolean prop on `NewsCard`. When true, the card renders with the gray/slate treatment and omits the "Why it Matters" section. `isBreaking` remains independent (pulsing dot only).
+`isLive` is a boolean prop on `NewsCard`. When true, the card uses a white shell with a bordered gray inset for headline + bullets only, slate `LIVE` label and `©` styling, and omits the "Why it Matters" section; tags stay on the white footer like regular cards. `isBreaking` remains independent (pulsing dot only).
 
 ---
 
