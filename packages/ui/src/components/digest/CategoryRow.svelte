@@ -244,7 +244,7 @@
 
       <div class="relative overflow-hidden">
         <div
-          class="news-scroll flex h-[30vh] overflow-x-scroll overflow-y-hidden divide-x divide-black/10"
+          class="news-scroll flex h-[30vh] overflow-x-scroll overflow-y-hidden"
           bind:this={scrollEl}
           onscroll={onScroll}
         >
@@ -253,7 +253,7 @@
               <p class="font-mono text-[0.65rem] uppercase tracking-widest text-black/30">No news found</p>
             </div>
           {:else}
-            {#each news as item, i}
+            {#each news as item}
               <NewsCard
                 title={item.title}
                 bullets={item.bullets}
@@ -262,7 +262,6 @@
                 isBreaking={item.isBreaking}
                 isLive={item.isLive}
                 tags={item.tags}
-                borderRight={!scrollable && i === news.length - 1}
               />
             {/each}
           {/if}

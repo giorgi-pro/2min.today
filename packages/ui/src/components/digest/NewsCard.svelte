@@ -11,10 +11,9 @@
     isBreaking: boolean;
     isLive: boolean;
     tags: string[];
-    borderRight?: boolean;
   };
 
-  const { title, bullets, whyItMatters, credits, isBreaking, isLive, tags, borderRight = false }: Props = $props();
+  const { title, bullets, whyItMatters, credits, isBreaking, isLive, tags }: Props = $props();
 
   let open = $state(false);
   let cardEl: HTMLDivElement;
@@ -38,7 +37,7 @@
 
 <div
   bind:this={cardEl}
-  class="news-tile relative flex h-full min-w-[min(100%,280px)] flex-col py-2 px-2 pb-[4px] {isLive ? 'bg-white' : ''} {borderRight ? 'border-r-2 border-black' : ''}"
+  class="news-tile relative flex h-full min-w-[min(100%,280px)] flex-col border-r border-black/10 py-2 px-2 pb-[4px] {isLive ? 'bg-white' : ''}"
   onclick={onCardClick}
   role="presentation"
 >
