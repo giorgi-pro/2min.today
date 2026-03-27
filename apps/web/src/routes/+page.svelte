@@ -228,6 +228,7 @@
     displayOrder.map((b, i) => ({
       bucket: b,
       index: i,
+      summary: categoryByBucket[b]?.summary ?? [],
       news: categoryByBucket[b]?.news ?? [],
     })),
   );
