@@ -2,8 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { json } from '@sveltejs/kit';
 import { getSupabaseServiceRoleClient } from '@lib/supabase/server';
 import { pipeline } from '@lib/pipeline';
-import { digestLogger } from '@lib/server/digest/logger';
-import { env } from '$env/dynamic/private';
+import { digestLogger } from '@2min.today/logging';
+import { env } from '@config';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url }) => {

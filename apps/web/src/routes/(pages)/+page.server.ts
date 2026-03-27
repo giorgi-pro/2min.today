@@ -1,45 +1,14 @@
-import { env } from '$env/dynamic/private';
+import { env } from '@config';
 import { getSupabaseClient } from '@lib/supabase/client';
 import { buildMockDigest } from '@lib/mock-digest';
 import type { Bucket } from '@lib/config/buckets';
 import { normalizeClusterBucket } from '@lib/config/buckets.constants';
-import { parseRegion, type Region, type Credit } from '@lib/types/digest';
-
-type SummaryJson = {
-  headline: string;
-  bullets: string[];
-  why_it_matters: string;
-  credits?: { source: string; url: string }[];
-  tags?: unknown;
-  region?: unknown;
-};
-
-export type DigestCard = {
-  headline: string;
-  bullets: string[];
-  whyItMatters: string;
-  tags: string[];
-  region: Region;
-  categoryLine: string | null;
-  credits: Credit[];
-  bucket: Bucket;
-  isBreaking: boolean;
-  isLive: boolean;
-};
-
-function parseFuseThreshold(raw: string | undefined): number {
-  if (raw == null || raw === '') return 0.4;
-  const n = Number.parseFloat(raw);
-  return Number.isFinite(n) ? n : 0.4;
-}
-
-function useMockData(): boolean {
-  return env.USE_MOCK_DATA?.trim() === 'true';
-}
+import { parseRegion, type Credit } from '@lib/types/digest';
+import type { DigestCard, SummaryJson } from '@lib/types/news';
 
 export const load = async () => {
-  const fuseThreshold = parseFuseThreshold(env.DIGEST_FUSE_THRESHOLD);
-  const useMock = useMockData();
+  const fuseThreshold = env.DIGEST_FUSE_THRESHOLD ?? 0.4;
+  const useMock = env.USE_MOCK_DATA === 'true';
 
   if (useMock) {
     const mock = buildMockDigest();

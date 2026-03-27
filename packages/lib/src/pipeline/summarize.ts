@@ -7,7 +7,7 @@ import {
   getFlashModel,
   mergeFlashGenerationConfig,
 } from '@lib/server/digest/models';
-import { silentLogger } from '@lib/server/digest/logger';
+import { silentLogger } from '@2min.today/logging';
 import { parseRegion } from '@lib/types/digest';
 import { BUCKET_ORDER, type Bucket } from '@lib/config/buckets.constants';
 import type { Cluster, SummarizedCluster, Credit, EmbeddedItem } from '@lib/types/digest';

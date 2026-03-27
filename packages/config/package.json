@@ -1,0 +1,14 @@
+{
+  "name": "@2min.today/config",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./*": "./**/*.ts"
+  },
+  "dependencies": {
+    "@t3-oss/env-core": "0.10.0",
+    "dotenv": "17.3.1",
+    "zod": "3.24.2"
+  }
+}

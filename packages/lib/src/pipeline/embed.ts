@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { Logger } from 'pino';
 import { env } from '$env/dynamic/private';
 import { getEmbeddingDimension, getEmbeddingModel } from '@lib/server/digest/models';
-import { silentLogger } from '@lib/server/digest/logger';
+import { silentLogger } from '@2min.today/logging';
 import type { RawItem, EmbeddedItem } from '@lib/types/digest';
 
 type EmbedRequest = EmbedContentRequest & { outputDimensionality?: number };

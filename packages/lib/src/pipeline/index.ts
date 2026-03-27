@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Logger } from 'pino';
-import { createDigestChild } from '@lib/server/digest/logger';
+import { createDigestChild } from '@2min.today/logging';
 import { fetchRawItems } from './fetch';
 import { embedItems } from './embed';
 import { clusterItems } from './cluster';

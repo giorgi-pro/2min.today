@@ -1,6 +1,6 @@
 <script lang="ts">
   import Header from '../components/Header.svelte';
-  import type { ShellLayoutProps } from './shell-layout';
+  import type { ShellLayoutProps } from '../types/shell-layout';
 
   let {
     searchQuery = $bindable(''),

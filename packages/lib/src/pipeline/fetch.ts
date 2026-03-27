@@ -4,7 +4,7 @@ import type { Logger } from 'pino';
 import { env } from '$env/dynamic/private';
 import { getNewsSources, type NewsSourceRss, type NewsSourceX, type NewsSourceType } from '@lib/config/news-sources';
 import type { NewsSource } from '@lib/config/news-sources';
-import { silentLogger } from '@lib/server/digest/logger';
+import { silentLogger } from '@2min.today/logging';
 import type { RawItem } from '@lib/types/digest';
 
 export interface FetchSourceResult {

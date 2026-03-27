@@ -1,0 +1,13 @@
+{
+  "name": "@2min.today/logging",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./logger.ts"
+  },
+  "dependencies": {
+    "@2min.today/config": "workspace:*",
+    "pino": "^9.6.0"
+  }
+}

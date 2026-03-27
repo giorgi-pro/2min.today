@@ -13,6 +13,9 @@ const config = {
     alias: {
       '@ui': path.resolve(dirname, '../../packages/ui/src'),
       '@lib': path.resolve(dirname, '../../packages/lib/src'),
+      '@config': path.resolve(dirname, '../../packages/config/env'),
+      '@2min.today/logging': path.resolve(dirname, '../../packages/logging/logger.ts'),
+      '@2min.today/config/env': path.resolve(dirname, '../../packages/config/env/index.ts'),
     },
   },
 }

@@ -1,0 +1,20 @@
+{
+  "name": "@2min.today/scripts",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./*": "./**/*.ts"
+  },
+  "dependencies": {
+    "@2min.today/lib": "workspace:*",
+    "@2min.today/config": "workspace:*",
+    "@google/generative-ai": "0.24.1",
+    "@supabase/supabase-js": "2.100.0",
+    "fast-xml-parser": "5.5.9",
+    "twitter-api-v2": "1.29.0",
+    "uuid": "13.0.0",
+    "fuse.js": "7.1.0",
+    "yaml": "2.8.3"
+  }
+}

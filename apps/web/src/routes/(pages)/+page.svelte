@@ -13,7 +13,7 @@
   import { buildMockDigest } from '@lib/mock-digest';
   import { debouncedSearchQuery, activeRegions } from '@lib/digest-filter';
   import { SearchHandler, ThresholdStrategy } from '@lib/search/search-handler';
-  import type { DigestCard } from './+page.server';
+  import type { DigestCard } from '@lib/types/news';
   import type { Region, Credit } from '@lib/types/digest';
   import CategoryRow from '@ui/components/digest/CategoryRow.svelte';
   import MobileView from '@ui/components/digest/MobileView.svelte';

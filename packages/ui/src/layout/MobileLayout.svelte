@@ -2,7 +2,7 @@
   import GlobalSearch from '../components/GlobalSearch.svelte';
   import Logo from '../components/Logo.svelte';
   import Menu from '../components/Menu.svelte';
-  import type { ShellLayoutProps } from './shell-layout';
+  import type { ShellLayoutProps } from '../types/shell-layout';
 
   let {
     searchQuery = $bindable(''),

@@ -1,6 +1,6 @@
 import type { Logger } from 'pino';
 import { getClassifySimilarityThreshold } from '@lib/server/digest/models';
-import { silentLogger } from '@lib/server/digest/logger';
+import { silentLogger } from '@2min.today/logging';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Bucket } from '@lib/config/buckets';
 import type { SummarizedCluster, ClassifiedCluster } from '@lib/types/digest';
