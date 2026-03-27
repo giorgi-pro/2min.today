@@ -28,10 +28,6 @@
     inverted: boolean;
     pressed: boolean;
     marqueeEnabled: boolean;
-    el?: HTMLElement;
-    onmouseenter: () => void;
-    onmouseleave: () => void;
-    onmousemove: (e: MouseEvent) => void;
     onclick: (e: MouseEvent) => void;
     reorderHandle?: boolean;
   };
@@ -42,10 +38,6 @@
     inverted,
     pressed,
     marqueeEnabled,
-    el = $bindable(),
-    onmouseenter,
-    onmouseleave,
-    onmousemove,
     onclick,
     reorderHandle = false,
   }: Props = $props();
@@ -59,10 +51,6 @@
     {reorderHandle ? 'cursor-grab select-none touch-none' : ''}
     {inverted ? 'bg-black text-white' : 'bg-white text-black border-r-2 border-black'}"
   style:transform={pressed ? 'translate(-1px, 1px)' : ''}
-  bind:this={el}
-  {onmouseenter}
-  {onmouseleave}
-  {onmousemove}
   {onclick}
 >
   <span class="m-6 whitespace-nowrap text-xl font-black uppercase leading-none tracking-tight">{name}</span>

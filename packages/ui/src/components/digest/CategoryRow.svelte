@@ -70,9 +70,12 @@
 
   let thumbPosition = $state(0);
   let scrollEl: HTMLElement | undefined = $state();
-  let categoryEl: HTMLElement | undefined = $state();
+  let rowEl: HTMLElement | undefined = $state();
   let marqueeFrame: number | null = null;
+  let marqueeStartTimer: ReturnType<typeof setTimeout> | null = null;
   let marqueeSpeed = 0;
+  let marqueeEaseStart: number | null = null;
+  const MARQUEE_EASE_DURATION = 1200;
   let marqueeEnabled = $state(true);
   let pressed = $state(false);
   let scrollable = $state(false);
@@ -99,28 +102,41 @@
     return Boolean(el && el.scrollWidth > el.clientWidth);
   }
 
-  function onCategoryMouseMove(e: MouseEvent) {
-    if (!marqueeEnabled || !categoryEl || !rowCanMarquee()) return;
-    const rect = categoryEl.getBoundingClientRect();
-    marqueeSpeed = ((e.clientX - rect.left) / rect.width - 0.5) * 2 * MAX_SPEED;
+  function onRowMouseMove(e: MouseEvent) {
+    if (!marqueeEnabled || !rowEl || !rowCanMarquee()) return;
+    const rect = rowEl.getBoundingClientRect();
+    const relX = (e.clientX - rect.left) / rect.width;
+    marqueeSpeed = relX > 0.75 ? (relX - 0.75) * 2 * MAX_SPEED : 0;
   }
 
   function startMarquee() {
     if (!marqueeEnabled || !scrollEl || !rowCanMarquee()) return;
     stopMarquee();
-    function tick() {
-      (scrollEl as HTMLElement).scrollLeft += marqueeSpeed;
+    marqueeStartTimer = setTimeout(() => {
+      marqueeStartTimer = null;
+      marqueeEaseStart = null;
+      function tick(timestamp: number) {
+        if (marqueeEaseStart === null) marqueeEaseStart = timestamp;
+        const t = Math.min((timestamp - marqueeEaseStart) / MARQUEE_EASE_DURATION, 1);
+        const eased = t * t * t; // cubic ease-in
+        (scrollEl as HTMLElement).scrollLeft += marqueeSpeed * eased;
+        marqueeFrame = requestAnimationFrame(tick);
+      }
       marqueeFrame = requestAnimationFrame(tick);
-    }
-    marqueeFrame = requestAnimationFrame(tick);
+    }, 2000);
   }
 
   function stopMarquee() {
+    if (marqueeStartTimer != null) {
+      clearTimeout(marqueeStartTimer);
+      marqueeStartTimer = null;
+    }
     if (marqueeFrame != null) {
       cancelAnimationFrame(marqueeFrame);
       marqueeFrame = null;
     }
     marqueeSpeed = 0;
+    marqueeEaseStart = null;
   }
 
   function toggleMarquee(_e: MouseEvent) {
@@ -190,6 +206,10 @@
     <div
       class="grid"
       style="grid-template-columns: 30vh 1fr"
+      bind:this={rowEl}
+      onmouseenter={startMarquee}
+      onmouseleave={stopMarquee}
+      onmousemove={onRowMouseMove}
     >
       <CategoryPanel
         {name}
@@ -198,10 +218,6 @@
         {pressed}
         {marqueeEnabled}
         reorderHandle={reorderable}
-        bind:el={categoryEl}
-        onmouseenter={startMarquee}
-        onmouseleave={stopMarquee}
-        onmousemove={onCategoryMouseMove}
         onclick={toggleMarquee}
       />
 
