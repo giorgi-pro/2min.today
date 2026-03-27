@@ -17,13 +17,23 @@
 
   let open = $state(false);
   let cardEl: HTMLDivElement;
+  let hoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
-  function onCardClick(e: MouseEvent) {
-    if (!open) return;
-    const target = e.target as Node;
-    const btn = cardEl.querySelector('button[aria-label="Toggle sources"]');
-    if (btn?.contains(target)) return;
+  function openSources() {
+    if (hoverCloseTimer) { clearTimeout(hoverCloseTimer); hoverCloseTimer = null; }
+    open = true;
+  }
+
+  function closeSources() {
     open = false;
+  }
+
+  function scheduleClose() {
+    hoverCloseTimer = setTimeout(() => { open = false; }, 120);
+  }
+
+  function onCardMouseLeave() {
+    scheduleClose();
   }
 </script>
 
@@ -38,7 +48,7 @@
 <div
   bind:this={cardEl}
   class="news-tile relative flex h-full min-w-[min(100%,280px)] flex-col border-r border-black/10 py-2 px-2 pb-[4px] {isLive ? 'bg-white' : ''}"
-  onclick={onCardClick}
+  onmouseleave={onCardMouseLeave}
   role="presentation"
 >
   <div class="mb-1 flex w-0 min-w-full flex-none items-start gap-4">
@@ -72,15 +82,19 @@
     <div class="relative {isLive ? 'mb-2' : ''}">
       <button
         type="button"
-        class="absolute right-0 top-0 z-[1] cursor-pointer border-0 bg-transparent p-0 font-mono text-[1rem] font-normal uppercase leading-none tracking-widest text-black/50 transition-colors hover:text-black/50"
-        onclick={() => (open = !open)}
+        class="absolute right-0 top-0 z-[1] cursor-pointer border-0 bg-transparent p-0 font-mono text-[1rem] font-normal uppercase leading-none tracking-widest text-black/30 transition-colors hover:text-black/50"
+        onclick={() => (open ? closeSources() : openSources())}
+        onmouseenter={openSources}
         aria-label="Toggle sources"
+        aria-expanded={open}
       >©</button>
       {#if open}
         <div
-          class="credits-dropdown absolute right-0 top-full z-10 mt-1 max-h-40 w-[min(26rem,calc(100vw-1.5rem))] border border-black/10 bg-white"
-          role="dialog"
+          class="credits-dropdown absolute bottom-full right-2 z-10 mb-1 max-h-40 w-[calc(100%-1rem)] border border-black/10 bg-white"
+          role="presentation"
+          tabindex="-1"
           aria-label="Sources"
+          onmouseenter={openSources}
         >
           {#if credits.length === 0}
             <p class="px-3 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-black/30">Source unavailable</p>

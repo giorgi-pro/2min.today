@@ -70,21 +70,23 @@
     hoverTimer = setTimeout(() => { showNews = false; }, 2000);
   }
 
-  let tooltipVisible = $state(false);
-  let tooltipX = $state(0);
-  let tooltipY = $state(0);
-  let tooltipCredits = $state<Credit[]>([]);
+  let openCreditIndex = $state<number | null>(null);
+  let creditX = $state(0);
+  let creditY = $state(0);
+  let creditCredits = $state<Credit[]>([]);
+  let creditCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
-  function showCreditTooltip(e: MouseEvent, credits: Credit[]) {
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    tooltipX = rect.left;
-    tooltipY = rect.bottom + 4;
-    tooltipCredits = credits;
-    tooltipVisible = true;
+  function openCredit(i: number, credits: Credit[], btn: HTMLElement) {
+    if (creditCloseTimer) { clearTimeout(creditCloseTimer); creditCloseTimer = null; }
+    const rect = btn.getBoundingClientRect();
+    creditX = rect.left;
+    creditY = rect.top;
+    creditCredits = credits;
+    openCreditIndex = i;
   }
 
-  function hideCreditTooltip() {
-    tooltipVisible = false;
+  function scheduleCloseCredit() {
+    creditCloseTimer = setTimeout(() => { openCreditIndex = null; }, 120);
   }
 
   const MAX_SPEED = 2.5;
@@ -204,19 +206,24 @@
             ? 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
             : 'transform 0.25s cubic-bezier(0.55, 0, 1, 0.45)'}
         >
-          {#each news as item}
-            <div class="flex h-full shrink-0 items-center gap-2 px-3" role="group">
+          {#each news as item, i}
+            <div
+              class="relative flex h-full shrink-0 items-center gap-2 px-3"
+              role="group"
+            >
               {#if item.isBreaking}
                 <span class="dot-pulse block h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF6347]"></span>
               {/if}
               <span class="font-mono text-[0.65rem] whitespace-nowrap leading-none text-black/70">{item.title}</span>
               <button
                 type="button"
-                class="cursor-pointer border-0 bg-transparent p-1 font-mono text-[0.75rem] font-bold leading-none text-black/30 hover:text-black/60"
+                class="cursor-pointer border-0 bg-transparent p-1 font-mono text-[0.75rem] font-bold leading-none text-black/30 transition-colors hover:text-black/60"
                 onmousedown={(e) => e.stopPropagation()}
                 ontouchstart={(e) => e.stopPropagation()}
-                onmouseenter={(e) => showCreditTooltip(e, item.credits)}
-                onmouseleave={hideCreditTooltip}
+                onclick={(e) => (openCreditIndex === i ? openCreditIndex = null : openCredit(i, item.credits, e.currentTarget as HTMLElement))}
+                onmouseenter={(e) => openCredit(i, item.credits, e.currentTarget as HTMLElement)}
+                aria-label="Toggle sources"
+                aria-expanded={openCreditIndex === i}
               >©</button>
             </div>
           {/each}
@@ -277,19 +284,19 @@
   {/if}
 </div>
 
-{#if tooltipVisible}
+{#if openCreditIndex !== null}
   <div
-    class="fixed z-50 max-h-40 w-[min(26rem,calc(100vw-1.5rem))] border border-black/10 bg-white"
-    style="left: {tooltipX}px; top: {tooltipY}px;"
-    role="tooltip"
-    onmouseenter={() => (tooltipVisible = true)}
-    onmouseleave={hideCreditTooltip}
+    class="credits-dropdown fixed z-50 max-h-40 w-[min(26rem,calc(100vw-1.5rem))] border border-black/10 bg-white"
+    style="left: {creditX}px; top: {creditY - 4}px; transform: translateY(-100%);"
+    role="presentation"
+    onmouseenter={() => { if (creditCloseTimer) { clearTimeout(creditCloseTimer); creditCloseTimer = null; } }}
+    onmouseleave={scheduleCloseCredit}
   >
-    {#if tooltipCredits.length === 0}
+    {#if creditCredits.length === 0}
       <p class="px-3 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-black/30">Source unavailable</p>
     {:else}
       <div class="flex flex-col">
-        {#each tooltipCredits as credit}
+        {#each creditCredits as credit}
           <div class="flex items-center border-b border-black/5 py-2 pl-3 pr-3 last:border-0">
             <div class="shrink-0 whitespace-nowrap pr-[30px] font-mono text-[0.55rem] uppercase leading-none tracking-widest text-black/40">{credit.source}</div>
             <div class="min-w-0 flex-1 leading-none">
@@ -307,3 +314,4 @@
     {/if}
   </div>
 {/if}
+
