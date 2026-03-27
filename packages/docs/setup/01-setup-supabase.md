@@ -30,7 +30,7 @@ From the **repository root**:
 pnpm --filter @2min.today/web run seed:anchors
 ```
 
-(`apps/web/.env` is loaded by the script’s `dotenv` import; dependencies resolve from `apps/web`, not the monorepo root.)
+(`apps/web/.env` is loaded automatically via `@2min.today/config/env`; dependencies resolve from `apps/web/node_modules`.)
 
 This upserts embedding rows in `bucket_anchors` from `apps/web/src/lib/config/buckets`.
 

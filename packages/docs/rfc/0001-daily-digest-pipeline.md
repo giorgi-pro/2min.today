@@ -63,7 +63,7 @@ Passed down to pipeline modules via dependency injection — no module imports t
 
 ```ts
 import { createClient } from '@supabase/supabase-js';
-import { env } from '$env/dynamic/private'; // SvelteKit v2+ private env
+import { env } from '@config';
 
 export const supabase = createClient(
   env.SUPABASE_URL,
@@ -74,7 +74,7 @@ export const supabase = createClient(
 );
 ```
 
-**Environment variables** — see `apps/web/.env.example` (and repo root `.env.example` if used for shared secrets). Private pipeline vars use SvelteKit `$env/dynamic/private`. Public Supabase URL + anon key for the homepage use `$env/dynamic/public` (§9). Set the same keys in Vercel → Environment Variables for production.
+**Environment variables** — see `apps/web/.env.example`. All env vars are validated and typed via `@2min.today/config` (`packages/config/env/index.ts`), accessible in SvelteKit via the `@config` alias. Set the same keys in Vercel → Environment Variables for production.
 
 > Public reads use **`PUBLIC_SUPABASE_URL`** + **`PUBLIC_SUPABASE_ANON_KEY`** via `lib/supabase/client.ts` (see §9). Those variables are safe to expose to the browser; the cron pipeline uses **only** `server.ts` and must never import the anon client.
 
@@ -166,7 +166,7 @@ export type Bucket = 'usa' | 'europe' | 'middle-east' | 'americas' | 'world' | '
 
 All 10 buckets have anchor embeddings in `bucket_anchors`. There is no `emerging` bucket — the classify step uses a hybrid approach: embedding similarity first, then LLM fallback from the summarize prompt, then `world` as the final catch-all (see §5 `classify.ts`).
 
-> The seed script uses `process.env` directly (not `$env/dynamic/private`) because it runs outside SvelteKit, as a plain Node script via `tsx`.
+> The seed script imports `@2min.today/config/env` which loads `.env` via `dotenv` automatically, so no manual `process.env` access is needed.
 
 ## 4. Pipeline Barrel (`lib/pipeline/index.ts`)
 
@@ -509,22 +509,19 @@ Run **once** after applying the migration, and **again after any change to `buck
 ```ts
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@supabase/supabase-js';
-import { BUCKET_ANCHORS } from '../src/lib/config/buckets';
-import 'dotenv/config'; // load .env.local for local execution
+import { BUCKET_ANCHORS } from '../apps/web/src/lib/config/buckets';
+import { env } from '@2min.today/config/env';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({ model: 'gemini-embedding-2-preview' });
+const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: env.EMBEDDING_MODEL });
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
 async function seedAnchors() {
   for (const [bucket, text] of Object.entries(BUCKET_ANCHORS)) {
     const result = await model.embedContent({
       content: { role: 'user', parts: [{ text }] },
-      outputDimensionality: 768,
+      outputDimensionality: env.EMBEDDING_DIMENSION,
     });
     const embedding = result.embedding.values;
 
@@ -546,8 +543,7 @@ Run with:
 npx tsx scripts/seed-bucket-anchors.ts
 ```
 
-> Note: the seed script uses `process.env` directly (not `$env/dynamic/private`) because it runs
-> outside SvelteKit, as a plain Node script via `tsx`.
+> Note: the seed script imports `@2min.today/config/env` which self-loads `.env` via `dotenv`, so env vars are available without manual `process.env` access.
 
 ## 8. Entry Point (`+server.ts`)
 
@@ -565,7 +561,7 @@ pre-computed ISO strings is the correct approach and hits the native index on `p
 import { json } from '@sveltejs/kit';
 import { supabase } from '$lib/supabase/server';
 import { pipeline } from '$lib/pipeline';
-import { env } from '$env/dynamic/private';
+import { env } from '@config';
 import type { RequestEvent } from '@sveltejs/kit';
 
 export const GET = async ({ url }: RequestEvent) => {
@@ -626,7 +622,7 @@ Anon client using SvelteKit **public** env (prefixed `PUBLIC_`, exposed to the s
 
 ```ts
 import { createClient } from '@supabase/supabase-js';
-import { env } from '$env/dynamic/public';
+import { env } from '@config';
 
 export const supabaseClient = createClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_ANON_KEY);
 ```

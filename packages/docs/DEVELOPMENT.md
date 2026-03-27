@@ -26,7 +26,7 @@ Full dashboard steps: [01-setup-supabase.md](./setup/01-setup-supabase.md).
 
    Use the Supabase **SQL Editor** (paste and run each file), or the [Supabase CLI](https://supabase.com/docs/guides/cli) (`db push` / linked project) if you use it locally.
 
-3. **Seed bucket anchors (once per database)** — After migrations, ensure `apps/web/.env` has `GEMINI_API_KEY` and Supabase vars. The script loads that file via `dotenv` when the working directory is `apps/web`.
+3. **Seed bucket anchors (once per database)** — After migrations, ensure `apps/web/.env` has `GEMINI_API_KEY` and Supabase vars. The script reads env vars via `@2min.today/config/env`, which self-loads `apps/web/.env` through `dotenv`.
 
 ```bash
 pnpm --filter @2min.today/web run seed:anchors
