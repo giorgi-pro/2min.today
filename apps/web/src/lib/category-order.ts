@@ -13,9 +13,11 @@ const LEGACY_BUCKET_KEYS: Record<string, Bucket> = {
   Science: 'science',
   Health: 'health',
   Sports: 'sports',
+  USA: 'usa',
+  Europe: 'europe',
+  Americas: 'americas',
 };
 
-/** Maps localStorage / legacy Title-case keys to current lowercase `Bucket` slugs. */
 export function normalizeStoredBucketKey(raw: string): Bucket | null {
   if (bucketKeySet.has(raw)) return raw as Bucket;
   return LEGACY_BUCKET_KEYS[raw] ?? null;

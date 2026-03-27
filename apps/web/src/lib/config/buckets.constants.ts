@@ -1,6 +1,19 @@
-export type Bucket = 'world' | 'business' | 'tech' | 'science' | 'health' | 'sports';
+export type Bucket =
+  | 'usa'
+  | 'europe'
+  | 'middle-east'
+  | 'americas'
+  | 'world'
+  | 'business'
+  | 'tech'
+  | 'science'
+  | 'health'
+  | 'sports';
 
-export const DIGEST_DISPLAY_BUCKETS: Bucket[] = ['world', 'business', 'tech', 'science', 'health', 'sports'];
+export const GEO_BUCKETS: Bucket[] = ['usa', 'europe', 'middle-east', 'americas', 'world'];
+export const TOPIC_BUCKETS: Bucket[] = ['business', 'tech', 'science', 'health', 'sports'];
+
+export const DIGEST_DISPLAY_BUCKETS: Bucket[] = [...GEO_BUCKETS, ...TOPIC_BUCKETS];
 
 export const BUCKET_ORDER: Bucket[] = [...DIGEST_DISPLAY_BUCKETS];
 
@@ -14,6 +27,9 @@ const LEGACY_CLUSTER_BUCKET: Record<string, Bucket> = {
   Health: 'health',
   Sports: 'sports',
   Emerging: 'world',
+  USA: 'usa',
+  Europe: 'europe',
+  Americas: 'americas',
 };
 
 export function normalizeClusterBucket(raw: string | null | undefined): Bucket {

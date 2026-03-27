@@ -89,16 +89,28 @@ Return ONLY valid JSON matching this schema:
   "whyItMatters": "max 30 words",
   "tags": ["3-5 single-word or short-phrase keywords, e.g. fed-rate, nvidia-chip, ai-regulation"],
   "region": "one of: world, europe, americas, middle-east, usa",
-  "bucket": "one of: world, business, tech, science, health, sports"
+  "bucket": "one of: usa, europe, middle-east, americas, world, business, tech, science, health, sports"
 }
 
 Tone: dense, zero fluff, future-facing. Tags must be precise and reusable across days.
 
 For "region", assign exactly one of: world, europe, americas, middle-east, usa.
-Rules: "usa" = US-domestic stories only. "americas" = multi-country Americas or non-US Americas countries. "middle-east" = MENA. "europe" = Europe/EU/UK. "world" = worldwide scope or unclear geography, or tech/science/health with no primary geographic anchor.
+Rules: "usa" = US-domestic stories only. "americas" = multi-country Americas or non-US Americas countries. "middle-east" = MENA. "europe" = Europe/EU/UK. "world" = worldwide scope or unclear geography.
 
-For "bucket", assign exactly one of: world, business, tech, science, health, sports.
-Rules: "business" = financial markets, economy, corporate, trade. "tech" = technology, AI, software, hardware, cybersecurity. "science" = scientific research, space, climate. "health" = medicine, public health, wellness, lifestyle, parenting, mental health. "sports" = sports, athletics, competitions, leagues, tournaments. "world" = everything else (politics, law, government, diplomacy, society, culture, accidents, crime, human rights, environment).`;
+For "bucket", use geography-first, topic-override classification:
+STEP 1 — Check topic overrides first. If the story is primarily about one of these topics, use the topic bucket regardless of geography:
+  "business" = financial markets, economy, corporate earnings, monetary policy, trade, tariffs, currency
+  "tech" = technology, AI, software, hardware, cybersecurity, startups
+  "science" = scientific research, space, climate science
+  "health" = medicine, public health, wellness, lifestyle, mental health, parenting
+  "sports" = sports, athletics, competitions, leagues, tournaments
+
+STEP 2 — If no topic override applies, route by geography:
+  "usa" = US-domestic politics, government, law, society, culture, crime
+  "europe" = EU/UK/European politics, government, society, culture
+  "middle-east" = MENA region politics, conflicts, society
+  "americas" = Latin America, Canada, Caribbean politics, society
+  "world" = multi-region, unclear geography, or stories that don't fit above`;
 
     const feedRegion = cluster.items.find((i) => i.feedRegion)?.feedRegion;
 

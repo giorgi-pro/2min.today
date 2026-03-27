@@ -9,7 +9,7 @@
 
 This RFC is written so any LLM (or developer) can **copy-paste and implement** the entire pipeline with zero ambiguity.
 Every function, every prompt, every error path, every Supabase query is specified exactly.
-The pipeline must always produce **exactly one daily edition** at 00:00 UTC, zero duplicates, perfect 5-bucket classification, and zero images.
+The pipeline must always produce **exactly one daily edition** at 00:00 UTC, zero duplicates, perfect 10-bucket classification (5 geographic + 5 topical), and zero images.
 
 ## Exact Behaviour Rules
 
@@ -17,7 +17,7 @@ The pipeline must always produce **exactly one daily edition** at 00:00 UTC, zer
 2. Is **fully idempotent**: if re-run on the same day, it does nothing (checks `published_at` date).
 3. End-to-end latency target: **< 2 seconds** on free tier.
 4. Output: exactly one row per cluster in the `clusters` table.
-5. Classification: **only** the 6 fixed buckets (`world`, `business`, `tech`, `science`, `health`, `sports`). No `emerging` — below-threshold clusters fall back to `llmBucket` (from the summarize prompt) or `world`.
+5. Classification: **10 fixed buckets** using "geography-first, topic-override" logic. 5 geographic: `usa`, `europe`, `middle-east`, `americas`, `world`. 5 topical: `business`, `tech`, `science`, `health`, `sports`. No `emerging` — below-threshold clusters fall back to `llmBucket` (from the summarize prompt) or `world`.
 6. No images, no HTML, no extra fields.
 
 ### Embedding vector size (Gemini + pgvector)
@@ -123,9 +123,9 @@ export interface ClassifiedCluster extends SummarizedCluster {
 
 ## 3. Bucket Config (`lib/config/buckets.yaml` + `lib/config/buckets.ts`)
 
-Names and anchor phrases are **shared with the frontend** (digest sections: World, Business, Tech, Science, Health). The pipeline must not use alternate labels (e.g. Economy vs Business) unless the YAML and UI change together.
+Names and anchor phrases are **shared with the frontend** (digest sections: USA, Europe, Middle East, Americas, World, Business, Tech, Science, Health, Sports). The pipeline must not use alternate labels (e.g. Economy vs Business) unless the YAML and UI change together.
 
-The YAML file is the long-term hook for **optional user-chosen topics** or **more than five sections**; only the loader, migration `check` constraint, seed script, and UI need to stay in sync when that changes.
+The YAML file is the long-term hook for **optional user-chosen topics** or **additional sections**; only the loader, migration `check` constraint, seed script, and UI need to stay in sync when that changes.
 
 ### `lib/config/buckets.yaml`
 
@@ -136,13 +136,18 @@ Used by `classify.ts` and `scripts/seed-bucket-anchors.ts` — both import from 
 # 2min.today Core Buckets
 # Single source of truth — edit here; seed + classify consume via buckets.ts
 # After editing anchor text, re-run: npx tsx scripts/seed-bucket-anchors.ts
+# Classification model: "geography-first, topic-override"
 buckets:
-  world:    "world news current affairs politics government policy law legislation protests civil rights human rights society culture environment crime accidents disasters international relations diplomacy geopolitics conflicts treaties global affairs"
-  business: "financial markets economy business corporate earnings monetary policy trade tariffs currency"
-  tech:     "technology innovation AI hardware software digital breakthroughs startups cybersecurity"
-  science:  "scientific discoveries research physics biology space exploration climate"
-  health:   "health medicine public health biomedical research wellness lifestyle habits nutrition mental health parenting child development fitness diet sleep screen time digital wellbeing"
-  sports:   "sports football soccer basketball tennis cricket rugby olympics athletics competitions leagues tournaments championships racing cycling swimming"
+  usa:         "United States America US federal government Congress White House president domestic American politics policy Trump Biden legislation court ruling"
+  europe:      "Europe European Union EU UK Britain France Germany Spain Italy Netherlands Poland Hungary NATO European parliament Brexit"
+  middle-east: "Middle East Iran Iraq Israel Palestine Saudi Arabia Syria Yemen Gulf OPEC Arab Lebanon Egypt Turkey conflict"
+  americas:    "Latin America Brazil Mexico Canada Argentina Colombia Caribbean South America Central America"
+  world:       "world news international relations diplomacy geopolitics global affairs Asia Africa India China Japan Australia current affairs society culture environment disasters"
+  business:    "financial markets economy business corporate earnings monetary policy trade tariffs currency stock market Wall Street"
+  tech:        "technology innovation AI hardware software digital breakthroughs startups cybersecurity"
+  science:     "scientific discoveries research physics biology space exploration climate"
+  health:      "health medicine public health biomedical research wellness lifestyle habits nutrition mental health parenting child development fitness diet sleep screen time digital wellbeing"
+  sports:      "sports football soccer basketball tennis cricket rugby olympics athletics competitions leagues tournaments championships racing cycling swimming"
 ```
 
 ### `lib/config/buckets.ts`
@@ -156,10 +161,10 @@ import path from 'path';
 
 const raw = fs.readFileSync(path.join(process.cwd(), 'src/lib/config/buckets.yaml'), 'utf8');
 export const BUCKET_ANCHORS = parse(raw).buckets as Record<string, string>;
-export type Bucket = 'world' | 'business' | 'tech' | 'science' | 'health' | 'sports';
+export type Bucket = 'usa' | 'europe' | 'middle-east' | 'americas' | 'world' | 'business' | 'tech' | 'science' | 'health' | 'sports';
 ```
 
-All 6 buckets have anchor embeddings in `bucket_anchors`. There is no `emerging` bucket — the classify step uses a hybrid approach: embedding similarity first, then LLM fallback from the summarize prompt, then `world` as the final catch-all (see §5 `classify.ts`).
+All 10 buckets have anchor embeddings in `bucket_anchors`. There is no `emerging` bucket — the classify step uses a hybrid approach: embedding similarity first, then LLM fallback from the summarize prompt, then `world` as the final catch-all (see §5 `classify.ts`).
 
 > The seed script uses `process.env` directly (not `$env/dynamic/private`) because it runs outside SvelteKit, as a plain Node script via `tsx`.
 
@@ -377,7 +382,7 @@ The entry point (`+server.ts` §8) already checks for existing rows and returns 
 
 - Model: `gemini-2.5-flash`.
 - **Structured output:** use the official Gemini JSON mode (`generationConfig.responseMimeType` + `responseSchema` on the model) so the model cannot return prose, markdown fences, or extra keys. Parse with `JSON.parse(result.response.text())` — no regex fallbacks.
-- **`bucket` field:** the prompt asks Gemini to pick one of the 6 buckets (`world`, `business`, `tech`, `science`, `health`, `sports`). This is stored as `llmBucket` on `SummarizedCluster` and used as a **fallback** in `classify.ts` when embedding similarity is below threshold. This avoids an extra Gemini call in the classify step.
+- **`bucket` field:** the prompt asks Gemini to pick one of the 10 buckets using "geography-first, topic-override" logic: topic buckets (`business`, `tech`, `science`, `health`, `sports`) win if the story is clearly about that topic; otherwise route by geography (`usa`, `europe`, `middle-east`, `americas`, `world`). This is stored as `llmBucket` on `SummarizedCluster` and used as a **fallback** in `classify.ts` when embedding similarity is below threshold. This avoids an extra Gemini call in the classify step.
 - **`region` field:** the prompt asks Gemini to pick one of the 5 regions (`world`, `europe`, `americas`, `middle-east`, `usa`). If `feedRegion` is set on any cluster item, it overrides the LLM pick.
 
 ```ts
@@ -406,7 +411,11 @@ Prompt includes explicit rules for both `region` and `bucket`:
 ```
 For "region": usa = US-domestic only. americas = multi-country Americas or non-US. middle-east = MENA. europe = Europe/EU/UK. world = worldwide scope or unclear geography.
 
-For "bucket": business = financial markets, economy, corporate, trade. tech = technology, AI, software, hardware. science = scientific research, space, climate. health = medicine, wellness, lifestyle, parenting, mental health. sports = sports, athletics, competitions, leagues. world = everything else (politics, law, government, diplomacy, society, culture, accidents, crime, human rights, environment).
+For "bucket", use geography-first, topic-override classification:
+STEP 1 — Check topic overrides first:
+  business = financial markets, economy, corporate, trade. tech = technology, AI, software, hardware. science = scientific research, space, climate. health = medicine, wellness, lifestyle, parenting, mental health. sports = sports, athletics, competitions, leagues.
+STEP 2 — If no topic override, route by geography:
+  usa = US-domestic politics, government, law, society. europe = EU/UK/European politics, society. middle-east = MENA region politics, conflicts. americas = Latin America, Canada, Caribbean. world = multi-region, unclear geography, or stories that don't fit above.
 ```
 
 - Map `parsed` onto `SummarizedCluster` (`headline`, `bullets`, `whyItMatters`, `tags`, `region`, `credits`, `llmBucket`).
@@ -415,8 +424,8 @@ For "bucket": business = financial markets, economy, corporate, trade. tech = te
 
 **Hybrid classification:** embedding similarity first, LLM fallback second, `world` catch-all third.
 
-- Fetch bucket anchor embeddings from Supabase (seeded once via `scripts/seed-bucket-anchors.ts` — 6 rows: `world`, `business`, `tech`, `science`, `health`, `sports`).
-- For each cluster centroid, compute cosine similarity against all 6 anchor embeddings.
+- Fetch bucket anchor embeddings from Supabase (seeded once via `scripts/seed-bucket-anchors.ts` — 10 rows: `usa`, `europe`, `middle-east`, `americas`, `world`, `business`, `tech`, `science`, `health`, `sports`).
+- For each cluster centroid, compute cosine similarity against all 10 anchor embeddings.
 - **Threshold:** compare max cosine similarity to **`CLASSIFY_SIMILARITY_THRESHOLD`** in env (`apps/web/.env`), a float in **0–1**, **default 0.65** if unset or invalid (`getClassifySimilarityThreshold()` in `lib/server/digest/models.ts`).
 - If max similarity ≥ threshold → assign best bucket.
 - Else → use `cluster.llmBucket` (the bucket Gemini picked during summarization). If `llmBucket` is `null` (Gemini returned an invalid value), fall back to `'world'`.
@@ -484,18 +493,18 @@ create table clusters (
 
 create index idx_clusters_embedding on clusters using hnsw (embedding vector_cosine_ops);
 
--- Bucket anchors: 6 fixed rows, seeded once via scripts/seed-bucket-anchors.ts
+-- Bucket anchors: 10 fixed rows, seeded once via scripts/seed-bucket-anchors.ts
 create table if not exists bucket_anchors (
   bucket    text primary key
-    check (bucket in ('world', 'business', 'tech', 'science', 'health', 'sports')),
+    check (bucket in ('usa', 'europe', 'middle-east', 'americas', 'world', 'business', 'tech', 'science', 'health', 'sports')),
   embedding vector(768) not null
 );
--- No HNSW index needed — only 6 rows, sequential scan is faster
+-- No HNSW index needed — only 10 rows, sequential scan is faster
 ```
 
 ## 7. Bucket Anchor Seed Script (`scripts/seed-bucket-anchors.ts`)
 
-Run **once** after applying the migration, and **again after any change to `buckets.yaml` anchor text** (e.g. adding `sports`, broadening `world`/`health`). Idempotent (upsert on primary key).
+Run **once** after applying the migration, and **again after any change to `buckets.yaml` anchor text** (e.g. adding geographic buckets, broadening anchor text). Idempotent (upsert on primary key).
 
 ```ts
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -726,7 +735,7 @@ Until the pipeline ships, keep `mockData` behind a guard or feature flag if need
 1. Copy `apps/web/.env.example` → `apps/web/.env.local` and fill in all values (private vars for pipeline + **`PUBLIC_SUPABASE_URL`** / **`PUBLIC_SUPABASE_ANON_KEY`** for homepage SSR).
 2. Add the same keys to Vercel dashboard → Environment Variables.
 3. Run migration `001-pgvector.sql` (creates `clusters` + `bucket_anchors` tables).
-4. Run `npx tsx scripts/seed-bucket-anchors.ts` to embed and store the 6 anchor vectors.
+4. Run `npx tsx scripts/seed-bucket-anchors.ts` to embed and store the 10 anchor vectors.
 5. Configure Supabase **RLS** so anonymous (or your chosen role) can `SELECT` the `clusters` rows the homepage should show.
 6. Add `APP_URL` and `CRON_SECRET` to GitHub repository secrets (Settings → Secrets → Actions). `APP_URL` is shared with the breaking news workflow (RFC-005).
 

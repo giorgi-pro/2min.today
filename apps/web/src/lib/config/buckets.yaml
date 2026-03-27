@@ -2,9 +2,17 @@
 # Single source of truth: lowercase slugs in DB and code. UI uses text-transform / uppercase for display.
 # Used by: lib/pipeline/classify.ts, scripts/seed-bucket-anchors.ts
 # After editing anchor text, re-run: npx tsx scripts/seed-bucket-anchors.ts
+#
+# Classification model: "geography-first, topic-override"
+# 1. Topic buckets (business, tech, science, health, sports) win if the story is clearly about that topic.
+# 2. Otherwise, route by geography (usa, europe, middle-east, americas, world).
 buckets:
-  world: "world news current affairs politics government policy law legislation protests civil rights human rights society culture environment crime accidents disasters international relations diplomacy geopolitics conflicts treaties global affairs"
-  business: "financial markets economy business corporate earnings monetary policy trade tariffs currency"
+  usa: "United States America US federal government Congress White House president domestic American politics policy Trump Biden legislation court ruling"
+  europe: "Europe European Union EU UK Britain France Germany Spain Italy Netherlands Poland Hungary NATO European parliament Brexit"
+  middle-east: "Middle East Iran Iraq Israel Palestine Saudi Arabia Syria Yemen Gulf OPEC Arab Lebanon Egypt Turkey conflict"
+  americas: "Latin America Brazil Mexico Canada Argentina Colombia Caribbean South America Central America"
+  world: "world news international relations diplomacy geopolitics global affairs Asia Africa India China Japan Australia current affairs society culture environment disasters"
+  business: "financial markets economy business corporate earnings monetary policy trade tariffs currency stock market Wall Street"
   tech: "technology innovation AI hardware software digital breakthroughs startups cybersecurity"
   science: "scientific discoveries research physics biology space exploration climate"
   health: "health medicine public health biomedical research wellness lifestyle habits nutrition mental health parenting child development fitness diet sleep screen time digital wellbeing"
