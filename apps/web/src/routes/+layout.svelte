@@ -6,7 +6,7 @@
   import { searchQuery, activeRegions } from '$lib/digest-filter'
   import type { Region } from '$lib/types/digest'
 
-  let { children } = $props()
+  let { data, children } = $props()
 </script>
 
 <div class="min-h-screen flex flex-col bg-white">
@@ -19,6 +19,6 @@
   <main class="flex-1">
     {@render children()}
   </main>
-  <BottomSection />
+  <BottomSection newsSourcesCount={data.newsSourcesCount} />
   <Footer />
 </div>

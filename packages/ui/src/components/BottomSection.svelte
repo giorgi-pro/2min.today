@@ -4,6 +4,8 @@
   import TimerTile from './TimerTile.svelte';
   import TimeTile from './TimeTile.svelte';
 
+  const { newsSourcesCount }: { newsSourcesCount: number } = $props();
+
   let utc = $state(false);
 
   let currentVisitors = $state('0002');
@@ -18,7 +20,7 @@
   <div class="flex flex-wrap gap-4">
     <BottomTile header="Current Visitors" content={currentVisitors} />
     <TimerTile {utc} ontoggle={() => (utc = !utc)} />
-    <BottomTile header="News Sources" content="38" />
+    <BottomTile header="News Sources" content={String(newsSourcesCount)} />
     <TimeTile header="Last Digest" time="06:00" {utc} ontoggle={() => (utc = !utc)} />
   </div>
 </section>
