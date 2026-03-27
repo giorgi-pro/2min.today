@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import { VALID_REGIONS, type Region } from '$lib/types/digest';
+import { VALID_REGIONS, type Region } from '@2min.today/lib/types/digest';
 
 export const searchQuery = writable('');
 

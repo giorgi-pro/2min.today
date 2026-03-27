@@ -1,12 +1,12 @@
 <script lang="ts">
-  import '../app.css'
+  import '../../app.css'
   import { onMount } from 'svelte'
-  import Header from '@2min.today/ui/components/Header.svelte'
-  import MobileLayout from '@2min.today/ui/components/MobileLayout.svelte'
-  import Footer from '@2min.today/ui/components/Footer.svelte'
-  import BottomSection from '@2min.today/ui/components/BottomSection.svelte'
-  import { searchQuery, activeRegions } from '$lib/digest-filter'
-  import type { Region } from '$lib/types/digest'
+  import Header from '@2min.today/ui/Header.svelte'
+  import MobileLayout from '@2min.today/ui/MobileLayout.svelte'
+  import Footer from '@2min.today/ui/Footer.svelte'
+  import BottomSection from '@2min.today/ui/BottomSection.svelte'
+  import { searchQuery, activeRegions } from '@2min.today/lib/digest-filter'
+  import type { Region } from '@2min.today/lib/types/digest'
 
   let { data, children } = $props()
 

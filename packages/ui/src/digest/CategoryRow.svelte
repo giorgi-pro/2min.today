@@ -186,12 +186,14 @@
   {#if minimized}
     <div
       class="flex h-8 cursor-pointer items-center {reorderable ? 'cursor-grab touch-none select-none' : ''}"
-      role="group"
+      role="button"
+      tabindex="0"
       use:optionalDragHandle={reorderable}
-      aria-label={reorderable ? `Drag to reorder ${name} category` : undefined}
+      aria-label={reorderable ? `Drag to reorder ${name} category` : `Expand ${name} category`}
       onmouseenter={onMinimizedRowEnter}
       onmouseleave={onMinimizedRowLeave}
       onclick={() => onExpand?.()}
+      onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') onExpand?.(); }}
     >
       <button
         type="button"
@@ -238,6 +240,8 @@
     <div
       class="grid"
       style="grid-template-columns: 30vh 1fr"
+      role="region"
+      aria-label="{name} category"
       bind:this={rowEl}
       onmouseenter={startMarquee}
       onmouseleave={stopMarquee}

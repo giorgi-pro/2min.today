@@ -3,8 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
-    "./button": "./src/button.tsx",
-    "./components/*": "./src/components/*"
+    "./components/*": "./src/*"
   },
   "scripts": {
     "lint": "biome lint .",

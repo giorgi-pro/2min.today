@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Logger } from 'pino';
-import { createDigestChild } from '$lib/server/digest/logger';
+import { createDigestChild } from '@2min.today/lib/server/digest/logger';
 import { fetchRawItems } from './fetch';
 import { embedItems } from './embed';
 import { clusterItems } from './cluster';
@@ -8,7 +8,7 @@ import { summarizeClusters } from './summarize';
 import { classifyClusters } from './classify';
 import { upsertClusters } from './upsert';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { ClassifiedCluster } from '$lib/types/digest';
+import type { ClassifiedCluster } from '@2min.today/lib/types/digest';
 
 export const pipeline = {
   async run(supabase: SupabaseClient, opts?: { log?: Logger }): Promise<ClassifiedCluster[]> {

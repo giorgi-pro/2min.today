@@ -1,16 +1,16 @@
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import type { Logger } from 'pino';
 import { env } from '$env/dynamic/private';
-import { withFlashGenerationRetry } from '$lib/server/digest/flash-generate';
+import { withFlashGenerationRetry } from '@2min.today/lib/server/digest/flash-generate';
 import {
   getDigestSummarizeMaxClusters,
   getFlashModel,
   mergeFlashGenerationConfig,
-} from '$lib/server/digest/models';
-import { silentLogger } from '$lib/server/digest/logger';
-import { parseRegion } from '$lib/types/digest';
-import { BUCKET_ORDER, type Bucket } from '$lib/config/buckets.constants';
-import type { Cluster, SummarizedCluster, Credit, EmbeddedItem } from '$lib/types/digest';
+} from '@2min.today/lib/server/digest/models';
+import { silentLogger } from '@2min.today/lib/server/digest/logger';
+import { parseRegion } from '@2min.today/lib/types/digest';
+import { BUCKET_ORDER, type Bucket } from '@2min.today/lib/config/buckets.constants';
+import type { Cluster, SummarizedCluster, Credit, EmbeddedItem } from '@2min.today/lib/types/digest';
 
 function extractCredits(items: EmbeddedItem[]): Credit[] {
   const seen = new Set<string>();

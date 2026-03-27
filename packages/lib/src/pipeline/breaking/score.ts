@@ -1,5 +1,5 @@
-import type { RawItem } from '$lib/types/digest';
-import type { BreakingCandidate } from '$lib/types/breaking';
+import type { RawItem } from '@2min.today/lib/types/digest';
+import type { BreakingCandidate } from '@2min.today/lib/types/breaking';
 
 const BREAKING_THRESHOLD = 3;
 const MAX_AGE_MINUTES = 20;

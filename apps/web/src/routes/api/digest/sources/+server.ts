@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { json } from '@sveltejs/kit';
-import { fetchRawItemsWithDiagnostics } from '$lib/pipeline/fetch';
-import { digestLogger } from '$lib/server/digest/logger';
+import { fetchRawItemsWithDiagnostics } from '@2min.today/lib/pipeline/fetch';
+import { digestLogger } from '@2min.today/lib/server/digest/logger';
 import { env } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
 

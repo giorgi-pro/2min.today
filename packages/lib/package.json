@@ -1,0 +1,30 @@
+{
+  "name": "@2min.today/lib",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "lint": "biome lint .",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@google/generative-ai": "0.24.1",
+    "@supabase/supabase-js": "2.100.0",
+    "fast-xml-parser": "5.5.9",
+    "pino": "^9.6.0",
+    "twitter-api-v2": "1.29.0",
+    "uuid": "13.0.0",
+    "fuse.js": "7.1.0",
+    "yaml": "2.8.3"
+  },
+  "devDependencies": {
+    "@2min.today/typescript-config": "workspace:*",
+    "@biomejs/biome": "2.1.1",
+    "@types/node": "^22.15.3",
+    "@types/uuid": "11.0.0",
+    "typescript": "5.9.2"
+  }
+}

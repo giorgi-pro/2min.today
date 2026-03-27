@@ -1,7 +1,7 @@
 import newsSourcesYaml from './news-sources.yaml?raw';
 import { parse } from 'yaml';
-import type { Region } from '$lib/types/digest';
-import { VALID_REGIONS } from '$lib/types/digest';
+import type { Region } from '@2min.today/lib/types/digest';
+import { VALID_REGIONS } from '@2min.today/lib/types/digest';
 
 export type NewsSourceType = 'rss' | 'x';
 

@@ -12,6 +12,7 @@ const config = {
     adapter: adapter(),
     alias: {
       '@2min.today/ui': path.resolve(dirname, '../../packages/ui/src'),
+      '@2min.today/lib': path.resolve(dirname, '../../packages/lib/src'),
     },
   },
 }

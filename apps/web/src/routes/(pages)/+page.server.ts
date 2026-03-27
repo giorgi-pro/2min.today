@@ -1,9 +1,9 @@
 import { env } from '$env/dynamic/private';
-import { getSupabaseClient } from '$lib/supabase/client';
-import { buildMockDigest } from '$lib/mock-digest';
-import type { Bucket } from '$lib/config/buckets';
-import { normalizeClusterBucket } from '$lib/config/buckets.constants';
-import { parseRegion, type Region, type Credit } from '$lib/types/digest';
+import { getSupabaseClient } from '@2min.today/lib/supabase/client';
+import { buildMockDigest } from '@2min.today/lib/mock-digest';
+import type { Bucket } from '@2min.today/lib/config/buckets';
+import { normalizeClusterBucket } from '@2min.today/lib/config/buckets.constants';
+import { parseRegion, type Region, type Credit } from '@2min.today/lib/types/digest';
 
 type SummaryJson = {
   headline: string;

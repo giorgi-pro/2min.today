@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { json } from '@sveltejs/kit';
-import { getSupabaseServiceRoleClient } from '$lib/supabase/server';
-import { pipeline } from '$lib/pipeline';
-import { digestLogger } from '$lib/server/digest/logger';
+import { getSupabaseServiceRoleClient } from '@2min.today/lib/supabase/server';
+import { pipeline } from '@2min.today/lib/pipeline';
+import { digestLogger } from '@2min.today/lib/server/digest/logger';
 import { env } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
 

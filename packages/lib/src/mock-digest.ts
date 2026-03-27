@@ -1,7 +1,7 @@
-import type { Bucket } from '$lib/config/buckets';
-import type { Region, Credit } from '$lib/types/digest';
-import { mockData } from '$lib/mock-data';
-import { bulletsFromMockContent, deduceMockTags } from '$lib/mock-tags';
+import type { Bucket } from '@2min.today/lib/config/buckets';
+import type { Region, Credit } from '@2min.today/lib/types/digest';
+import { mockData } from '@2min.today/lib/mock-data';
+import { bulletsFromMockContent, deduceMockTags } from '@2min.today/lib/mock-tags';
 
 export type MockDigestCard = {
   headline: string;

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Logger } from 'pino';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { digestLogger } from '$lib/server/digest/logger';
+import { digestLogger } from '@2min.today/lib/server/digest/logger';
 import { fetchRawItems } from '../fetch';
 import { scoreItems } from './score';
 import { generateLiveCard } from './generate';

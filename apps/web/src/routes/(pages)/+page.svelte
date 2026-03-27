@@ -3,20 +3,20 @@
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
   import { dragHandleZone, type DndEvent } from 'svelte-dnd-action';
-  import { DIGEST_DISPLAY_BUCKETS, type Bucket } from '$lib/config/buckets.constants';
+  import { DIGEST_DISPLAY_BUCKETS, type Bucket } from '@2min.today/lib/config/buckets.constants';
   import {
     CATEGORY_ORDER_STORAGE_KEY,
     CATEGORY_MINIMIZED_STORAGE_KEY,
     normalizeStoredBucketKey,
     resolveCategoryOrder,
-  } from '$lib/category-order';
-  import { buildMockDigest } from '$lib/mock-digest';
-  import { debouncedSearchQuery, activeRegions } from '$lib/digest-filter';
-  import { SearchHandler, ThresholdStrategy } from '$lib/search/search-handler';
+  } from '@2min.today/lib/category-order';
+  import { buildMockDigest } from '@2min.today/lib/mock-digest';
+  import { debouncedSearchQuery, activeRegions } from '@2min.today/lib/digest-filter';
+  import { SearchHandler, ThresholdStrategy } from '@2min.today/lib/search/search-handler';
   import type { DigestCard } from './+page.server';
-  import type { Region, Credit } from '$lib/types/digest';
-  import CategoryRow from '@2min.today/ui/components/digest/CategoryRow.svelte';
-  import MobileView from '@2min.today/ui/components/digest/MobileView.svelte';
+  import type { Region, Credit } from '@2min.today/lib/types/digest';
+  import CategoryRow from '@2min.today/ui/digest/CategoryRow.svelte';
+  import MobileView from '@2min.today/ui/digest/MobileView.svelte';
 
   type DndBucketItem = { id: Bucket; bucket: Bucket };
 
