@@ -16,15 +16,16 @@
   },
   "devDependencies": {
     "@2min.today/typescript-config": "workspace:*",
+    "@biomejs/biome": "2.1.1",
     "@types/node": "^22.15.3",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
-    "@biomejs/biome": "2.1.1",
     "svelte": "^5.46.4",
     "typescript": "5.9.2"
   },
   "dependencies": {
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "svelte-dnd-action": "0.9.69"
   }
 }

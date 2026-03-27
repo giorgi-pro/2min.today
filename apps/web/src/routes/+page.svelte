@@ -1,12 +1,13 @@
 <script lang="ts">
+  import { flip } from 'svelte/animate';
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
+  import { dragHandleZone, type DndEvent } from 'svelte-dnd-action';
   import { DIGEST_DISPLAY_BUCKETS, type Bucket } from '$lib/config/buckets.constants';
   import {
     CATEGORY_ORDER_STORAGE_KEY,
     CATEGORY_MINIMIZED_STORAGE_KEY,
     normalizeStoredBucketKey,
-    reorderCategoryBuckets,
     resolveCategoryOrder,
   } from '$lib/category-order';
   import { buildMockDigest } from '$lib/mock-digest';
@@ -16,7 +17,7 @@
   import type { Region, Credit } from '$lib/types/digest';
   import CategoryRow from '@2min.today/ui/components/digest/CategoryRow.svelte';
 
-  const BUCKET_MIME = 'application/x-2min-bucket';
+  type DndBucketItem = { id: Bucket; bucket: Bucket };
 
   type Category = {
     name: string;
@@ -168,55 +169,24 @@
     persistMinimized(next);
   }
 
-  let draggingBucket = $state<Bucket | null>(null);
-  let dragOverBucket = $state<Bucket | null>(null);
+  let dndItems = $state<DndBucketItem[]>([]);
+  let dndDragging = $state(false);
+  const flipDurationMs = 150;
 
-  function onPanelDragStart(bucket: Bucket) {
-    return (e: DragEvent) => {
-      const dt = e.dataTransfer;
-      if (!dt) return;
-      dt.setData(BUCKET_MIME, bucket);
-      dt.setData('text/plain', bucket);
-      dt.effectAllowed = 'move';
-      draggingBucket = bucket;
-    };
+  $effect.pre(() => {
+    if (dndDragging) return;
+    dndItems = displayOrder.map((b) => ({ id: b, bucket: b }));
+  });
+
+  function handleDndConsider(e: CustomEvent<DndEvent<DndBucketItem>>) {
+    dndDragging = true;
+    dndItems = e.detail.items;
   }
 
-  function onPanelDragEnd() {
-    draggingBucket = null;
-    dragOverBucket = null;
-  }
-
-  function onRowDragOver(bucket: Bucket) {
-    return (e: DragEvent) => {
-      e.preventDefault();
-      const dt = e.dataTransfer;
-      if (dt) dt.dropEffect = 'move';
-      dragOverBucket = bucket;
-    };
-  }
-
-  function onRowDragLeave(bucket: Bucket) {
-    return (e: DragEvent) => {
-      const rel = e.relatedTarget as Node | null;
-      const cur = e.currentTarget as HTMLElement;
-      if (rel && cur.contains(rel)) return;
-      if (dragOverBucket === bucket) dragOverBucket = null;
-    };
-  }
-
-  function onRowDrop(onto: Bucket) {
-    return (e: DragEvent) => {
-      e.preventDefault();
-      const dt = e.dataTransfer;
-      const raw = dt?.getData(BUCKET_MIME) || dt?.getData('text/plain');
-      dragOverBucket = null;
-      draggingBucket = null;
-      if (!raw) return;
-      const from = raw as Bucket;
-      if (from === onto) return;
-      persistBucketOrder(reorderCategoryBuckets(displayOrder, from, onto));
-    };
+  function handleDndFinalize(e: CustomEvent<DndEvent<DndBucketItem>>) {
+    dndItems = e.detail.items;
+    persistBucketOrder(dndItems.map((i) => i.bucket));
+    dndDragging = false;
   }
 
   const categoryByBucket = $derived(
@@ -248,26 +218,32 @@
   />
 </svelte:head>
 
-<div>
-  {#each displayOrder as bucket, i (bucket)}
-    {@const category = categoryByBucket[bucket]}
-    {#if category}
-      <CategoryRow
-        name={category.name}
-        summary={category.summary}
-        news={category.news}
-        index={i}
-        minimized={minimizedBuckets.has(bucket)}
-        onMinimize={() => minimizeBucket(bucket)}
-        onExpand={() => expandBucket(bucket)}
-        dragSource={draggingBucket === bucket}
-        dragOver={dragOverBucket === bucket}
-        onPanelDragStart={onPanelDragStart(bucket)}
-        onPanelDragEnd={onPanelDragEnd}
-        onRowDragOver={onRowDragOver(bucket)}
-        onRowDragLeave={onRowDragLeave(bucket)}
-        onRowDrop={onRowDrop(bucket)}
-      />
-    {/if}
+<div
+  aria-label="News categories, drag panel or grip to reorder"
+  role="region"
+  use:dragHandleZone={{
+    items: dndItems,
+    flipDurationMs,
+    dropTargetStyle: { outline: 'none' },
+  }}
+  onconsider={handleDndConsider}
+  onfinalize={handleDndFinalize}
+>
+  {#each dndItems as item, i (item.id)}
+    <div class="border-b-2 border-black" animate:flip={{ duration: flipDurationMs }}>
+      {#if categoryByBucket[item.bucket]}
+        {@const category = categoryByBucket[item.bucket] as Category}
+        <CategoryRow
+          name={category.name}
+          summary={category.summary}
+          news={category.news}
+          index={i}
+          minimized={minimizedBuckets.has(item.bucket)}
+          onMinimize={() => minimizeBucket(item.bucket)}
+          onExpand={() => expandBucket(item.bucket)}
+          reorderable
+        />
+      {/if}
+    </div>
   {/each}
 </div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { dragHandle } from 'svelte-dnd-action';
   import CategoryPanel from './CategoryPanel.svelte';
   import NewsCard from './NewsCard.svelte';
 
@@ -22,13 +23,7 @@
     minimized?: boolean;
     onMinimize?: () => void;
     onExpand?: () => void;
-    onPanelDragStart?: (e: DragEvent) => void;
-    onPanelDragEnd?: (e: DragEvent) => void;
-    onRowDragOver?: (e: DragEvent) => void;
-    onRowDragLeave?: (e: DragEvent) => void;
-    onRowDrop?: (e: DragEvent) => void;
-    dragSource?: boolean;
-    dragOver?: boolean;
+    reorderable?: boolean;
   };
 
   const {
@@ -39,13 +34,7 @@
     minimized = false,
     onMinimize,
     onExpand,
-    onPanelDragStart,
-    onPanelDragEnd,
-    onRowDragOver,
-    onRowDragLeave,
-    onRowDrop,
-    dragSource = false,
-    dragOver = false,
+    reorderable = false,
   }: Props = $props();
   let showNews = $state(false);
   let hoverTimer: ReturnType<typeof setTimeout> | null = null;
@@ -76,8 +65,6 @@
   function hideCreditTooltip() {
     tooltipVisible = false;
   }
-
-  const panelDraggable = $derived(Boolean(onPanelDragStart));
 
   const MAX_SPEED = 2.5;
 
@@ -136,42 +123,7 @@
     marqueeSpeed = 0;
   }
 
-  let suppressPanelClick = $state(false);
-
-  function applyPanelGrabCursor() {
-    const c = 'grabbing';
-    document.documentElement.style.setProperty('cursor', c, 'important');
-    document.body.style.setProperty('cursor', c, 'important');
-    categoryEl?.style.setProperty('cursor', c, 'important');
-  }
-
-  function clearPanelGrabCursor() {
-    document.documentElement.style.removeProperty('cursor');
-    document.body.style.removeProperty('cursor');
-    categoryEl?.style.removeProperty('cursor');
-  }
-
-  function handlePanelDragStart(e: DragEvent) {
-    stopMarquee();
-    applyPanelGrabCursor();
-    onPanelDragStart?.(e);
-  }
-
-  function handlePanelDrag(_e: DragEvent) {
-    applyPanelGrabCursor();
-  }
-
-  function handlePanelDragEnd(e: DragEvent) {
-    clearPanelGrabCursor();
-    onPanelDragEnd?.(e);
-    suppressPanelClick = true;
-    setTimeout(() => {
-      suppressPanelClick = false;
-    }, 400);
-  }
-
-  function toggleMarquee(e: MouseEvent) {
-    if (suppressPanelClick) return;
+  function toggleMarquee(_e: MouseEvent) {
     stopMarquee();
     onMinimize?.();
   }
@@ -186,19 +138,23 @@
 </style>
 
 <div
-  class="border-b-2 border-black"
-  role={panelDraggable ? 'group' : undefined}
-  aria-label={panelDraggable ? `${name} category row` : undefined}
-  ondragover={onRowDragOver}
-  ondragleave={onRowDragLeave}
-  ondrop={onRowDrop}
+  role={reorderable ? 'group' : undefined}
+  aria-label={reorderable ? `${name} category row` : undefined}
 >
   {#if minimized}
     <div
       class="flex h-8 items-center"
+      role="group"
       onmouseenter={onMinimizedRowEnter}
       onmouseleave={onMinimizedRowLeave}
     >
+      {#if reorderable}
+        <div
+          class="flex h-8 w-5 shrink-0 cursor-grab touch-none select-none items-center justify-center border-r border-black/15"
+          use:dragHandle
+          aria-label="Drag to reorder {name} category"
+        ></div>
+      {/if}
       <button
         class="flex h-8 shrink-0 cursor-pointer items-center px-4 font-mono text-[0.6rem] font-black uppercase tracking-widest transition-opacity hover:opacity-70
           {index % 2 === 0 ? 'bg-black text-white' : 'bg-white text-black border-r-2 border-black'}"
@@ -241,12 +197,7 @@
         inverted={index % 2 === 0}
         {pressed}
         {marqueeEnabled}
-        draggable={panelDraggable}
-        dragging={dragSource}
-        dropTarget={dragOver}
-        ondragstart={handlePanelDragStart}
-        ondrag={handlePanelDrag}
-        ondragend={handlePanelDragEnd}
+        reorderHandle={reorderable}
         bind:el={categoryEl}
         onmouseenter={startMarquee}
         onmouseleave={stopMarquee}
@@ -254,11 +205,7 @@
         onclick={toggleMarquee}
       />
 
-      <div
-        class="relative overflow-hidden"
-        role={panelDraggable ? 'presentation' : undefined}
-        ondragover={onRowDragOver}
-      >
+      <div class="relative overflow-hidden">
         <div
           class="news-scroll flex h-[30vh] overflow-x-scroll overflow-y-hidden divide-x divide-black/10"
           bind:this={scrollEl}
