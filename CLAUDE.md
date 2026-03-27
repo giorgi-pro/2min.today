@@ -30,6 +30,13 @@ Type-check the SvelteKit app specifically:
 cd apps/web && pnpm check-types   # runs svelte-check
 ```
 
+Seed bucket classification anchors (run from repo root):
+```bash
+pnpm --filter @2min.today/web run seed:anchors
+```
+
+There is no test framework. Manual API testing uses the Bruno collection in `.bruno/collections/2min.today/` (requires `base_url`, `cron_secret`, `breaking_secret` variables).
+
 ## Architecture
 
 ### Monorepo Structure
@@ -40,18 +47,27 @@ cd apps/web && pnpm check-types   # runs svelte-check
 
 ### Backend Pipeline (`apps/web/src/routes/api/digest/+server.ts`)
 
-The digest API is the core of the product:
-1. Fetch RSS + X from `apps/web/src/lib/config/news-sources.yaml` via `lib/pipeline/fetch.ts` (fetch-only diagnostics: `GET /api/digest/sources?secret=` same as digest cron)
-2. Generate Gemini embeddings per story
-3. Deduplicate via cosine similarity against existing Supabase pgvector entries
-4. Summarize unique stories with Gemini 2.5 Flash (3 bullets + "Why it Matters")
-5. Persist to Supabase
+The digest API is the core of the product. The 6-phase pipeline in `lib/pipeline/index.ts`:
+1. **Fetch** — Parses RSS + X from `lib/config/news-sources.yaml` → `RawItem[]` (fetch-only diagnostics: `GET /api/digest/sources?secret=`)
+2. **Embed** — Gemini embedding per story → `EmbeddedItem[]`
+3. **Cluster** — Cosine similarity grouping → `Cluster[]` (threshold: `CLUSTER_SIMILARITY_THRESHOLD`, default 0.85)
+4. **Summarize** — One Flash call per cluster → headline + 3 bullets + "Why it Matters" (optional cap: `DIGEST_SUMMARIZE_MAX_CLUSTERS`)
+5. **Classify** — Compares centroid to bucket anchors in Supabase → assigns one of 10 buckets (threshold: `CLASSIFY_SIMILARITY_THRESHOLD`, default 0.65)
+6. **Upsert** — Persists to Supabase `clusters` table
 
-Protected by cron auth. Triggered by Vercel cron.
+**Buckets** — 5 geographic: `usa`, `europe`, `middle-east`, `americas`, `world`; 5 topical: `business`, `tech`, `science`, `health`, `sports`. Legacy values are auto-normalized via `normalizeClusterBucket()`.
+
+**Breaking news** — Separate pipeline at `lib/pipeline/breaking/` triggered by `POST /api/breaking`. Uses heuristic scoring (no embeddings), then one Flash call per candidate. Deduplicates via `source_url`. Workflow: `.github/workflows/breaking-news.yml` (manual dispatch only; cron commented out).
+
+Protected by cron auth. Triggered by GitHub Actions (`.github/workflows/daily-digest.yml`) or Vercel cron.
 
 Model constants are in `apps/web/src/lib/server/digest/models.ts`:
 - `FLASH_MODEL`, `EMBEDDING_MODEL`, `EMBEDDING_DIMENSION` — see `apps/web/.env.example` (defaults in `lib/server/digest/models.ts` getters)
 - `FLASH_GENERATION_MIN_INTERVAL_MS` — optional; unset = **UnconstrainedFlow** (no pacing, no 429 retries); set to e.g. `15000` = **ConstrainedFlow** (one Flash call every 15s + 429 retries with backoff)
+
+Local dev: set `USE_MOCK_DATA=true` in `apps/web/.env` to bypass Supabase and return static mock digest on the homepage.
+
+**Database** — Migrations in `apps/web/supabase/migrations/`. Tables: `clusters` (stores digests with HNSW pgvector index) and `bucket_anchors` (classification seed vectors). Run `seed:anchors` script after adding new buckets to `lib/config/buckets.yaml`.
 
 ### Tech Stack Decisions (from ADR)
 
