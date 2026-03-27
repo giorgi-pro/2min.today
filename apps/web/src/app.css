@@ -82,6 +82,10 @@ html::-webkit-scrollbar-thumb {
   border-width: 1px;
 }
 
+.news-scroll-thin::-webkit-scrollbar {
+  height: 3px;
+}
+
 .credits-dropdown {
   overflow-x: hidden;
   overflow-y: auto;

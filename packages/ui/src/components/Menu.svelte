@@ -17,7 +17,7 @@
 </script>
 
 <nav class="flex flex-row items-center gap-2" aria-label="Region">
-  <GlobalSwitch onclick={onRegionClear} />
+  <div class="mr-2"><GlobalSwitch onclick={onRegionClear} /></div>
   <EuropeSwitch active={activeRegions.has('europe')} onclick={() => onRegionToggle?.('europe')} />
   <AmericasSwitch active={activeRegions.has('americas')} onclick={() => onRegionToggle?.('americas')} />
   <MiddleEastSwitch active={activeRegions.has('middle-east')} onclick={() => onRegionToggle?.('middle-east')} />

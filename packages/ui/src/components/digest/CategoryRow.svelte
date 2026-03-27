@@ -202,7 +202,7 @@
         onmousedown={(e) => e.stopPropagation()}
         ontouchstart={(e) => e.stopPropagation()}
       >{name}</button>
-      <div class="relative h-8 min-w-0 flex-1" style="overflow-x: auto; overflow-y: hidden;">
+      <div class="relative h-8 min-w-0 flex-1 {showNews ? 'news-scroll news-scroll-thin' : 'overflow-hidden'}">
         <div
           class="flex h-full divide-x divide-black/10"
           style:transform={showNews ? 'translateY(0)' : 'translateY(100%)'}

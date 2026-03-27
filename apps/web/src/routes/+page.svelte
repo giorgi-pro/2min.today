@@ -16,6 +16,7 @@
   import type { DigestCard } from './+page.server';
   import type { Region, Credit } from '$lib/types/digest';
   import CategoryRow from '@2min.today/ui/components/digest/CategoryRow.svelte';
+  import MobileView from '@2min.today/ui/components/digest/MobileView.svelte';
 
   type DndBucketItem = { id: Bucket; bucket: Bucket };
 
@@ -110,6 +111,11 @@
   let minimizedBuckets = $state<Set<Bucket>>(new Set());
 
   onMount(() => {
+    const mq = window.matchMedia('(max-width: 576px)');
+    isMobile = mq.matches;
+    const mqHandler = (e: MediaQueryListEvent) => { isMobile = e.matches; };
+    mq.addEventListener('change', mqHandler);
+
     try {
       const rawOrder = localStorage.getItem(CATEGORY_ORDER_STORAGE_KEY);
       if (rawOrder) {
@@ -138,6 +144,8 @@
     } catch {
       /* ignore */
     }
+
+    return () => mq.removeEventListener('change', mqHandler);
   });
 
   const baseOrder = $derived(resolveCategoryOrder(savedBucketOrder, presentBuckets));
@@ -168,6 +176,8 @@
     next.delete(bucket);
     persistMinimized(next);
   }
+
+  let isMobile = $state(false);
 
   let dndItems = $state<DndBucketItem[]>([]);
   let dndDragging = $state(false);
@@ -214,6 +224,14 @@
     }, {}),
   );
 
+  const mobileCategories = $derived(
+    displayOrder.map((b, i) => ({
+      bucket: b,
+      index: i,
+      news: categoryByBucket[b]?.news ?? [],
+    })),
+  );
+
 </script>
 
 <svelte:head>
@@ -224,34 +242,38 @@
   />
 </svelte:head>
 
-<div
-  aria-label="News categories, drag rows to reorder"
-  role="region"
-  use:dragHandleZone={{
-    items: dndItems,
-    flipDurationMs,
-    dropTargetStyle: { outline: 'none' },
-    transformDraggedElement: styleCategoryDragPreview,
-  }}
-  onconsider={handleDndConsider}
-  onfinalize={handleDndFinalize}
->
-  {#each dndItems as item, i (item.id)}
-    <div class="-mt-[2px] border-2 border-black" animate:flip={{ duration: flipDurationMs }}>
-      {#if categoryByBucket[item.bucket]}
-        {@const category = categoryByBucket[item.bucket] as Category}
-        <CategoryRow
-          name={category.name}
-          summary={category.summary}
-          news={category.news}
-          index={i}
-          minimized={minimizedBuckets.has(item.bucket)}
-          dragging={dndDragging}
-          onMinimize={() => minimizeBucket(item.bucket)}
-          onExpand={() => expandBucket(item.bucket)}
-          reorderable
-        />
-      {/if}
-    </div>
-  {/each}
-</div>
+{#if isMobile}
+  <MobileView categories={mobileCategories} />
+{:else}
+  <div
+    aria-label="News categories, drag rows to reorder"
+    role="region"
+    use:dragHandleZone={{
+      items: dndItems,
+      flipDurationMs,
+      dropTargetStyle: { outline: 'none' },
+      transformDraggedElement: styleCategoryDragPreview,
+    }}
+    onconsider={handleDndConsider}
+    onfinalize={handleDndFinalize}
+  >
+    {#each dndItems as item, i (item.id)}
+      <div class="-mt-[2px] border-2 border-black" animate:flip={{ duration: flipDurationMs }}>
+        {#if categoryByBucket[item.bucket]}
+          {@const category = categoryByBucket[item.bucket] as Category}
+          <CategoryRow
+            name={category.name}
+            summary={category.summary}
+            news={category.news}
+            index={i}
+            minimized={minimizedBuckets.has(item.bucket)}
+            dragging={dndDragging}
+            onMinimize={() => minimizeBucket(item.bucket)}
+            onExpand={() => expandBucket(item.bucket)}
+            reorderable
+          />
+        {/if}
+      </div>
+    {/each}
+  </div>
+{/if}
