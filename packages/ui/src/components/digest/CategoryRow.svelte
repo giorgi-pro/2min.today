@@ -42,6 +42,7 @@
     news: NewsItem[];
     index: number;
     minimized?: boolean;
+    dragging?: boolean;
     onMinimize?: () => void;
     onExpand?: () => void;
     reorderable?: boolean;
@@ -53,6 +54,7 @@
     news,
     index,
     minimized = false,
+    dragging = false,
     onMinimize,
     onExpand,
     reorderable = false,
@@ -77,6 +79,7 @@
   let creditCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
   function openCredit(i: number, credits: Credit[], btn: HTMLElement) {
+    if (dragging) return;
     if (creditCloseTimer) { clearTimeout(creditCloseTimer); creditCloseTimer = null; }
     const rect = btn.getBoundingClientRect();
     creditX = rect.left;
@@ -182,18 +185,19 @@
 >
   {#if minimized}
     <div
-      class="flex h-8 items-center {reorderable ? 'cursor-grab touch-none select-none' : ''}"
+      class="flex h-8 cursor-pointer items-center {reorderable ? 'cursor-grab touch-none select-none' : ''}"
       role="group"
       use:optionalDragHandle={reorderable}
       aria-label={reorderable ? `Drag to reorder ${name} category` : undefined}
       onmouseenter={onMinimizedRowEnter}
       onmouseleave={onMinimizedRowLeave}
+      onclick={() => onExpand?.()}
     >
       <button
         type="button"
         class="flex h-8 shrink-0 cursor-pointer items-center px-4 font-mono text-[0.6rem] font-black uppercase tracking-widest transition-opacity hover:opacity-70
           {index % 2 === 0 ? 'bg-black text-white' : 'bg-white text-black border-r-2 border-black'}"
-        onclick={() => onExpand?.()}
+        onclick={(e) => { e.stopPropagation(); onExpand?.(); }}
         aria-label="Expand category"
         onmousedown={(e) => e.stopPropagation()}
         ontouchstart={(e) => e.stopPropagation()}
@@ -220,7 +224,7 @@
                 class="cursor-pointer border-0 bg-transparent p-1 font-mono text-[0.75rem] font-bold leading-none text-black/30 transition-colors hover:text-black/60"
                 onmousedown={(e) => e.stopPropagation()}
                 ontouchstart={(e) => e.stopPropagation()}
-                onclick={(e) => (openCreditIndex === i ? openCreditIndex = null : openCredit(i, item.credits, e.currentTarget as HTMLElement))}
+                onclick={(e) => { e.stopPropagation(); openCreditIndex === i ? openCreditIndex = null : openCredit(i, item.credits, e.currentTarget as HTMLElement); }}
                 onmouseenter={(e) => openCredit(i, item.credits, e.currentTarget as HTMLElement)}
                 aria-label="Toggle sources"
                 aria-expanded={openCreditIndex === i}
@@ -284,7 +288,7 @@
   {/if}
 </div>
 
-{#if openCreditIndex !== null}
+{#if openCreditIndex !== null && !dragging}
   <div
     class="credits-dropdown fixed z-50 max-h-40 w-[min(26rem,calc(100vw-1.5rem))] border border-black/10 bg-white"
     style="left: {creditX}px; top: {creditY - 4}px; transform: translateY(-100%);"

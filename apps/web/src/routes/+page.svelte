@@ -246,6 +246,7 @@
           news={category.news}
           index={i}
           minimized={minimizedBuckets.has(item.bucket)}
+          dragging={dndDragging}
           onMinimize={() => minimizeBucket(item.bucket)}
           onExpand={() => expandBucket(item.bucket)}
           reorderable
