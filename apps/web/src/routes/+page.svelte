@@ -237,7 +237,7 @@
   onfinalize={handleDndFinalize}
 >
   {#each dndItems as item, i (item.id)}
-    <div class="border-b-2 border-black" animate:flip={{ duration: flipDurationMs }}>
+    <div class="-mt-[2px] border-2 border-black" animate:flip={{ duration: flipDurationMs }}>
       {#if categoryByBucket[item.bucket]}
         {@const category = categoryByBucket[item.bucket] as Category}
         <CategoryRow

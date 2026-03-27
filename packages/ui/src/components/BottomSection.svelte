@@ -16,7 +16,7 @@
   });
 </script>
 
-<section class="border-t-2 border-black px-4 py-4 md:px-4">
+<section class="-mt-[2px] border-t-2 border-black px-4 py-4 md:px-4">
   <div class="flex flex-wrap gap-4">
     <BottomTile header="Current Visitors" content={currentVisitors} />
     <TimerTile {utc} ontoggle={() => (utc = !utc)} />

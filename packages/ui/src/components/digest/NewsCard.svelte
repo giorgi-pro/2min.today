@@ -38,7 +38,7 @@
 
 <div
   bind:this={cardEl}
-  class="news-tile relative flex h-full min-w-[min(100%,280px)] flex-col p-2 pb-[4px] {isLive ? 'bg-white' : ''} {borderRight ? 'border-r-2 border-black' : ''}"
+  class="news-tile relative flex h-full min-w-[min(100%,280px)] flex-col py-2 px-2 pb-[4px] {isLive ? 'bg-white' : ''} {borderRight ? 'border-r-2 border-black' : ''}"
   onclick={onCardClick}
   role="presentation"
 >
@@ -50,53 +50,15 @@
     {/if}
   </div>
 
-  <button
-    class="absolute right-2 top-1.5 cursor-pointer font-mono text-[1rem] font-bold leading-none transition-colors
-      {isLive ? 'text-[#637588]/60 hover:text-[#637588]' : 'text-black hover:text-black/70'}"
-    onclick={() => (open = !open)}
-    aria-label="Toggle sources"
-  >©</button>
-
-  {#if open}
-    <div
-      class="credits-dropdown absolute right-2 top-6 z-10 max-h-40 w-[min(26rem,calc(100vw-1.5rem))] border border-black/10 bg-white"
-      role="dialog"
-      aria-label="Sources"
-    >
-      {#if credits.length === 0}
-        <p class="px-3 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-black/30">Source unavailable</p>
-      {:else}
-        <div class="flex flex-col">
-          {#each credits as credit}
-            <div class="flex items-center border-b border-black/5 py-2 pl-3 pr-3 last:border-0">
-              <div
-                class="shrink-0 whitespace-nowrap pr-[30px] font-mono text-[0.55rem] uppercase leading-none tracking-widest text-black/40"
-              >{credit.source}</div>
-              <div class="min-w-0 flex-1 leading-none">
-                <a
-                  href={credit.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={credit.url}
-                  class="block min-w-0 truncate text-[0.65rem] leading-none text-black underline underline-offset-2"
-                >{credit.url}</a>
-              </div>
-            </div>
-          {/each}
-        </div>
-      {/if}
-    </div>
-  {/if}
-
   <div
     class={isLive
       ? 'mt-1 flex min-h-0 w-0 min-w-full flex-1 flex-col border border-black/15 bg-[#F0F2F4] p-2'
-      : 'contents'}
+      : 'contents px-4'}
   >
     <h2
-      class="mb-3 flex-none text-lg font-bold leading-snug tracking-tight {isLive ? 'text-[#181c20]' : 'text-black'}"
+      class="mb-3 mx-1 flex-none text-lg font-bold leading-snug tracking-tight {isLive ? 'text-[#181c20]' : 'text-black'}"
     >{title}</h2>
-    <ul class="min-h-0 w-0 min-w-full flex-1 space-y-1.5 overflow-hidden">
+    <ul class="min-h-0 w-0 min-w-full flex-1 space-y-1.5 overflow-hidden mx-1">
       {#each bullets as bullet}
         <li class="flex gap-2 text-[0.8rem] leading-snug {isLive ? 'text-[#3d4754]' : 'text-black'}">
           <span class="mt-[0.35rem] block h-[3px] w-[3px] shrink-0 {isLive ? 'bg-[#637588]' : 'bg-black'}"></span>
@@ -108,10 +70,48 @@
 
   <div class="mt-3 w-0 min-w-full flex-none">
     <div class="mb-2 border-t border-black/15"></div>
-    {#if !isLive}
-      <p class="mb-1 font-mono text-[0.55rem] uppercase tracking-widest text-black/30">Why it matters</p>
-      <p class="border-l border-black/20 pl-2 text-[0.7rem] italic leading-tight text-black/55">{whyItMatters}</p>
-    {/if}
+    <div class="relative {isLive ? 'mb-2' : ''}">
+      <button
+        type="button"
+        class="absolute right-0 top-0 z-[1] cursor-pointer border-0 bg-transparent p-0 font-mono text-[1rem] font-normal uppercase leading-none tracking-widest text-black/50 transition-colors hover:text-black/50"
+        onclick={() => (open = !open)}
+        aria-label="Toggle sources"
+      >©</button>
+      {#if open}
+        <div
+          class="credits-dropdown absolute right-0 top-full z-10 mt-1 max-h-40 w-[min(26rem,calc(100vw-1.5rem))] border border-black/10 bg-white"
+          role="dialog"
+          aria-label="Sources"
+        >
+          {#if credits.length === 0}
+            <p class="px-3 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-black/30">Source unavailable</p>
+          {:else}
+            <div class="flex flex-col">
+              {#each credits as credit}
+                <div class="flex items-center border-b border-black/5 py-2 pl-3 pr-3 last:border-0">
+                  <div
+                    class="shrink-0 whitespace-nowrap pr-[30px] font-mono text-[0.55rem] uppercase leading-none tracking-widest text-black/40"
+                  >{credit.source}</div>
+                  <div class="min-w-0 flex-1 leading-none">
+                    <a
+                      href={credit.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={credit.url}
+                      class="block min-w-0 truncate text-[0.65rem] leading-none text-black underline underline-offset-2"
+                    >{credit.url}</a>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      {/if}
+      {#if !isLive}
+        <p class="mb-1 pr-8 font-mono text-[0.55rem] uppercase tracking-widest text-black/30">Why it matters</p>
+        <p class="border-l border-black/20 pl-2 text-[0.7rem] italic leading-tight text-black/55">{whyItMatters}</p>
+      {/if}
+    </div>
     <NewsTags {tags} />
   </div>
 </div>
