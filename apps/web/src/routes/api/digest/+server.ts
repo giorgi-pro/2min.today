@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { json } from '@sveltejs/kit';
-import { supabase } from '$lib/supabase/server';
+import { getSupabaseServiceRoleClient } from '$lib/supabase/server';
 import { pipeline } from '$lib/pipeline';
 import { digestLogger } from '$lib/server/digest/logger';
 import { env } from '$env/dynamic/private';
@@ -18,6 +18,8 @@ export const GET: RequestHandler = async ({ url }) => {
   const now = new Date();
   const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+
+  const supabase = getSupabaseServiceRoleClient();
 
   const { data: existing } = await supabase
     .from('clusters')

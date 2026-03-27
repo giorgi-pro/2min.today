@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { json } from '@sveltejs/kit';
-import { supabase } from '$lib/supabase/server';
+import { getSupabaseServiceRoleClient } from '$lib/supabase/server';
 import { breakingPipeline } from '$lib/pipeline/breaking';
 import { digestLogger } from '$lib/server/digest/logger';
 import { env } from '$env/dynamic/private';
@@ -16,6 +16,7 @@ export const GET: RequestHandler = async ({ url }) => {
   const log = digestLogger.child({ runId, route: 'breaking-handler' });
 
   try {
+    const supabase = getSupabaseServiceRoleClient();
     const published = await breakingPipeline.run(supabase, { log });
     log.info({ published }, 'breaking handler success');
     return json({ status: 'ok', published });
