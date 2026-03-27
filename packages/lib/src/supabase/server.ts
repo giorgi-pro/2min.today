@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { env } from '$env/dynamic/private';
+import { env } from '@2min.today/config/env';
 
 let _client: SupabaseClient | null = null;
 

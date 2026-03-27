@@ -10,6 +10,7 @@ const config = {
   preprocess: vitePreprocess(),
   kit: {
     adapter: adapter(),
+    prerender: { handleMissingId: 'ignore', entries: [] },
     alias: {
       '@ui': path.resolve(dirname, '../../packages/ui/src'),
       '@lib': path.resolve(dirname, '../../packages/lib/src'),

@@ -1,5 +1,5 @@
 import type { GenerationConfig } from '@google/generative-ai';
-import { env } from '$env/dynamic/private';
+import { env } from '@2min.today/config/env';
 
 const FLASH_THINKING_LEVELS = ['MINIMAL', 'LOW', 'MEDIUM', 'HIGH'] as const;
 

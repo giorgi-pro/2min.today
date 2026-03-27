@@ -1,7 +1,7 @@
 import type { EmbedContentRequest } from '@google/generative-ai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { Logger } from 'pino';
-import { env } from '$env/dynamic/private';
+import { env } from '@2min.today/config/env';
 import { getEmbeddingDimension, getEmbeddingModel } from '@lib/server/digest/models';
 import { silentLogger } from '@2min.today/logging';
 import type { RawItem, EmbeddedItem } from '@lib/types/digest';

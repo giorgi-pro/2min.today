@@ -1,7 +1,7 @@
 import { XMLParser } from 'fast-xml-parser';
 import { TwitterApi } from 'twitter-api-v2';
 import type { Logger } from 'pino';
-import { env } from '$env/dynamic/private';
+import { env } from '@2min.today/config/env';
 import { getNewsSources, type NewsSourceRss, type NewsSourceX, type NewsSourceType } from '@lib/config/news-sources';
 import type { NewsSource } from '@lib/config/news-sources';
 import { silentLogger } from '@2min.today/logging';

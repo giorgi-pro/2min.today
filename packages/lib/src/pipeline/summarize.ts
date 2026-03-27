@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import type { Logger } from 'pino';
-import { env } from '$env/dynamic/private';
+import { env } from '@2min.today/config/env';
 import { withFlashGenerationRetry } from '@lib/server/digest/flash-generate';
 import {
   getDigestSummarizeMaxClusters,

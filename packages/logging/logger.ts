@@ -22,7 +22,13 @@ function createDigestLogger(): Logger {
   }
 }
 
-export const digestLogger: Logger = createDigestLogger();
+let _digestLogger: Logger | undefined;
+export const digestLogger: Logger = new Proxy({} as Logger, {
+  get(_, key) {
+    if (!_digestLogger) _digestLogger = createDigestLogger();
+    return _digestLogger[key as keyof Logger];
+  },
+});
 
 export const silentLogger: Logger = pino({ level: 'silent' });
 
