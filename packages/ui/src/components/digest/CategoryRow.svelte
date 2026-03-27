@@ -1,6 +1,27 @@
 <script lang="ts">
   import { dragHandle } from 'svelte-dnd-action';
   import CategoryPanel from './CategoryPanel.svelte';
+
+  function optionalDragHandle(node: HTMLElement, enabled: boolean) {
+    let destroyDh: (() => void) | undefined;
+    function apply(next: boolean) {
+      destroyDh?.();
+      destroyDh = undefined;
+      if (next) {
+        const { destroy } = dragHandle(node);
+        destroyDh = destroy;
+      }
+    }
+    apply(enabled);
+    return {
+      update(next: boolean) {
+        apply(next);
+      },
+      destroy() {
+        destroyDh?.();
+      },
+    };
+  }
   import NewsCard from './NewsCard.svelte';
 
   type Credit = { source: string; url: string };
@@ -159,23 +180,21 @@
 >
   {#if minimized}
     <div
-      class="flex h-8 items-center"
+      class="flex h-8 items-center {reorderable ? 'cursor-grab touch-none select-none' : ''}"
       role="group"
+      use:optionalDragHandle={reorderable}
+      aria-label={reorderable ? `Drag to reorder ${name} category` : undefined}
       onmouseenter={onMinimizedRowEnter}
       onmouseleave={onMinimizedRowLeave}
     >
-      {#if reorderable}
-        <div
-          class="flex h-8 w-5 shrink-0 cursor-grab touch-none select-none items-center justify-center border-r border-black/15"
-          use:dragHandle
-          aria-label="Drag to reorder {name} category"
-        ></div>
-      {/if}
       <button
+        type="button"
         class="flex h-8 shrink-0 cursor-pointer items-center px-4 font-mono text-[0.6rem] font-black uppercase tracking-widest transition-opacity hover:opacity-70
           {index % 2 === 0 ? 'bg-black text-white' : 'bg-white text-black border-r-2 border-black'}"
         onclick={() => onExpand?.()}
         aria-label="Expand category"
+        onmousedown={(e) => e.stopPropagation()}
+        ontouchstart={(e) => e.stopPropagation()}
       >{name}</button>
       <div class="relative h-8 min-w-0 flex-1" style="overflow-x: auto; overflow-y: hidden;">
         <div
@@ -194,6 +213,8 @@
               <button
                 type="button"
                 class="cursor-pointer border-0 bg-transparent p-1 font-mono text-[0.75rem] font-bold leading-none text-black/30 hover:text-black/60"
+                onmousedown={(e) => e.stopPropagation()}
+                ontouchstart={(e) => e.stopPropagation()}
                 onmouseenter={(e) => showCreditTooltip(e, item.credits)}
                 onmouseleave={hideCreditTooltip}
               >©</button>
@@ -232,7 +253,7 @@
               <p class="font-mono text-[0.65rem] uppercase tracking-widest text-black/30">No news found</p>
             </div>
           {:else}
-            {#each news as item}
+            {#each news as item, i}
               <NewsCard
                 title={item.title}
                 bullets={item.bullets}
@@ -241,6 +262,7 @@
                 isBreaking={item.isBreaking}
                 isLive={item.isLive}
                 tags={item.tags}
+                borderRight={!scrollable && i === news.length - 1}
               />
             {/each}
           {/if}

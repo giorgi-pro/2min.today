@@ -189,6 +189,12 @@
     dndDragging = false;
   }
 
+  function styleCategoryDragPreview(element: HTMLElement, _data: unknown, _index: number) {
+    element.style.setProperty('outline', 'none', 'important');
+    element.style.setProperty('border', '2px solid #000000', 'important');
+    element.style.setProperty('background-color', '#ffffff', 'important');
+  }
+
   const categoryByBucket = $derived(
     presentBuckets.reduce<Partial<Record<Bucket, Category>>>((acc, b) => {
       acc[b] = {
@@ -219,12 +225,13 @@
 </svelte:head>
 
 <div
-  aria-label="News categories, drag panel or grip to reorder"
+  aria-label="News categories, drag rows to reorder"
   role="region"
   use:dragHandleZone={{
     items: dndItems,
     flipDurationMs,
     dropTargetStyle: { outline: 'none' },
+    transformDraggedElement: styleCategoryDragPreview,
   }}
   onconsider={handleDndConsider}
   onfinalize={handleDndFinalize}
