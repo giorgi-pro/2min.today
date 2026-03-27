@@ -1,0 +1,5 @@
+@layer components {
+  .summary-text {
+    @apply cursor-text text-[0.55rem] leading-tight opacity-60;
+  }
+}

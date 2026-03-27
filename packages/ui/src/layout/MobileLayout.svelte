@@ -1,17 +1,8 @@
 <script lang="ts">
-  import GlobalSearch from './GlobalSearch.svelte';
-  import Logo from './Logo.svelte';
-  import Menu from './Menu.svelte';
-
-  type Region = 'world' | 'europe' | 'americas' | 'middle-east' | 'usa';
-
-  interface Props {
-    searchQuery?: string;
-    activeRegions?: Set<Region>;
-    onRegionToggle?: (r: Region) => void;
-    onRegionClear?: () => void;
-    children: import('svelte').Snippet;
-  }
+  import GlobalSearch from '../components/GlobalSearch.svelte';
+  import Logo from '../components/Logo.svelte';
+  import Menu from '../components/Menu.svelte';
+  import type { ShellLayoutProps } from './shell-layout';
 
   let {
     searchQuery = $bindable(''),
@@ -19,7 +10,7 @@
     onRegionToggle,
     onRegionClear,
     children,
-  }: Props = $props();
+  }: ShellLayoutProps = $props();
 </script>
 
 <header class="sticky top-0 z-50 border-b-2 border-black bg-white">

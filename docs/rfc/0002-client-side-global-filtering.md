@@ -3,13 +3,13 @@
 **Status:** Approved for Implementation (amended: tag **filtering** removed; **search** is header-only — no secondary digest chrome or `clearAllFilters`)  
 **Date:** 2026-03-25  
 **Author:** Grok (detailed spec) / Project Owner  
-**Target files:** `apps/web/src/lib/types/digest.ts` + `apps/web/src/lib/pipeline/summarize.ts` + `apps/web/src/lib/pipeline/upsert.ts` + `apps/web/src/lib/digest-filter.ts` + `apps/web/src/lib/mock-tags.ts` + `apps/web/src/lib/mock-digest.ts` + `apps/web/src/routes/+page.server.ts` + `apps/web/src/routes/+page.svelte` + `apps/web/src/routes/+layout.svelte` + `apps/web/src/app.css` (e.g. `.summary-text`) + `packages/ui/src/components/GlobalSearch.svelte` + `packages/ui/src/components/Header.svelte` + `apps/web/package.json` + `apps/web/.env.example` + `packages/ui` digest tile components (`NewsTags` / `NewsCard` / `CategoryRow` / `CategoryPanel`)
+**Target files:** `apps/web/src/lib/types/digest.ts` + `apps/web/src/lib/pipeline/summarize.ts` + `apps/web/src/lib/pipeline/upsert.ts` + `apps/web/src/lib/digest-filter.ts` + `apps/web/src/lib/mock-tags.ts` + `apps/web/src/lib/mock-digest.ts` + `apps/web/src/routes/+page.server.ts` + `apps/web/src/routes/+page.svelte` + `apps/web/src/routes/+layout.svelte` + `apps/web/src/index.css` (e.g. `.summary-text`) + `packages/ui/src/components/GlobalSearch.svelte` + `packages/ui/src/components/Header.svelte` + `apps/web/package.json` + `apps/web/.env.example` + `packages/ui` digest tile components (`NewsTags` / `NewsCard` / `CategoryRow` / `CategoryPanel`)
 
 ## Purpose
 
 This RFC **extends [RFC-001: Daily Digest Pipeline](0001-daily-digest-pipeline.md)**. It adds client-side fuzzy search and pipeline-generated tags on top of the existing digest shape, SSR `load`, and cron pipeline. It does **not** redefine ingestion, clustering, classification, or Supabase layout except where `summary` jsonb gains a `tags` field.
 
-Add a **global fuzzy search** (client-side) and **per-cluster tags** (pipeline-generated, **display only** on tiles — own row under “Why it matters”, shared **`.summary-text`** styling with category panel **summary** lines in `app.css`).
+Add a **global fuzzy search** (client-side) and **per-cluster tags** (pipeline-generated, **display only** on tiles — own row under “Why it matters”, shared **`.summary-text`** styling with category panel **summary** lines in `index.css`).
 
 The interface remains brutalist: one search field wired to the existing header control, tiles stay typography-first, zero images, rigid grid. Filtering runs on SSR data already on the page — **no extra API calls**, no client-side database. Target sub-10 ms feel on a ~30-tile digest after debounced search.
 
@@ -42,7 +42,7 @@ Production: leave `USE_MOCK_DATA` unset, empty, or any value other than exactly 
    - Generated **only** in `summarize.ts` (same Gemini structured output as headline / bullets / why).
    - Stored in `summary` jsonb as `tags: string[]` (prefer up to **5** entries; single words or short phrases).
    - **Normalization after parse (required):** coerce to array; trim strings; drop empties; **cap at 5**; accept **fewer than 3** tags if the model returns fewer (do **not** fail the pipeline on short `tags`).
-   - Rendered in a **row below** “Why it matters”, right-aligned **`#tag`** tokens, **`.summary-text`** in [`app.css`](../../apps/web/src/app.css) (size/opacity + `cursor-text` on the tag container).
+   - Rendered in a **row below** “Why it matters”, right-aligned **`#tag`** tokens, **`.summary-text`** in [`index.css`](../../apps/web/src/index.css) (size/opacity + `cursor-text` on the tag container).
    - **No** global selected set, **`localStorage`**, or click-to-filter on tags. Chips are **presentational** (`<span>`).
 
 3. **Search-only filtering**
@@ -75,7 +75,7 @@ apps/web/
 ├── .env.example
 ├── package.json                              ← fuse.js
 ├── src/
-│   ├── app.css                               ← .summary-text, .news-tile, scrollbars
+│   ├── index.css                               ← .summary-text, .news-tile, scrollbars
 │   ├── lib/
 │   │   ├── digest-filter.ts                  ← writable stores: searchQuery, debouncedSearchQuery (150 ms debounce)
 │   │   ├── config/buckets.constants.ts       ← DIGEST_DISPLAY_BUCKETS, BUCKET_ORDER, Bucket (client-safe; no fs — see note below)

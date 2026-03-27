@@ -1,8 +1,8 @@
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { env } from '$env/dynamic/private';
-import { withFlashGenerationRetry } from '@2min.today/lib/server/digest/flash-generate';
-import { getFlashModel, mergeFlashGenerationConfig } from '@2min.today/lib/server/digest/models';
-import type { BreakingCandidate } from '@2min.today/lib/types/breaking';
+import { withFlashGenerationRetry } from '@lib/server/digest/flash-generate';
+import { getFlashModel, mergeFlashGenerationConfig } from '@lib/server/digest/models';
+import type { BreakingCandidate } from '@lib/types/breaking';
 
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 

@@ -43,7 +43,7 @@ There is no test framework. Manual API testing uses the Bruno collection in `.br
 
 - **`apps/web`** — SvelteKit 5 app (main product). Both frontend and backend API routes live here.
 - **`apps/docs`** — Next.js 16 + React 19 documentation site.
-- **`packages/ui`** — Shared component library (`@2min.today/ui`). Currently has Svelte components (Header, Footer) and a React button stub. Imported via workspace alias.
+- **`packages/ui`** — Shared component library (`@ui`). Currently has Svelte components (Header, Footer) and a React button stub. Imported via workspace alias.
 
 ### Backend Pipeline (`apps/web/src/routes/api/digest/+server.ts`)
 

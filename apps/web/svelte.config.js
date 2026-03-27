@@ -11,8 +11,8 @@ const config = {
   kit: {
     adapter: adapter(),
     alias: {
-      '@2min.today/ui': path.resolve(dirname, '../../packages/ui/src'),
-      '@2min.today/lib': path.resolve(dirname, '../../packages/lib/src'),
+      '@ui': path.resolve(dirname, '../../packages/ui/src'),
+      '@lib': path.resolve(dirname, '../../packages/lib/src'),
     },
   },
 }

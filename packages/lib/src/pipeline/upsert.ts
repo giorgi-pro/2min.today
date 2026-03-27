@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { ClassifiedCluster } from '@2min.today/lib/types/digest';
+import type { ClassifiedCluster } from '@lib/types/digest';
 
 export async function upsertClusters(
   clusters: ClassifiedCluster[],

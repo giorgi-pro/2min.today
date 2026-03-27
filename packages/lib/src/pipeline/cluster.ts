@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { getClusterSimilarityThreshold } from '@2min.today/lib/server/digest/models';
-import type { EmbeddedItem, Cluster } from '@2min.today/lib/types/digest';
+import { getClusterSimilarityThreshold } from '@lib/server/digest/models';
+import type { EmbeddedItem, Cluster } from '@lib/types/digest';
 
 function cosineSimilarity(a: number[], b: number[]): number {
   let dot = 0;

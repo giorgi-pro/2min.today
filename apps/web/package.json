@@ -13,10 +13,8 @@
     "seed:anchors": "tsx ../../scripts/seed-bucket-anchors.ts"
   },
   "dependencies": {
-    "@2min.today/lib": "workspace:*",
-    "@2min.today/ui": "workspace:*",
-    "@fontsource-variable/inter": "5.2.8",
-    "@fontsource/dseg7": "4.5.4",
+    "@lib": "workspace:*",
+    "@ui": "workspace:*",
     "@google/generative-ai": "0.24.1",
     "@supabase/supabase-js": "2.100.0",
     "@sveltejs/adapter-auto": "7.0.1",

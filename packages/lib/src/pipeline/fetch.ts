@@ -2,10 +2,10 @@ import { XMLParser } from 'fast-xml-parser';
 import { TwitterApi } from 'twitter-api-v2';
 import type { Logger } from 'pino';
 import { env } from '$env/dynamic/private';
-import { getNewsSources, type NewsSourceRss, type NewsSourceX, type NewsSourceType } from '@2min.today/lib/config/news-sources';
-import type { NewsSource } from '@2min.today/lib/config/news-sources';
-import { silentLogger } from '@2min.today/lib/server/digest/logger';
-import type { RawItem } from '@2min.today/lib/types/digest';
+import { getNewsSources, type NewsSourceRss, type NewsSourceX, type NewsSourceType } from '@lib/config/news-sources';
+import type { NewsSource } from '@lib/config/news-sources';
+import { silentLogger } from '@lib/server/digest/logger';
+import type { RawItem } from '@lib/types/digest';
 
 export interface FetchSourceResult {
   id: string;

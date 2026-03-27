@@ -1,9 +1,9 @@
 import type { Logger } from 'pino';
-import { getClassifySimilarityThreshold } from '@2min.today/lib/server/digest/models';
-import { silentLogger } from '@2min.today/lib/server/digest/logger';
+import { getClassifySimilarityThreshold } from '@lib/server/digest/models';
+import { silentLogger } from '@lib/server/digest/logger';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Bucket } from '@2min.today/lib/config/buckets';
-import type { SummarizedCluster, ClassifiedCluster } from '@2min.today/lib/types/digest';
+import type { Bucket } from '@lib/config/buckets';
+import type { SummarizedCluster, ClassifiedCluster } from '@lib/types/digest';
 
 function cosineSimilarity(a: number[], b: number[]): number {
   let dot = 0;

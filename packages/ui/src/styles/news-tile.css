@@ -1,0 +1,6 @@
+.news-tile {
+  width: max-content;
+  min-width: 30vh;
+  max-width: 60vh;
+  flex-shrink: 0;
+}
