@@ -19,7 +19,7 @@ export interface Category {
 
 export const mockData: Category[] = [
   {
-    name: 'World',
+    name: 'world',
     summary: [
       'Ukraine–Russia ceasefire talks resume in Istanbul',
       'India–Pakistan border tensions escalate',
@@ -40,7 +40,7 @@ export const mockData: Category[] = [
         ],
         isBreaking: false,
         isLive: true,
-        region: 'global',
+        region: 'world',
       },
       {
         title: 'Ukraine and Russia Hold First Direct Ceasefire Talks in Three Years',
@@ -69,7 +69,7 @@ export const mockData: Category[] = [
           { source: 'Reuters', url: 'https://reuters.com/world/india/india-recalls-ambassador-pakistan' },
         ],
         isBreaking: false,
-        region: 'global',
+        region: 'world',
       },
       {
         title: 'EU Calls Emergency Summit on Migration After 400 Drown Off Libya',
@@ -97,7 +97,7 @@ export const mockData: Category[] = [
           { source: 'AP', url: 'https://apnews.com/article/china-south-china-sea-naval-drills' },
         ],
         isBreaking: false,
-        region: 'global',
+        region: 'world',
       },
       {
         title: 'UN Security Council Votes to Deploy Peacekeepers to Sudan After Genocide Finding',
@@ -112,12 +112,12 @@ export const mockData: Category[] = [
           { source: 'Bloomberg', url: 'https://bloomberg.com/news/articles/un-sudan-genocide-ruling' },
         ],
         isBreaking: false,
-        region: 'global',
+        region: 'world',
       },
     ],
   },
   {
-    name: 'Business',
+    name: 'business',
     summary: [
       'Fed signals rate-cut pause through mid-year',
       'NVIDIA crosses $4T market cap',
@@ -210,12 +210,12 @@ export const mockData: Category[] = [
           { source: 'Reuters', url: 'https://reuters.com/business/shipping-rates-suez-return' },
         ],
         isBreaking: false,
-        region: 'global',
+        region: 'world',
       },
     ],
   },
   {
-    name: 'Tech',
+    name: 'tech',
     summary: [
       'GPT-5 launches with 1M-token context',
       'Apple foldable iPhone enters mass production',
@@ -252,7 +252,7 @@ export const mockData: Category[] = [
           { source: 'Bloomberg', url: 'https://bloomberg.com/news/articles/apple-foldable-iphone-clover' },
         ],
         isBreaking: false,
-        region: 'global',
+        region: 'world',
       },
       {
         title: 'EU Begins Enforcing AI Act High-Risk System Requirements',
@@ -281,7 +281,7 @@ export const mockData: Category[] = [
           { source: 'Bloomberg', url: 'https://bloomberg.com/news/articles/north-korea-swift-hack' },
         ],
         isBreaking: false,
-        region: 'global',
+        region: 'world',
       },
       {
         title: 'SpaceX Starship Completes First Full Orbital Mission, Catches Both Stages',
@@ -301,7 +301,7 @@ export const mockData: Category[] = [
     ],
   },
   {
-    name: 'Science',
+    name: 'science',
     summary: [
       "Blood test predicts Alzheimer's 15 years early",
       'Antarctic ice loss 40% above projections',
@@ -337,7 +337,7 @@ export const mockData: Category[] = [
           { source: 'AP', url: 'https://apnews.com/article/antarctic-ice-sheet-accelerating-loss' },
         ],
         isBreaking: false,
-        region: 'global',
+        region: 'world',
       },
       {
         title: 'Perseverance Rover Confirms Organic Molecules in Jezero Crater Rock Cores',
@@ -367,7 +367,7 @@ export const mockData: Category[] = [
           { source: 'AP', url: 'https://apnews.com/article/fermilab-muon-fifth-force-five-sigma' },
         ],
         isBreaking: true,
-        region: 'global',
+        region: 'world',
       },
       {
         title: 'Gene Therapy Achieves Insulin Independence in 11 of 14 Type 1 Diabetes Patients',
@@ -381,12 +381,12 @@ export const mockData: Category[] = [
           { source: 'Reuters', url: 'https://reuters.com/science/gene-therapy-diabetes-insulin-independence' },
         ],
         isBreaking: false,
-        region: 'global',
+        region: 'world',
       },
     ],
   },
   {
-    name: 'Health',
+    name: 'health',
     summary: [
       'WHO declares mpox Clade Ib a global emergency',
       'New antibiotic defeats all drug-resistant strains',
@@ -408,7 +408,7 @@ export const mockData: Category[] = [
           { source: 'AP', url: 'https://apnews.com/article/mpox-clade-ib-global-emergency' },
         ],
         isBreaking: true,
-        region: 'global',
+        region: 'world',
       },
       {
         title: 'New Antibiotic Compound Defeats All Known Drug-Resistant Bacterial Strains in Trial',
@@ -466,7 +466,61 @@ export const mockData: Category[] = [
           { source: 'Reuters', url: 'https://reuters.com/science/youth-anxiety-pandemic-levels-who' },
         ],
         isBreaking: false,
-        region: 'global',
+        region: 'world',
+      },
+    ],
+  },
+  {
+    name: 'sports',
+    summary: [
+      'Champions League quarterfinal draw produces blockbuster ties',
+      'India wins Cricket World Cup after 12-year drought',
+      'IOC confirms Saudi Arabia bid for 2036 Olympics',
+      'Djokovic announces retirement after record 25th Grand Slam',
+      'NBA expansion adds Las Vegas and Mexico City teams',
+    ],
+    news: [
+      {
+        title: 'Champions League Draw Sets Up Real Madrid vs Manchester City Rematch',
+        content:
+          'The UEFA Champions League quarterfinal draw produced a blockbuster rematch between Real Madrid and Manchester City, reprising their semifinal clash from last season. The other ties see Arsenal face Bayern Munich, Barcelona take on Inter Milan, and PSG meet Atletico Madrid.',
+        whyItMatters:
+          'The draw ensures the highest possible TV revenue for UEFA and sets the stage for potential dynasty-defining results for multiple clubs.',
+        source: 'BBC',
+        credits: [
+          { source: 'BBC', url: 'https://bbc.com/sport/football/champions-league-draw-2026' },
+          { source: 'Reuters', url: 'https://reuters.com/sports/champions-league-quarterfinal-draw' },
+        ],
+        isBreaking: false,
+        region: 'europe',
+      },
+      {
+        title: 'India Wins Cricket World Cup Final Against Australia in Record Chase',
+        content:
+          'India defeated Australia by 4 wickets in a thrilling World Cup final at Lord\'s, chasing down 328 with two balls to spare. Virat Kohli scored 139 not out in what he called "the greatest innings of my life." The victory ends India\'s 12-year World Cup drought.',
+        whyItMatters:
+          'Cricket is a $2 billion annual industry in India. A World Cup win amplifies IPL franchise valuations and consolidates BCCI dominance over global cricket governance.',
+        source: 'Reuters',
+        credits: [
+          { source: 'Reuters', url: 'https://reuters.com/sports/cricket-world-cup-final-india-australia' },
+          { source: 'AP', url: 'https://apnews.com/article/cricket-world-cup-india-wins' },
+        ],
+        isBreaking: true,
+        region: 'world',
+      },
+      {
+        title: 'IOC Shortlists Saudi Arabia for 2036 Summer Olympics Amid Human Rights Concerns',
+        content:
+          'The International Olympic Committee confirmed Saudi Arabia as the leading candidate to host the 2036 Summer Games, citing its $500 billion infrastructure investment and guaranteed funding. Human rights organizations condemned the decision, calling it "sportswashing at its most brazen."',
+        whyItMatters:
+          'A Saudi Olympics would represent the largest geopolitical use of sport as soft power since Beijing 2008, with major implications for athlete safety and press freedom.',
+        source: 'AP',
+        credits: [
+          { source: 'AP', url: 'https://apnews.com/article/ioc-saudi-arabia-2036-olympics' },
+          { source: 'Reuters', url: 'https://reuters.com/sports/olympics-saudi-arabia-2036-bid' },
+        ],
+        isBreaking: false,
+        region: 'middle-east',
       },
     ],
   },

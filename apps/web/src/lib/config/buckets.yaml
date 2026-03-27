@@ -1,9 +1,11 @@
 # 2min.today Core Buckets
-# Single source of truth for bucket names and anchor definitions.
+# Single source of truth: lowercase slugs in DB and code. UI uses text-transform / uppercase for display.
 # Used by: lib/pipeline/classify.ts, scripts/seed-bucket-anchors.ts
+# After editing anchor text, re-run: npx tsx scripts/seed-bucket-anchors.ts
 buckets:
-  World: "global geopolitics international relations diplomacy conflicts treaties"
-  Business: "financial markets economy business corporate earnings monetary policy"
-  Tech: "technology innovation AI hardware software digital breakthroughs"
-  Science: "scientific discoveries research physics biology space exploration"
-  Health: "health medicine public health biomedical research wellness"
+  world: "world news current affairs politics government policy law legislation protests civil rights human rights society culture environment crime accidents disasters international relations diplomacy geopolitics conflicts treaties global affairs"
+  business: "financial markets economy business corporate earnings monetary policy trade tariffs currency"
+  tech: "technology innovation AI hardware software digital breakthroughs startups cybersecurity"
+  science: "scientific discoveries research physics biology space exploration climate"
+  health: "health medicine public health biomedical research wellness lifestyle habits nutrition mental health parenting child development fitness diet sleep screen time digital wellbeing"
+  sports: "sports football soccer basketball tennis cricket rugby olympics athletics competitions leagues tournaments championships racing cycling swimming"

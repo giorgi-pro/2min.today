@@ -4,6 +4,7 @@
   import { DIGEST_DISPLAY_BUCKETS, type Bucket } from '$lib/config/buckets.constants';
   import {
     CATEGORY_ORDER_STORAGE_KEY,
+    normalizeStoredBucketKey,
     reorderCategoryBuckets,
     resolveCategoryOrder,
   } from '$lib/category-order';
@@ -31,7 +32,12 @@
   };
 
   const { data } = $props<{
-    data: { digest: Partial<Record<string, DigestCard[]>>; summaries: Partial<Record<string, string[]>>; fuseThreshold: number };
+    data: {
+      digest: Partial<Record<string, DigestCard[]>>;
+      summaries: Partial<Record<string, string[]>>;
+      fuseThreshold: number;
+      useMockData: boolean;
+    };
   }>();
 
   let debouncedQ = $state('');
@@ -50,14 +56,15 @@
   const sourceDigest = $derived(
     data.digest && Object.keys(data.digest).length > 0
       ? (data.digest as Partial<Record<Bucket, DigestCard[]>>)
-      : (buildMockDigest().cards as Partial<Record<Bucket, DigestCard[]>>),
+      : data.useMockData
+        ? (buildMockDigest().cards as Partial<Record<Bucket, DigestCard[]>>)
+        : ({} as Partial<Record<Bucket, DigestCard[]>>),
   );
 
   type CardRow = DigestCard & { bucket: Bucket };
 
   const allCards = $derived(
     Object.entries(sourceDigest)
-      .filter(([bucket]) => bucket !== 'Emerging')
       .flatMap(([bucket, cards]) =>
         (cards ?? []).map((c) => ({ ...c, bucket: bucket as Bucket })),
       ) as CardRow[],
@@ -105,10 +112,9 @@
       if (!raw) return;
       const parsed = JSON.parse(raw) as unknown;
       if (!Array.isArray(parsed)) return;
-      savedBucketOrder = parsed.filter(
-        (x): x is Bucket =>
-          typeof x === 'string' && (DIGEST_DISPLAY_BUCKETS as readonly string[]).includes(x),
-      );
+      savedBucketOrder = parsed
+        .map((x) => (typeof x === 'string' ? normalizeStoredBucketKey(x) : null))
+        .filter((x): x is Bucket => x != null);
     } catch {
       /* ignore */
     }

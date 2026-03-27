@@ -45,12 +45,12 @@ graph TD
 
 ### Core 5 Buckets + Hybrid Classification
 
-- Fixed buckets: `World` • `Business` • `Tech` • `Science` • `Health` — same labels as the frontend digest UI (single source of truth: `lib/config/buckets.yaml`, loaded once via `lib/config/buckets.ts`; classify + seed script import `BUCKET_ANCHORS` from there only).
+- Fixed buckets: `world` • `business` • `tech` • `science` • `health` (lowercase slugs in DB/code; UI uppercases for display). Single source of truth: `lib/config/buckets.yaml` via `lib/config/buckets.ts`; classify + seed script import `BUCKET_ANCHORS` from there only.
 - **YAML dependency:** add the [`yaml`](https://www.npmjs.com/package/yaml) package only — on the order of **~4 KB gzipped**, **installed once**. The file is parsed when `buckets.ts` first loads; afterwards anchors are ordinary in-memory objects with **full TypeScript** types at call sites, so there is **no YAML work on the digest hot path** (clustering, Gemini, DB).
 - YAML can evolve later (e.g. user-chosen topics or more sections) without splitting pipeline vs. product naming.
 - Each cluster embedding compared (cosine) to 5 pre-embedded bucket anchors.
 - **Threshold** is **`CLASSIFY_SIMILARITY_THRESHOLD`** (env, 0–1, **default 0.65**). At or above → assign best bucket; below → route to **`Emerging`**; Gemini generates one crisp **category line**.
-- **`Emerging`** rows are **stored** like other clusters; the **homepage digest** (`+page.server.ts` / `DIGEST_DISPLAY_BUCKETS` in `buckets.constants.ts`) **lists only the five YAML buckets**, so `Emerging` does not appear as a section in the main UI.
+- **`emerging`** rows are **stored** like other clusters; the **homepage digest** (`+page.server.ts` / `DIGEST_DISPLAY_BUCKETS` in `buckets.constants.ts`) **lists only the five YAML buckets**, so `emerging` does not appear as a section in the main UI.
 - *Product note:* “auto-archives after 24 h” for Emerging remains a future/optional behaviour if not implemented in `upsert` / cron.
 
 ### File Layout
@@ -95,7 +95,7 @@ create index idx_clusters_embedding on clusters using hnsw (embedding vector_cos
 
 create table if not exists bucket_anchors (
   bucket    text primary key
-    check (bucket in ('World', 'Business', 'Tech', 'Science', 'Health')),
+    check (bucket in ('world', 'business', 'tech', 'science', 'health')),
   embedding vector(768) not null
 );
 -- Seeded once via scripts/seed-bucket-anchors.ts from BUCKET_ANCHORS in lib/config/buckets.ts (YAML-backed)

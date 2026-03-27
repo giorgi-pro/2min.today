@@ -2,6 +2,7 @@ import { env } from '$env/dynamic/private';
 import { getSupabaseClient } from '$lib/supabase/client';
 import { buildMockDigest } from '$lib/mock-digest';
 import type { Bucket } from '$lib/config/buckets';
+import { normalizeClusterBucket } from '$lib/config/buckets.constants';
 import { parseRegion, type Region, type Credit } from '$lib/types/digest';
 
 type SummaryJson = {
@@ -38,10 +39,16 @@ function useMockData(): boolean {
 
 export const load = async () => {
   const fuseThreshold = parseFuseThreshold(env.DIGEST_FUSE_THRESHOLD);
+  const useMock = useMockData();
 
-  if (useMockData()) {
+  if (useMock) {
     const mock = buildMockDigest();
-    return { digest: mock.cards as Partial<Record<Bucket, DigestCard[]>>, summaries: mock.summaries, fuseThreshold };
+    return {
+      digest: mock.cards as Partial<Record<Bucket, DigestCard[]>>,
+      summaries: mock.summaries,
+      fuseThreshold,
+      useMockData: true,
+    };
   }
 
   const now = new Date();
@@ -57,12 +64,16 @@ export const load = async () => {
 
   if (error) {
     console.error('Supabase load error:', error);
-    return { digest: {} as Partial<Record<Bucket, DigestCard[]>>, summaries: {} as Partial<Record<Bucket, string[]>>, fuseThreshold };
+    return {
+      digest: {} as Partial<Record<Bucket, DigestCard[]>>,
+      summaries: {} as Partial<Record<Bucket, string[]>>,
+      fuseThreshold,
+      useMockData: false,
+    };
   }
 
   const digest = (data ?? []).reduce<Partial<Record<Bucket, DigestCard[]>>>((acc, row) => {
-    const b = row.bucket as Bucket;
-    if (b === 'Emerging') return acc;
+    const b = normalizeClusterBucket(row.bucket);
     const s = row.summary as SummaryJson;
     if (!acc[b]) acc[b] = [];
       acc[b]?.push({
@@ -82,5 +93,5 @@ export const load = async () => {
     return acc;
   }, {});
 
-  return { digest, summaries: {} as Partial<Record<Bucket, string[]>>, fuseThreshold };
+  return { digest, summaries: {} as Partial<Record<Bucket, string[]>>, fuseThreshold, useMockData: false };
 };

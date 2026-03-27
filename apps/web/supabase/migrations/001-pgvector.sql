@@ -14,6 +14,6 @@ create index idx_clusters_embedding on clusters using hnsw (embedding vector_cos
 
 create table if not exists bucket_anchors (
   bucket    text primary key
-    check (bucket in ('World', 'Business', 'Tech', 'Science', 'Health')),
+    check (bucket in ('world', 'business', 'tech', 'science', 'health')),
   embedding vector(768) not null
 );

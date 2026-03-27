@@ -9,6 +9,7 @@ import {
 } from '$lib/server/digest/models';
 import { silentLogger } from '$lib/server/digest/logger';
 import { parseRegion } from '$lib/types/digest';
+import { BUCKET_ORDER, type Bucket } from '$lib/config/buckets.constants';
 import type { Cluster, SummarizedCluster, Credit, EmbeddedItem } from '$lib/types/digest';
 
 function extractCredits(items: EmbeddedItem[]): Credit[] {
@@ -64,8 +65,9 @@ export async function summarizeClusters(clusters: Cluster[], log?: Logger): Prom
           whyItMatters: { type: SchemaType.STRING },
           tags: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
           region: { type: SchemaType.STRING },
+          bucket: { type: SchemaType.STRING },
         },
-        required: ['headline', 'bullets', 'whyItMatters', 'tags', 'region'],
+        required: ['headline', 'bullets', 'whyItMatters', 'tags', 'region', 'bucket'],
       },
     }),
   });
@@ -85,13 +87,18 @@ Return ONLY valid JSON matching this schema:
   "headline": "max 12 words",
   "bullets": ["exactly 3 bullets, max 25 words each"],
   "whyItMatters": "max 30 words",
-  "tags": ["3-5 single-word or short-phrase keywords, e.g. fed-rate, nvidia-chip, ai-regulation"]
+  "tags": ["3-5 single-word or short-phrase keywords, e.g. fed-rate, nvidia-chip, ai-regulation"],
+  "region": "one of: world, europe, americas, middle-east, usa",
+  "bucket": "one of: world, business, tech, science, health, sports"
 }
 
 Tone: dense, zero fluff, future-facing. Tags must be precise and reusable across days.
 
-For "region", assign exactly one of: global, europe, americas, middle-east, usa.
-Rules: "usa" = US-domestic stories only. "americas" = multi-country Americas or non-US Americas countries. "middle-east" = MENA. "europe" = Europe/EU/UK. Default to "global" if unclear, or for tech/science/health with no primary geographic anchor.`;
+For "region", assign exactly one of: world, europe, americas, middle-east, usa.
+Rules: "usa" = US-domestic stories only. "americas" = multi-country Americas or non-US Americas countries. "middle-east" = MENA. "europe" = Europe/EU/UK. "world" = worldwide scope or unclear geography, or tech/science/health with no primary geographic anchor.
+
+For "bucket", assign exactly one of: world, business, tech, science, health, sports.
+Rules: "business" = financial markets, economy, corporate, trade. "tech" = technology, AI, software, hardware, cybersecurity. "science" = scientific research, space, climate. "health" = medicine, public health, wellness, lifestyle, parenting, mental health. "sports" = sports, athletics, competitions, leagues, tournaments. "world" = everything else (politics, law, government, diplomacy, society, culture, accidents, crime, human rights, environment).`;
 
     const feedRegion = cluster.items.find((i) => i.feedRegion)?.feedRegion;
 
@@ -103,8 +110,12 @@ Rules: "usa" = US-domestic stories only. "americas" = multi-country Americas or 
         whyItMatters: string;
         tags?: unknown;
         region?: unknown;
+        bucket?: unknown;
       };
     });
+
+    const rawBucket = typeof parsed.bucket === 'string' ? parsed.bucket.toLowerCase().trim() : null;
+    const llmBucket = rawBucket && (BUCKET_ORDER as string[]).includes(rawBucket) ? (rawBucket as Bucket) : null;
 
     results.push({
       ...cluster,
@@ -114,6 +125,7 @@ Rules: "usa" = US-domestic stories only. "americas" = multi-country Americas or 
       tags: normalizeSummaryTags(parsed.tags),
       region: feedRegion ?? parseRegion(parsed.region),
       credits: extractCredits(cluster.items),
+      llmBucket,
     });
   }
 

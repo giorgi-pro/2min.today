@@ -28,9 +28,9 @@ Aligned with [ADR-001](./adr/0001-backend%20technology%20stack%20selection.md), 
 
 Matches `buckets.yaml`, **`DIGEST_DISPLAY_BUCKETS`** (five sections on the homepage) and **`BUCKET_ORDER`** (includes `Emerging` for types/pipeline), and `classify.ts` (**`CLASSIFY_SIMILARITY_THRESHOLD`** in env, **default 0.65**).
 
-- **Fixed buckets:** `World`, `Business`, `Tech`, `Science`, `Health` — names and anchor phrases live only in **`apps/web/src/lib/config/buckets.yaml`** (loaded via `buckets.ts`); the UI and pipeline stay in sync.
-- **Assignment:** Cluster centroid embedding vs precomputed bucket anchors; at or above the env threshold → best bucket; below → **`Emerging`** with a short **`category_line`** from Flash (see `classify.ts`).
-- **`Emerging`** is not in the YAML anchor set; it is a runtime bucket only, **persisted** but **not shown** on the main digest homepage (SSR filters it out).
+- **Fixed buckets:** `world`, `business`, `tech`, `science`, `health` (lowercase in DB/code; UI uppercases labels) — anchor phrases live only in **`apps/web/src/lib/config/buckets.yaml`** (loaded via `buckets.ts`); the UI and pipeline stay in sync.
+- **Assignment:** Cluster centroid embedding vs precomputed bucket anchors; at or above the env threshold → best bucket; below → **`emerging`** with a short **`category_line`** from Flash (see `classify.ts`).
+- **`emerging`** is not in the YAML anchor set; it is a runtime bucket only, **persisted** but **not shown** on the main digest homepage (SSR filters it out).
 - **Daily edition:** The digest handler is **idempotent per UTC day** (`routes/api/digest/+server.ts`): if any row already exists in today’s `published_at` window, the pipeline does not run again. On a successful run, `upsert.ts` clears that same UTC-day window and bulk-writes the new cluster set; the homepage groups rows by `bucket` in `+page.server.ts` (five sections only).
 
 ---
@@ -46,4 +46,4 @@ Matches `buckets.yaml`, **`DIGEST_DISPLAY_BUCKETS`** (five sections on the homep
 
 ### **Conclusion**
 
-**2min.today** is a constrained product bet: **one daily edition**, **five fixed homepage sections** (plus **`Emerging`** as a stored pipeline outcome for low anchor match, not shown on the main digest UI), **vector dedupe**, and **JSON-shaped AI output**, documented so the implementation stays traceable to [ADR-001](./adr/0001-backend%20technology%20stack%20selection.md), [ADR-002](./adr/0002-daily-digest-pipeline-architecture-and-implementation.md), [RFC-001](./rfc/0001-daily-digest-pipeline.md), [RFC-005](./rfc/0005-breaking-news-pipeline.md), and [RFC-006](./rfc/0006-source-credits.md).
+**2min.today** is a constrained product bet: **one daily edition**, **five fixed homepage sections** (plus **`emerging`** as a stored pipeline outcome for low anchor match, not shown on the main digest UI), **vector dedupe**, and **JSON-shaped AI output**, documented so the implementation stays traceable to [ADR-001](./adr/0001-backend%20technology%20stack%20selection.md), [ADR-002](./adr/0002-daily-digest-pipeline-architecture-and-implementation.md), [RFC-001](./rfc/0001-daily-digest-pipeline.md), [RFC-005](./rfc/0005-breaking-news-pipeline.md), and [RFC-006](./rfc/0006-source-credits.md).

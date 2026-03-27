@@ -1,17 +1,20 @@
 import type { Bucket } from '$lib/config/buckets';
 
-export type Region = 'global' | 'europe' | 'americas' | 'middle-east' | 'usa';
+export type Region = 'world' | 'europe' | 'americas' | 'middle-east' | 'usa';
 
 export interface Credit {
   source: string;
   url: string;
 }
 
-export const VALID_REGIONS = new Set<Region>(['global', 'europe', 'americas', 'middle-east', 'usa']);
+export const VALID_REGIONS = new Set<Region>(['world', 'europe', 'americas', 'middle-east', 'usa']);
 
 export function parseRegion(value: unknown): Region {
-  if (typeof value === 'string' && VALID_REGIONS.has(value as Region)) return value as Region;
-  return 'global';
+  if (typeof value === 'string') {
+    const normalized = value === 'global' || value === 'Global' ? 'world' : value;
+    if (VALID_REGIONS.has(normalized as Region)) return normalized as Region;
+  }
+  return 'world';
 }
 
 export interface RawItem {
@@ -41,6 +44,7 @@ export interface SummarizedCluster extends Cluster {
   tags: string[];
   region: Region;
   credits: Credit[];
+  llmBucket: Bucket | null;
 }
 
 export interface ClassifiedCluster extends SummarizedCluster {

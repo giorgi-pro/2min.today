@@ -1,9 +1,25 @@
 import type { Bucket } from '$lib/config/buckets.constants';
-import { DIGEST_DISPLAY_BUCKETS } from '$lib/config/buckets.constants';
+import { BUCKET_ORDER, DIGEST_DISPLAY_BUCKETS } from '$lib/config/buckets.constants';
 
 export const CATEGORY_ORDER_STORAGE_KEY = '2min.today/category-order';
 
 const displayBucketSet = new Set<string>(DIGEST_DISPLAY_BUCKETS);
+const bucketKeySet = new Set<string>(BUCKET_ORDER);
+
+const LEGACY_BUCKET_KEYS: Record<string, Bucket> = {
+  World: 'world',
+  Business: 'business',
+  Tech: 'tech',
+  Science: 'science',
+  Health: 'health',
+  Sports: 'sports',
+};
+
+/** Maps localStorage / legacy Title-case keys to current lowercase `Bucket` slugs. */
+export function normalizeStoredBucketKey(raw: string): Bucket | null {
+  if (bucketKeySet.has(raw)) return raw as Bucket;
+  return LEGACY_BUCKET_KEYS[raw] ?? null;
+}
 
 export function resolveCategoryOrder(saved: string[] | null | undefined, present: Bucket[]): Bucket[] {
   const presentSet = new Set(present);

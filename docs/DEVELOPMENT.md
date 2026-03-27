@@ -22,6 +22,7 @@ Full dashboard steps: [01-setup-supabase.md](./setup/01-setup-supabase.md).
 2. **Migrations** — SQL files live under `apps/web/supabase/migrations/`. Apply **in order**:
    - `001-pgvector.sql` — `vector` extension, `clusters`, `bucket_anchors`, indexes
    - `002-live-news.sql` — breaking-news columns on `clusters` (`is_live`, `source_url`, …)
+   - `003-lowercase-buckets-world-region.sql` — lowercase `bucket` slugs (`world` … `health`, `emerging`); `summary.region` `global` → `world`; relax `bucket_anchors` check then re-apply
 
    Use the Supabase **SQL Editor** (paste and run each file), or the [Supabase CLI](https://supabase.com/docs/guides/cli) (`db push` / linked project) if you use it locally.
 
@@ -74,3 +75,13 @@ curl "http://localhost:3000/api/breaking?secret=${BREAKING_SECRET}"
 Set `USE_MOCK_DATA=true` in `apps/web/.env` to show static digest data without running the full pipeline.
 
 After a successful digest run, the homepage can load real rows from Supabase via the anon client.
+
+## 7. Bruno (API collection)
+
+Open the workspace at **`.bruno/workspace.yml`** in [Bruno](https://www.usebruno.com/). Set the **Local** environment variables to match `apps/web/.env`:
+
+- **`base_url`** — `http://localhost:3000` (default)
+- **`cron_secret`** — same value as `CRON_SECRET`
+- **`breaking_secret`** — same value as `BREAKING_SECRET`
+
+The **2min.today** collection under **`.bruno/collections/2min.today/`** includes **Digest → Run pipeline**, **Digest → Fetch sources**, and **Breaking → Run pipeline** (same routes as §4–§5).

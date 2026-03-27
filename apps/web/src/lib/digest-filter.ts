@@ -23,7 +23,7 @@ function readStoredRegions(): Set<Region> {
     if (!raw) return new Set();
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return new Set();
-    return new Set(parsed.filter((v): v is Region => VALID_REGIONS.has(v) && v !== 'global'));
+    return new Set(parsed.filter((v): v is Region => VALID_REGIONS.has(v) && v !== 'world'));
   } catch {
     return new Set();
   }

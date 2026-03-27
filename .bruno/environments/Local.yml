@@ -1,0 +1,12 @@
+name: Local
+variables:
+  - name: base_url
+    value: http://localhost:3000
+  - name: cron_secret
+    value: ""
+  - name: breaking_secret
+    value: ""
+  - name: token
+    value: ""
+  - name: anon_token
+    value: ""

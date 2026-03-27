@@ -100,7 +100,7 @@ packages/ui/src/components/
     └── CategoryPanel.svelte
 ```
 
-**Note:** [`buckets.ts`](../../apps/web/src/lib/config/buckets.ts) uses Node **`fs`** to read `buckets.yaml`. Client code (e.g. **`+page.svelte`**) must import from [`buckets.constants.ts`](../../apps/web/src/lib/config/buckets.constants.ts) only so Vite does not bundle `fs` in the browser. Use **`DIGEST_DISPLAY_BUCKETS`** for **homepage section order** and filtering (five YAML buckets; **`Emerging`** is not shown on the main digest). **`BUCKET_ORDER`** is the full ordered list including **`Emerging`** for the **`Bucket`** type and pipeline; the homepage uses **`DIGEST_DISPLAY_BUCKETS`** for **`presentBuckets`** / **`liveToCategories`** ordering.
+**Note:** [`buckets.ts`](../../apps/web/src/lib/config/buckets.ts) uses Node **`fs`** to read `buckets.yaml`. Client code (e.g. **`+page.svelte`**) must import from [`buckets.constants.ts`](../../apps/web/src/lib/config/buckets.constants.ts) only so Vite does not bundle `fs` in the browser. Use **`DIGEST_DISPLAY_BUCKETS`** for **homepage section order** and filtering (five lowercase YAML slugs; **`emerging`** is not shown on the main digest). **`BUCKET_ORDER`** is the full ordered list including **`emerging`** for the **`Bucket`** type and pipeline; the homepage uses **`DIGEST_DISPLAY_BUCKETS`** for **`presentBuckets`** / ordering. Category labels use **uppercase** styling in the UI.
 
 ## TypeScript types
 
@@ -174,11 +174,13 @@ For each mock news item, `tags` are **1–3 short tokens** deduced from the head
 
 - **Count:** minimum **1**, maximum **3** strings per card.
 - **Heuristic:** normalize headline, strip punctuation, split, drop stopwords, dedupe, sort by length descending, take up to **3**; if empty, one tag from normalized `source` or bucket name.
-- **Cost:** trivial string work on `load` / client fallback only.
+- **Cost:** trivial string work on `load` / optional client fallback only.
 
-**Live Supabase branch** — for each row, `if (!acc[b]) acc[b] = []`, then push a card with `tags` filtered to strings only; **`return { digest, fuseThreshold }`** (including on Supabase error — empty digest + threshold).
+**Live Supabase branch** — for each row, `if (!acc[b]) acc[b] = []`, then push a card with `tags` filtered to strings only; **`return { digest, fuseThreshold, useMockData: false }`** (including on Supabase error — empty digest + threshold + **`useMockData: false`**).
 
-**Client fallback:** when SSR returns an **empty** `digest`, [`+page.svelte`](../../apps/web/src/routes/+page.svelte) uses **`buildMockDigest()`** as `sourceDigest` so search still works without `USE_MOCK_DATA`.
+**Mock branch** — **`return { …, useMockData: true }`**.
+
+**Client `sourceDigest`:** if `data.digest` has keys, use it. Else, only if **`data.useMockData`** is **`true`**, use **`buildMockDigest().cards`** (covers the rare case SSR mock digest is empty). If **`useMockData` is `false`** and digest is empty (no rows for today’s UTC window, or Supabase error), use an **empty** map — **no** mock tiles. This keeps **`USE_MOCK_DATA=false`** from showing mock content when the live digest is simply empty.
 
 ## 4. Shared client state (`lib/digest-filter.ts`)
 
@@ -201,7 +203,7 @@ Exports:
 
 Merged with the **existing** marquee / bucket layout. Implemented behaviour:
 
-- **`sourceDigest`:** if `data.digest` has keys, use it; else **`buildMockDigest()`** (same shape as mock server path).
+- **`sourceDigest`:** if `data.digest` has keys, use it; else if **`data.useMockData`** then **`buildMockDigest().cards`**; else **{}** (empty homepage until real data exists).
 - **`allCards`:** flatten `sourceDigest` with **`Object.entries`** (each card already has **`bucket`** on the server; mock cards include it too). Import **`DIGEST_DISPLAY_BUCKETS`** from **`$lib/config/buckets.constants`** (not **`buckets.ts`** — avoids bundling **`fs`**). Only include cards whose **`bucket`** is in **`DIGEST_DISPLAY_BUCKETS`** (SSR already omits **`Emerging`**; this is a client-side safety net).
 - **`Fuse`:** `$derived` when `allCards` or **`data.fuseThreshold`** changes. **`bullets`** are searched via a **`getFn`** that **`join(' ')`**s the array (Fuse v7 does not treat `bullets[]` as text by default).
 - **`filteredCards`:** read **`debouncedQ`**; if trimmed query non-empty, Fuse search over **`allCards`**; else all cards. **`filteredDigest`** regroups by **`bucket`** using a local list reference after `if (!acc[b]) acc[b] = []` (no non-null assertion).
@@ -230,7 +232,11 @@ Illustrative core (abbreviated):
   });
 
   const sourceDigest = $derived(
-    data.digest && Object.keys(data.digest).length > 0 ? data.digest : buildMockDigest(),
+    data.digest && Object.keys(data.digest).length > 0
+      ? data.digest
+      : data.useMockData
+        ? buildMockDigest().cards
+        : {},
   );
 
   const allCards = $derived(/* flatten sourceDigest with bucket on each row */);

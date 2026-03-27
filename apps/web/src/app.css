@@ -83,6 +83,7 @@ html::-webkit-scrollbar-thumb {
 }
 
 .credits-dropdown {
+  overflow-x: hidden;
   overflow-y: auto;
 }
 

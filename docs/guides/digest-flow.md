@@ -96,7 +96,7 @@ One Flash `generateContent` call per cluster. This is the slowest phase.
 - `bullets` — exactly 3 bullets, max 25 words each.
 - `whyItMatters` — max 30 words.
 - `tags` — 3–5 short-phrase keywords (e.g. `fed-rate`, `nvidia-chip`), normalized and capped at 5.
-- `region` — one of `global | europe | americas | middle-east | usa`. `feedRegion` from the YAML source overrides the model's answer if present.
+- `region` — one of `world | europe | americas | middle-east | usa` (lowercase). `feedRegion` from the YAML source overrides the model's answer if present. Legacy stored `global` is read as `world`.
 
 **Flash pacing — two modes** (controlled by `FLASH_GENERATION_MIN_INTERVAL_MS`):
 
@@ -115,13 +115,13 @@ Output: `SummarizedCluster[]` — cluster + `headline`, `bullets`, `whyItMatters
 
 Assigns each cluster to one of the five homepage buckets — or marks it `Emerging`.
 
-**Setup:** loads all rows from the `bucket_anchors` Supabase table. These are pre-embedded anchor phrases for each bucket (`World`, `Business`, `Tech`, `Science`, `Health`), seeded once via `scripts/seed-bucket-anchors.ts`. Throws if the table is empty.
+**Setup:** loads all rows from the `bucket_anchors` Supabase table. These are pre-embedded anchor phrases for each bucket (`world`, `business`, `tech`, `science`, `health`), seeded once via `scripts/seed-bucket-anchors.ts`. Throws if the table is empty.
 
 **Per cluster:**
 1. Compute cosine similarity between the cluster's **centroid** embedding and each bucket anchor embedding.
 2. Compare the best similarity to **`CLASSIFY_SIMILARITY_THRESHOLD`** (env, `0`–`1`, default `0.65`).
    - **At or above threshold** → assign best-matching bucket. `categoryLine` is `null`.
-   - **Below threshold** → bucket = `Emerging`. One additional Flash call generates a short `categoryLine` label (max 8 words). This call also goes through the ConstrainedFlow/UnconstrainedFlow pacing, so each Emerging cluster adds another pacing slot.
+   - **Below threshold** → bucket = `emerging`. One additional Flash call generates a short `categoryLine` label (max 8 words). This call also goes through the ConstrainedFlow/UnconstrainedFlow pacing, so each emerging cluster adds another pacing slot.
 
 Output: `ClassifiedCluster[]` — every cluster now has `bucket` and `categoryLine`.
 
@@ -137,8 +137,8 @@ Writes the digest to Supabase atomically within today's UTC window.
    - `embedding` — centroid vector.
    - `raw_items` — full array of source items (jsonb).
    - `summary` — `{ headline, bullets, why_it_matters, tags, region, credits }` (jsonb).
-   - `bucket` — assigned bucket name (including `Emerging`).
-   - `category_line` — Flash-generated label for Emerging clusters, `null` for fixed buckets.
+   - `bucket` — assigned bucket slug (including `emerging`).
+   - `category_line` — Flash-generated label for emerging clusters, `null` for fixed buckets.
    - `published_at` — current timestamp.
 
 Output: the same `ClassifiedCluster[]` passed in; throws on Supabase error.
@@ -166,11 +166,11 @@ The SvelteKit `load` function runs on every homepage request (SSR). It:
 
 1. Reads today's UTC window (same logic as the handler).
 2. Queries `clusters` for rows in that window, ordered by `published_at` descending.
-3. **Skips `Emerging` rows** — `if (b === 'Emerging') return acc`. Emerging clusters are stored in the DB for ops/future use but never shown on the main digest UI.
+3. **Skips `emerging` rows** — normalized via `normalizeClusterBucket`. Emerging clusters are stored in the DB for ops/future use but never shown on the main digest UI.
 4. Groups remaining rows into `Partial<Record<Bucket, DigestCard[]>>` — one array per bucket.
 5. Returns `{ digest, fuseThreshold }` to the page. `DIGEST_FUSE_THRESHOLD` (default `0.4`) controls Fuse.js search sensitivity.
 
-The five homepage sections (`DIGEST_DISPLAY_BUCKETS` in `lib/config/buckets.constants.ts`) are: `World`, `Business`, `Tech`, `Science`, `Health`. `BUCKET_ORDER` extends this with `Emerging` for type-level completeness and pipeline use.
+The five homepage sections (`DIGEST_DISPLAY_BUCKETS` in `lib/config/buckets.constants.ts`) are lowercase slugs: `world`, `business`, `tech`, `science`, `health`. The UI uppercases labels (e.g. **WORLD**). `BUCKET_ORDER` extends this with `emerging` for typing and pipeline use.
 
 ---
 
@@ -209,4 +209,4 @@ The **total wall time** is dominated by summarize. If the `curl` call appears to
 | `CLASSIFY_SIMILARITY_THRESHOLD` | `0.65` | Cosine cutoff: below → Emerging |
 | `DIGEST_SUMMARIZE_MAX_CLUSTERS` | unset | Cap Flash calls for debugging |
 | `DIGEST_FUSE_THRESHOLD` | `0.4` | Homepage search fuziness |
-| `USE_MOCK_DATA` | `false` | `true` skips Supabase; uses local mock data |
+| `USE_MOCK_DATA` | `false` | Only exact `true` enables mock from `load`. When `false`, an empty live digest shows no cards (no client-side mock substitute). |

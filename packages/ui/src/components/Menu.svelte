@@ -5,7 +5,7 @@
   import MiddleEastSwitch from './region/MiddleEastSwitch.svelte';
   import USASwitch from './region/USASwitch.svelte';
 
-  type Region = 'global' | 'europe' | 'americas' | 'middle-east' | 'usa';
+  type Region = 'world' | 'europe' | 'americas' | 'middle-east' | 'usa';
 
   interface Props {
     activeRegions?: Set<Region>;

@@ -18,7 +18,7 @@
 
 ## 3. Run migrations
 
-Migrations live in `apps/web/supabase/migrations/` (`001-pgvector.sql`, then `002-live-news.sql`). Apply them in order via the Supabase SQL editor, or with the [Supabase CLI](https://supabase.com/docs/guides/cli) after linking the project.
+Migrations live in `apps/web/supabase/migrations/` (`001-pgvector.sql`, `002-live-news.sql`, `003-lowercase-buckets-world-region.sql`, …). Apply them in order via the Supabase SQL editor, or with the [Supabase CLI](https://supabase.com/docs/guides/cli) after linking the project. **`003`** rewrites bucket slugs to lowercase and `summary.region` from `global` to `world`.
 
 ## 4. Seed bucket anchors (once)
 

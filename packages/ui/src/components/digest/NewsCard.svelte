@@ -58,30 +58,31 @@
 
   {#if open}
     <div
-      class="credits-dropdown absolute right-2 top-6 z-10 max-h-40 w-[26rem] border border-black/10 bg-white"
+      class="credits-dropdown absolute right-2 top-6 z-10 max-h-40 w-[min(26rem,calc(100vw-1.5rem))] border border-black/10 bg-white"
       role="dialog"
       aria-label="Sources"
     >
       {#if credits.length === 0}
         <p class="px-3 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-black/30">Source unavailable</p>
       {:else}
-        <table class="w-full border-collapse">
-          <tbody>
-            {#each credits as credit}
-              <tr class="border-b border-black/5 last:border-0">
-                <td class="w-px whitespace-nowrap py-2 pl-3 pr-3 font-mono text-[0.55rem] uppercase tracking-widest text-black/40">{credit.source}</td>
-                <td class="py-2 pr-3">
-                  <a
-                    href={credit.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="block truncate text-[0.65rem] text-black underline underline-offset-2"
-                  >{credit.url}</a>
-                </td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
+        <div class="flex flex-col">
+          {#each credits as credit}
+            <div class="flex items-center border-b border-black/5 py-2 pl-3 pr-3 last:border-0">
+              <div
+                class="shrink-0 whitespace-nowrap pr-[30px] font-mono text-[0.55rem] uppercase leading-none tracking-widest text-black/40"
+              >{credit.source}</div>
+              <div class="min-w-0 flex-1 leading-none">
+                <a
+                  href={credit.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={credit.url}
+                  class="block min-w-0 truncate text-[0.65rem] leading-none text-black underline underline-offset-2"
+                >{credit.url}</a>
+              </div>
+            </div>
+          {/each}
+        </div>
       {/if}
     </div>
   {/if}

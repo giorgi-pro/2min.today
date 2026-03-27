@@ -10,17 +10,17 @@
 
 ## Purpose
 
-Add a `region` dimension to every digest card so users can filter the daily digest by geographic focus. Region is orthogonal to the existing topic bucket (World, Business, Tech…) — a card always has exactly one topic bucket and exactly one region.
+Add a `region` dimension to every digest card so users can filter the daily digest by geographic focus. Region is orthogonal to the existing topic bucket (`world`, `business`, `tech` … as lowercase slugs) — a card always has exactly one topic bucket and exactly one region.
 
 ---
 
 ## Region Taxonomy
 
-Five regions are supported. `global` is the canonical fallback.
+Five regions are supported. `world` is the canonical fallback (replaces legacy `global` in stored JSON; `parseRegion` maps `global` → `world`).
 
 | Value | Meaning |
 |-------|---------|
-| `global` | Worldwide scope, or region is unclear / not one of the below |
+| `world` | Worldwide scope, or region is unclear / not one of the below |
 | `europe` | Primarily Europe, EU, UK, Eastern Europe |
 | `americas` | Latin America, Caribbean, Canada, or multi-country stories spanning the Americas |
 | `middle-east` | Middle East and North Africa (MENA) |
@@ -32,10 +32,10 @@ Five regions are supported. `global` is the canonical fallback.
 - Story is about a non-US country in the Americas (Venezuela, Brazil, Mexico, Canada, etc.) → `americas`
 - Story is about a US foreign policy action *directed at another region* (e.g. US sanctions on Iran) → region of the *target* country, not `usa`
 
-**Unmapped regions → `global`:**
-- Asia, South/East Asia, Oceania, Sub-Saharan Africa (except where also MENA) → `global`
-- Global institutions (UN, WHO, IMF, WTO) with no dominant regional focus → `global`
-- Technology, science, and health stories with no primary geographic anchor → `global`
+**Unmapped regions → `world`:**
+- Asia, South/East Asia, Oceania, Sub-Saharan Africa (except where also MENA) → `world`
+- Worldwide institutions (UN, WHO, IMF, WTO) with no dominant regional focus → `world`
+- Technology, science, and health stories with no primary geographic anchor → `world`
 
 ---
 
@@ -62,19 +62,19 @@ For clusters where `feedRegion` is absent, `region` is added to the Gemini struc
 
 **Prompt instruction added:**
 ```
-"region": one of ["global","europe","americas","middle-east","usa"].
+"region": one of ["world","europe","americas","middle-east","usa"].
 Assign "usa" only for US-domestic stories. Assign "americas" for multi-country
-Americas stories or non-US Americas countries. Default to "global" if unclear.
+Americas stories or non-US Americas countries. Default to "world" if unclear.
 ```
 
-**Validation:** if the model returns a value outside the enum, fall back to `global`. Never fail the pipeline on a bad region value.
+**Validation:** if the model returns a value outside the enum, fall back to `world`. Never fail the pipeline on a bad region value.
 
 ### Priority
 
 ```
 feedRegion (Tier 1) → if present, use it
                     → else use Gemini output (Tier 2), validated against enum
-                    → fallback: "global"
+                    → fallback: "world"
 ```
 
 ---
@@ -84,7 +84,7 @@ feedRegion (Tier 1) → if present, use it
 ### `apps/web/src/lib/types/digest.ts`
 
 ```ts
-export type Region = 'global' | 'europe' | 'americas' | 'middle-east' | 'usa';
+export type Region = 'world' | 'europe' | 'americas' | 'middle-east' | 'usa';
 
 export interface RawItem {
   // ...existing fields...
@@ -120,7 +120,7 @@ Feed entries gain an optional `feedRegion`. The `RSS_FEEDS` array entries gain a
 
 ### `summarize.ts`
 
-Schema adds `region` as a `SchemaType.STRING` enum field in `required`. After parse, validate against the `VALID_REGIONS` set; if invalid, use the cluster's `feedRegion` if present, else `'global'`. The `feedRegion` from the cluster items takes priority over the model output.
+Schema adds `region` as a `SchemaType.STRING` enum field in `required`. After parse, validate against the `VALID_REGIONS` set; if invalid, use the cluster's `feedRegion` if present, else `'world'`. The `feedRegion` from the cluster items takes priority over the model output.
 
 ### `upsert.ts`
 
@@ -138,19 +138,19 @@ summary: {
 
 ### `+page.server.ts`
 
-`SummaryJson` gains `region?: string`. Mapped to `DigestCard.region` with fallback to `'global'`.
+`SummaryJson` gains `region?: string`. Mapped to `DigestCard.region` with fallback to `'world'` (legacy `global` normalized via `parseRegion`).
 
 ---
 
 ## Client-Side Filter
 
-Region filtering is a simple equality check applied **after** the existing search filter. `global` is a special value meaning "show all" — selecting the Globe icon shows the full digest regardless of card region.
+Region filtering is a simple equality check applied **after** the existing search filter. The Globe icon clears the active set (show all cards). The `world` **region slug** on a card means worldwide geographic scope, not “show all.”
 
 ### Filter logic
 
 ```
-selected region = 'global' → show all cards
-selected region = X        → show only cards where card.region === X
+empty active region set → show all cards
+active set non-empty     → show only cards where card.region matches any active region
 ```
 
 Applied in `filteredCards` in `+page.svelte`, after Fuse search results.
@@ -159,7 +159,7 @@ Applied in `filteredCards` in `+page.svelte`, after Fuse search results.
 
 `activeRegions` is a custom store in `digest-filter.ts` holding a `Set<Region>`. It is backed by `localStorage` under the key `regions` (JSON array). Rules:
 
-- On init: parse `localStorage.getItem('regions')` as a JSON array. Keep only valid non-`global` region values. If the result is empty, start with an empty set (no filter).
+- On init: parse `localStorage.getItem('regions')` as a JSON array. Keep only valid non-`world` region values (so the worldwide slug is never a persisted “chip”; Globe clears). If the result is empty, start with an empty set (no filter).
 - On every change: if the set is empty, remove the `regions` key from `localStorage`. Otherwise write `JSON.stringify([...set])`.
 - URL does not change. No query param, no hash fragment.
 - SSR-safe: `localStorage` is only accessed in the browser (`typeof window !== 'undefined'`).
@@ -168,7 +168,7 @@ Applied in `filteredCards` in `+page.svelte`, after Fuse search results.
 
 - Each named region (`europe`, `americas`, `middle-east`, `usa`) is an **independent toggle**. Clicking a region that is already active deselects it; clicking an inactive region adds it to the active set.
 - **Multiple regions can be active simultaneously.** The filter shows cards whose `region` matches *any* of the active regions.
-- Empty active set = no filter = full digest shown (equivalent to "global").
+- Empty active set = no filter = full digest shown.
 
 ### Global switch behaviour
 
@@ -199,6 +199,6 @@ No new top-level columns required if `region` lives inside the `summary` jsonb (
 
 - **Server-side region filtering** — digest is small enough for client-side filtering; future RFC if needed.
 - **Multi-region cards** — each card has exactly one region.
-- **Asia / Oceania / Sub-Saharan Africa as named regions** — collapsed to `global` for v1.
+- **Asia / Oceania / Sub-Saharan Africa as named regions** — collapsed to `world` for v1.
 - **Region-segmented digests** — separate pipeline runs per region; future RFC.
 - **URL-based region state** — intentionally not implemented; localStorage is sufficient and cleaner.

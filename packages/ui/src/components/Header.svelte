@@ -3,7 +3,7 @@
   import Logo from './Logo.svelte';
   import Menu from './Menu.svelte';
 
-  type Region = 'global' | 'europe' | 'americas' | 'middle-east' | 'usa';
+  type Region = 'world' | 'europe' | 'americas' | 'middle-east' | 'usa';
 
   interface Props {
     searchQuery?: string;

@@ -17,7 +17,7 @@ The pipeline must always produce **exactly one daily edition** at 00:00 UTC, zer
 2. Is **fully idempotent**: if re-run on the same day, it does nothing (checks `published_at` date).
 3. End-to-end latency target: **< 2 seconds** on free tier.
 4. Output: exactly one row per cluster in the `clusters` table.
-5. Classification: **only** the 5 fixed buckets or `Emerging`.
+5. Classification: **only** the 6 fixed buckets (`world`, `business`, `tech`, `science`, `health`, `sports`). No `emerging` — below-threshold clusters fall back to `llmBucket` (from the summarize prompt) or `world`.
 6. No images, no HTML, no extra fields.
 
 ### Embedding vector size (Gemini + pgvector)
@@ -109,11 +109,15 @@ export interface SummarizedCluster extends Cluster {
   headline: string;
   bullets: string[]; // exactly 3
   whyItMatters: string;
+  tags: string[];
+  region: Region;
+  credits: Credit[];
+  llmBucket: Bucket | null; // Gemini's topic pick from the summarize prompt; used as fallback in classify
 }
 
 export interface ClassifiedCluster extends SummarizedCluster {
   bucket: Bucket;
-  categoryLine: string | null; // only for Emerging
+  categoryLine: string | null;
 }
 ```
 
@@ -131,13 +135,14 @@ Used by `classify.ts` and `scripts/seed-bucket-anchors.ts` — both import from 
 ```yaml
 # 2min.today Core Buckets
 # Single source of truth — edit here; seed + classify consume via buckets.ts
-# Future: user-defined topics or extra sections can start from this file
+# After editing anchor text, re-run: npx tsx scripts/seed-bucket-anchors.ts
 buckets:
-  World:    "global geopolitics international relations diplomacy conflicts treaties"
-  Business: "financial markets economy business corporate earnings monetary policy"
-  Tech:     "technology innovation AI hardware software digital breakthroughs"
-  Science:  "scientific discoveries research physics biology space exploration"
-  Health:   "health medicine public health biomedical research wellness"
+  world:    "world news current affairs politics government policy law legislation protests civil rights human rights society culture environment crime accidents disasters international relations diplomacy geopolitics conflicts treaties global affairs"
+  business: "financial markets economy business corporate earnings monetary policy trade tariffs currency"
+  tech:     "technology innovation AI hardware software digital breakthroughs startups cybersecurity"
+  science:  "scientific discoveries research physics biology space exploration climate"
+  health:   "health medicine public health biomedical research wellness lifestyle habits nutrition mental health parenting child development fitness diet sleep screen time digital wellbeing"
+  sports:   "sports football soccer basketball tennis cricket rugby olympics athletics competitions leagues tournaments championships racing cycling swimming"
 ```
 
 ### `lib/config/buckets.ts`
@@ -151,10 +156,10 @@ import path from 'path';
 
 const raw = fs.readFileSync(path.join(process.cwd(), 'src/lib/config/buckets.yaml'), 'utf8');
 export const BUCKET_ANCHORS = parse(raw).buckets as Record<string, string>;
-export type Bucket = 'World' | 'Business' | 'Tech' | 'Science' | 'Health' | 'Emerging';
+export type Bucket = 'world' | 'business' | 'tech' | 'science' | 'health' | 'sports';
 ```
 
-`Emerging` is a runtime classification outcome only; it is not a row in `buckets.yaml` and is not stored in `bucket_anchors`. Rows with `bucket = 'Emerging'` are still **upserted** to `clusters`, but the homepage **`load`** in `+page.server.ts` **omits** them so the digest UI shows only the five YAML buckets (`DIGEST_DISPLAY_BUCKETS` in `buckets.constants.ts`; full `BUCKET_ORDER` still includes `Emerging` for typing and pipeline).
+All 6 buckets have anchor embeddings in `bucket_anchors`. There is no `emerging` bucket — the classify step uses a hybrid approach: embedding similarity first, then LLM fallback from the summarize prompt, then `world` as the final catch-all (see §5 `classify.ts`).
 
 > The seed script uses `process.env` directly (not `$env/dynamic/private`) because it runs outside SvelteKit, as a plain Node script via `tsx`.
 
@@ -372,6 +377,8 @@ The entry point (`+server.ts` §8) already checks for existing rows and returns 
 
 - Model: `gemini-2.5-flash`.
 - **Structured output:** use the official Gemini JSON mode (`generationConfig.responseMimeType` + `responseSchema` on the model) so the model cannot return prose, markdown fences, or extra keys. Parse with `JSON.parse(result.response.text())` — no regex fallbacks.
+- **`bucket` field:** the prompt asks Gemini to pick one of the 6 buckets (`world`, `business`, `tech`, `science`, `health`, `sports`). This is stored as `llmBucket` on `SummarizedCluster` and used as a **fallback** in `classify.ts` when embedding similarity is below threshold. This avoids an extra Gemini call in the classify step.
+- **`region` field:** the prompt asks Gemini to pick one of the 5 regions (`world`, `europe`, `americas`, `middle-east`, `usa`). If `feedRegion` is set on any cluster item, it overrides the LLM pick.
 
 ```ts
 const model = genAI.getGenerativeModel({
@@ -384,51 +391,39 @@ const model = genAI.getGenerativeModel({
         headline: { type: 'string' },
         bullets: { type: 'array', items: { type: 'string' }, minItems: 3, maxItems: 3 },
         whyItMatters: { type: 'string' },
+        tags: { type: 'array', items: { type: 'string' } },
+        region: { type: 'string' },
+        bucket: { type: 'string' },
       },
-      required: ['headline', 'bullets', 'whyItMatters'],
+      required: ['headline', 'bullets', 'whyItMatters', 'tags', 'region', 'bucket'],
     },
   },
 });
-
-const SUMMARY_PROMPT = `You are a brutalist news editor for 2min.today.
-
-Cluster of reports:
-${JSON.stringify(cluster.items.map(i => ({ title: i.title, content: i.content.slice(0, 800) })))}
-
-Return ONLY valid JSON matching this schema:
-{
-  "headline": "max 12 words",
-  "bullets": ["exactly 3 bullets, max 25 words each"],
-  "whyItMatters": "max 30 words"
-}
-
-Tone: dense, zero fluff, future-facing.`;
-
-const result = await model.generateContent(SUMMARY_PROMPT);
-const parsed = JSON.parse(result.response.text()) as {
-  headline: string;
-  bullets: string[];
-  whyItMatters: string;
-};
 ```
 
-- Map `parsed` onto `SummarizedCluster` (`headline`, `bullets`, `whyItMatters`).
+Prompt includes explicit rules for both `region` and `bucket`:
+
+```
+For "region": usa = US-domestic only. americas = multi-country Americas or non-US. middle-east = MENA. europe = Europe/EU/UK. world = worldwide scope or unclear geography.
+
+For "bucket": business = financial markets, economy, corporate, trade. tech = technology, AI, software, hardware. science = scientific research, space, climate. health = medicine, wellness, lifestyle, parenting, mental health. sports = sports, athletics, competitions, leagues. world = everything else (politics, law, government, diplomacy, society, culture, accidents, crime, human rights, environment).
+```
+
+- Map `parsed` onto `SummarizedCluster` (`headline`, `bullets`, `whyItMatters`, `tags`, `region`, `credits`, `llmBucket`).
 
 ### `classify.ts`
 
-- Import `BUCKET_ANCHORS` from `$lib/config/buckets`.
-- Fetch bucket anchor embeddings from Supabase (seeded once via `scripts/seed-bucket-anchors.ts`).
-- For each cluster centroid:
+**Hybrid classification:** embedding similarity first, LLM fallback second, `world` catch-all third.
 
-```sql
-SELECT bucket, 1 - (embedding <=> $1) AS similarity
-FROM bucket_anchors
-ORDER BY similarity DESC LIMIT 1;
-```
-
+- Fetch bucket anchor embeddings from Supabase (seeded once via `scripts/seed-bucket-anchors.ts` — 6 rows: `world`, `business`, `tech`, `science`, `health`, `sports`).
+- For each cluster centroid, compute cosine similarity against all 6 anchor embeddings.
 - **Threshold:** compare max cosine similarity to **`CLASSIFY_SIMILARITY_THRESHOLD`** in env (`apps/web/.env`), a float in **0–1**, **default 0.65** if unset or invalid (`getClassifySimilarityThreshold()` in `lib/server/digest/models.ts`).
 - If max similarity ≥ threshold → assign best bucket.
-- Else → `bucket = 'Emerging'`, call Gemini once for `categoryLine` (max 8 words). **Homepage SSR** does not surface `Emerging` cards (see §3 `buckets` / `DIGEST_DISPLAY_BUCKETS` note); rows remain in `clusters` for ops or future product use.
+- Else → use `cluster.llmBucket` (the bucket Gemini picked during summarization). If `llmBucket` is `null` (Gemini returned an invalid value), fall back to `'world'`.
+
+There is **no `emerging` bucket**. There are **no Gemini calls in classify** — the LLM work is done once in `summarize.ts` and reused here. This saves one Flash call per below-threshold cluster.
+
+`categoryLine` is always `null` (retained on the type for backward compatibility with existing DB rows).
 
 ### `upsert.ts`
 
@@ -489,18 +484,18 @@ create table clusters (
 
 create index idx_clusters_embedding on clusters using hnsw (embedding vector_cosine_ops);
 
--- Bucket anchors: 5 fixed rows, seeded once via scripts/seed-bucket-anchors.ts
+-- Bucket anchors: 6 fixed rows, seeded once via scripts/seed-bucket-anchors.ts
 create table if not exists bucket_anchors (
   bucket    text primary key
-    check (bucket in ('World', 'Business', 'Tech', 'Science', 'Health')),
+    check (bucket in ('world', 'business', 'tech', 'science', 'health', 'sports')),
   embedding vector(768) not null
 );
--- No HNSW index needed — only 5 rows, sequential scan is faster
+-- No HNSW index needed — only 6 rows, sequential scan is faster
 ```
 
 ## 7. Bucket Anchor Seed Script (`scripts/seed-bucket-anchors.ts`)
 
-Run **once** after applying the migration. Idempotent (upsert on primary key).
+Run **once** after applying the migration, and **again after any change to `buckets.yaml` anchor text** (e.g. adding `sports`, broadening `world`/`health`). Idempotent (upsert on primary key).
 
 ```ts
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -731,7 +726,7 @@ Until the pipeline ships, keep `mockData` behind a guard or feature flag if need
 1. Copy `apps/web/.env.example` → `apps/web/.env.local` and fill in all values (private vars for pipeline + **`PUBLIC_SUPABASE_URL`** / **`PUBLIC_SUPABASE_ANON_KEY`** for homepage SSR).
 2. Add the same keys to Vercel dashboard → Environment Variables.
 3. Run migration `001-pgvector.sql` (creates `clusters` + `bucket_anchors` tables).
-4. Run `npx tsx scripts/seed-bucket-anchors.ts` to embed and store the 5 anchor vectors.
+4. Run `npx tsx scripts/seed-bucket-anchors.ts` to embed and store the 6 anchor vectors.
 5. Configure Supabase **RLS** so anonymous (or your chosen role) can `SELECT` the `clusters` rows the homepage should show.
 6. Add `APP_URL` and `CRON_SECRET` to GitHub repository secrets (Settings → Secrets → Actions). `APP_URL` is shared with the breaking news workflow (RFC-005).
 

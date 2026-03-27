@@ -1,12 +1,5 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { Logger } from 'pino';
-import { env } from '$env/dynamic/private';
-import { withFlashGenerationRetry } from '$lib/server/digest/flash-generate';
-import {
-  getClassifySimilarityThreshold,
-  getFlashModel,
-  mergeFlashGenerationConfig,
-} from '$lib/server/digest/models';
+import { getClassifySimilarityThreshold } from '$lib/server/digest/models';
 import { silentLogger } from '$lib/server/digest/logger';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Bucket } from '$lib/config/buckets';
@@ -44,13 +37,6 @@ export async function classifyClusters(
   l.info({ anchorCount: anchors.length }, 'classify anchors loaded');
 
   const similarityThreshold = getClassifySimilarityThreshold();
-
-  const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY ?? '');
-  const model = genAI.getGenerativeModel({
-    model: getFlashModel(),
-    generationConfig: mergeFlashGenerationConfig({}),
-  });
-
   const results: ClassifiedCluster[] = [];
 
   for (const [clusterIndex, cluster] of clusters.entries()) {
@@ -66,26 +52,12 @@ export async function classifyClusters(
     }
 
     if (bestSim >= similarityThreshold) {
-      results.push({
-        ...cluster,
-        bucket: bestBucket as Bucket,
-        categoryLine: null,
-      });
+      l.debug({ clusterIndex, bestBucket, bestSim }, 'classify embedding match');
+      results.push({ ...cluster, bucket: bestBucket as Bucket, categoryLine: null });
     } else {
-      l.debug({ clusterIndex, clusterId: cluster.id }, 'classify emerging flash');
-
-      const prompt = `Generate a concise category label (max 8 words) for this news cluster:\n\nHeadline: ${cluster.headline}\nBullets: ${cluster.bullets.join('; ')}\n\nReturn ONLY the label, no quotes, no explanation.`;
-
-      const categoryLine = await withFlashGenerationRetry(async () => {
-        const result = await model.generateContent(prompt);
-        return result.response.text().trim().slice(0, 80);
-      });
-
-      results.push({
-        ...cluster,
-        bucket: 'Emerging' as Bucket,
-        categoryLine,
-      });
+      const fallback = cluster.llmBucket ?? 'world';
+      l.debug({ clusterIndex, bestSim, llmBucket: cluster.llmBucket, fallback }, 'classify llm fallback');
+      results.push({ ...cluster, bucket: fallback as Bucket, categoryLine: null });
     }
   }
 
