@@ -217,7 +217,7 @@
 </script>
 
 <svelte:head>
-  <title>2min.today</title>
+  <title>&#x200E;</title>
   <meta
     name="description"
     content="2min.today is a daily, informationally dense Global Digest that summarizes the world's most significant news into a precise two-minute read."
