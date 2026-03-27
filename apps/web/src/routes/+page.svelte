@@ -4,6 +4,7 @@
   import { DIGEST_DISPLAY_BUCKETS, type Bucket } from '$lib/config/buckets.constants';
   import {
     CATEGORY_ORDER_STORAGE_KEY,
+    CATEGORY_MINIMIZED_STORAGE_KEY,
     normalizeStoredBucketKey,
     reorderCategoryBuckets,
     resolveCategoryOrder,
@@ -105,28 +106,66 @@
   );
 
   let savedBucketOrder = $state<Bucket[]>([]);
+  let minimizedBuckets = $state<Set<Bucket>>(new Set());
 
   onMount(() => {
     try {
-      const raw = localStorage.getItem(CATEGORY_ORDER_STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as unknown;
-      if (!Array.isArray(parsed)) return;
-      savedBucketOrder = parsed
-        .map((x) => (typeof x === 'string' ? normalizeStoredBucketKey(x) : null))
-        .filter((x): x is Bucket => x != null);
+      const rawOrder = localStorage.getItem(CATEGORY_ORDER_STORAGE_KEY);
+      if (rawOrder) {
+        const parsed = JSON.parse(rawOrder) as unknown;
+        if (Array.isArray(parsed)) {
+          savedBucketOrder = parsed
+            .map((x) => (typeof x === 'string' ? normalizeStoredBucketKey(x) : null))
+            .filter((x): x is Bucket => x != null);
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+    try {
+      const rawMin = localStorage.getItem(CATEGORY_MINIMIZED_STORAGE_KEY);
+      if (rawMin) {
+        const parsed = JSON.parse(rawMin) as unknown;
+        if (Array.isArray(parsed)) {
+          minimizedBuckets = new Set(
+            parsed
+              .map((x) => (typeof x === 'string' ? normalizeStoredBucketKey(x) : null))
+              .filter((x): x is Bucket => x != null),
+          );
+        }
+      }
     } catch {
       /* ignore */
     }
   });
 
-  const displayOrder = $derived(resolveCategoryOrder(savedBucketOrder, presentBuckets));
+  const baseOrder = $derived(resolveCategoryOrder(savedBucketOrder, presentBuckets));
+  const displayOrder = $derived(baseOrder);
 
   function persistBucketOrder(next: Bucket[]) {
     savedBucketOrder = next;
     if (browser) {
       localStorage.setItem(CATEGORY_ORDER_STORAGE_KEY, JSON.stringify(next));
     }
+  }
+
+  function persistMinimized(next: Set<Bucket>) {
+    minimizedBuckets = next;
+    if (browser) {
+      localStorage.setItem(CATEGORY_MINIMIZED_STORAGE_KEY, JSON.stringify([...next]));
+    }
+  }
+
+  function minimizeBucket(bucket: Bucket) {
+    const next = new Set(minimizedBuckets);
+    next.add(bucket);
+    persistMinimized(next);
+  }
+
+  function expandBucket(bucket: Bucket) {
+    const next = new Set(minimizedBuckets);
+    next.delete(bucket);
+    persistMinimized(next);
   }
 
   let draggingBucket = $state<Bucket | null>(null);
@@ -218,6 +257,9 @@
         summary={category.summary}
         news={category.news}
         index={i}
+        minimized={minimizedBuckets.has(bucket)}
+        onMinimize={() => minimizeBucket(bucket)}
+        onExpand={() => expandBucket(bucket)}
         dragSource={draggingBucket === bucket}
         dragOver={dragOverBucket === bucket}
         onPanelDragStart={onPanelDragStart(bucket)}

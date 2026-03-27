@@ -19,6 +19,9 @@
     summary: string[];
     news: NewsItem[];
     index: number;
+    minimized?: boolean;
+    onMinimize?: () => void;
+    onExpand?: () => void;
     onPanelDragStart?: (e: DragEvent) => void;
     onPanelDragEnd?: (e: DragEvent) => void;
     onRowDragOver?: (e: DragEvent) => void;
@@ -33,6 +36,9 @@
     summary,
     news,
     index,
+    minimized = false,
+    onMinimize,
+    onExpand,
     onPanelDragStart,
     onPanelDragEnd,
     onRowDragOver,
@@ -41,6 +47,35 @@
     dragSource = false,
     dragOver = false,
   }: Props = $props();
+  let showNews = $state(false);
+  let hoverTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function onMinimizedRowEnter() {
+    if (hoverTimer) { clearTimeout(hoverTimer); hoverTimer = null; }
+    if (!showNews) hoverTimer = setTimeout(() => { showNews = true; }, 1000);
+  }
+
+  function onMinimizedRowLeave() {
+    if (hoverTimer) { clearTimeout(hoverTimer); }
+    hoverTimer = setTimeout(() => { showNews = false; }, 2000);
+  }
+
+  let tooltipVisible = $state(false);
+  let tooltipX = $state(0);
+  let tooltipY = $state(0);
+  let tooltipCredits = $state<Credit[]>([]);
+
+  function showCreditTooltip(e: MouseEvent, credits: Credit[]) {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    tooltipX = rect.left;
+    tooltipY = rect.bottom + 4;
+    tooltipCredits = credits;
+    tooltipVisible = true;
+  }
+
+  function hideCreditTooltip() {
+    tooltipVisible = false;
+  }
 
   const panelDraggable = $derived(Boolean(onPanelDragStart));
 
@@ -103,12 +138,31 @@
 
   let suppressPanelClick = $state(false);
 
+  function applyPanelGrabCursor() {
+    const c = 'grabbing';
+    document.documentElement.style.setProperty('cursor', c, 'important');
+    document.body.style.setProperty('cursor', c, 'important');
+    categoryEl?.style.setProperty('cursor', c, 'important');
+  }
+
+  function clearPanelGrabCursor() {
+    document.documentElement.style.removeProperty('cursor');
+    document.body.style.removeProperty('cursor');
+    categoryEl?.style.removeProperty('cursor');
+  }
+
   function handlePanelDragStart(e: DragEvent) {
     stopMarquee();
+    applyPanelGrabCursor();
     onPanelDragStart?.(e);
   }
 
+  function handlePanelDrag(_e: DragEvent) {
+    applyPanelGrabCursor();
+  }
+
   function handlePanelDragEnd(e: DragEvent) {
+    clearPanelGrabCursor();
     onPanelDragEnd?.(e);
     suppressPanelClick = true;
     setTimeout(() => {
@@ -118,80 +172,154 @@
 
   function toggleMarquee(e: MouseEvent) {
     if (suppressPanelClick) return;
-    marqueeEnabled = !marqueeEnabled;
-    if (marqueeEnabled) {
-      onCategoryMouseMove(e);
-      startMarquee();
-    } else {
-      stopMarquee();
-    }
-    pressed = true;
-    setTimeout(() => {
-      pressed = false;
-    }, 150);
+    stopMarquee();
+    onMinimize?.();
   }
 </script>
 
+<style>
+  @keyframes neon-pulse {
+    0%, 100% { box-shadow: 0 0 4px 1px rgba(255, 99, 71, 0.2); }
+    50%       { box-shadow: 0 0 2px 1px rgba(255, 99, 71, 0.5); }
+  }
+  .dot-pulse { animation: neon-pulse 2s ease-in-out infinite; }
+</style>
+
 <div
-  class="grid border-b-2 border-black"
-  style="grid-template-columns: 30vh 1fr"
+  class="border-b-2 border-black"
   role={panelDraggable ? 'group' : undefined}
   aria-label={panelDraggable ? `${name} category row` : undefined}
   ondragover={onRowDragOver}
   ondragleave={onRowDragLeave}
   ondrop={onRowDrop}
 >
-  <CategoryPanel
-    {name}
-    {summary}
-    inverted={index % 2 === 0}
-    {pressed}
-    {marqueeEnabled}
-    draggable={panelDraggable}
-    dragging={dragSource}
-    dropTarget={dragOver}
-    ondragstart={handlePanelDragStart}
-    ondragend={handlePanelDragEnd}
-    bind:el={categoryEl}
-    onmouseenter={startMarquee}
-    onmouseleave={stopMarquee}
-    onmousemove={onCategoryMouseMove}
-    onclick={toggleMarquee}
-  />
-
-  <div
-    class="relative overflow-hidden"
-    role={panelDraggable ? 'presentation' : undefined}
-    ondragover={onRowDragOver}
-  >
+  {#if minimized}
     <div
-      class="news-scroll flex h-[30vh] overflow-x-scroll overflow-y-hidden divide-x divide-black/10"
-      bind:this={scrollEl}
-      onscroll={onScroll}
+      class="flex h-8 items-center"
+      onmouseenter={onMinimizedRowEnter}
+      onmouseleave={onMinimizedRowLeave}
     >
-      {#if news.length === 0}
-        <div class="flex h-full w-full items-center justify-center px-6">
-          <p class="font-mono text-[0.65rem] uppercase tracking-widest text-black/30">No news found</p>
+      <button
+        class="flex h-8 shrink-0 cursor-pointer items-center px-4 font-mono text-[0.6rem] font-black uppercase tracking-widest transition-opacity hover:opacity-70
+          {index % 2 === 0 ? 'bg-black text-white' : 'bg-white text-black border-r-2 border-black'}"
+        onclick={() => onExpand?.()}
+        aria-label="Expand category"
+      >{name}</button>
+      <div class="relative h-8 min-w-0 flex-1" style="overflow-x: auto; overflow-y: hidden;">
+        <div
+          class="flex h-full divide-x divide-black/10"
+          style:transform={showNews ? 'translateY(0)' : 'translateY(100%)'}
+          style:transition={showNews
+            ? 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+            : 'transform 0.25s cubic-bezier(0.55, 0, 1, 0.45)'}
+        >
+          {#each news as item}
+            <div class="flex h-full shrink-0 items-center gap-2 px-3" role="group">
+              {#if item.isBreaking}
+                <span class="dot-pulse block h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF6347]"></span>
+              {/if}
+              <span class="font-mono text-[0.65rem] whitespace-nowrap leading-none text-black/70">{item.title}</span>
+              <button
+                type="button"
+                class="cursor-pointer border-0 bg-transparent p-1 font-mono text-[0.75rem] font-bold leading-none text-black/30 hover:text-black/60"
+                onmouseenter={(e) => showCreditTooltip(e, item.credits)}
+                onmouseleave={hideCreditTooltip}
+              >©</button>
+            </div>
+          {/each}
         </div>
-      {:else}
-        {#each news as item}
-          <NewsCard
-            title={item.title}
-            bullets={item.bullets}
-            whyItMatters={item.whyItMatters}
-            credits={item.credits}
-            isBreaking={item.isBreaking}
-            isLive={item.isLive}
-            tags={item.tags}
-          />
-        {/each}
-      {/if}
+      </div>
     </div>
+  {:else}
+    <div
+      class="grid"
+      style="grid-template-columns: 30vh 1fr"
+    >
+      <CategoryPanel
+        {name}
+        {summary}
+        inverted={index % 2 === 0}
+        {pressed}
+        {marqueeEnabled}
+        draggable={panelDraggable}
+        dragging={dragSource}
+        dropTarget={dragOver}
+        ondragstart={handlePanelDragStart}
+        ondrag={handlePanelDrag}
+        ondragend={handlePanelDragEnd}
+        bind:el={categoryEl}
+        onmouseenter={startMarquee}
+        onmouseleave={stopMarquee}
+        onmousemove={onCategoryMouseMove}
+        onclick={toggleMarquee}
+      />
 
-    {#if scrollable}
-      <div class="pointer-events-none absolute bottom-[1px] left-[1px] right-0 h-[4px]">
-        <div class="absolute top-0 h-full bg-black" style="left: {thumbPosition}px; width: 20vw"></div>
+      <div
+        class="relative overflow-hidden"
+        role={panelDraggable ? 'presentation' : undefined}
+        ondragover={onRowDragOver}
+      >
+        <div
+          class="news-scroll flex h-[30vh] overflow-x-scroll overflow-y-hidden divide-x divide-black/10"
+          bind:this={scrollEl}
+          onscroll={onScroll}
+        >
+          {#if news.length === 0}
+            <div class="flex h-full w-full items-center justify-center px-6">
+              <p class="font-mono text-[0.65rem] uppercase tracking-widest text-black/30">No news found</p>
+            </div>
+          {:else}
+            {#each news as item}
+              <NewsCard
+                title={item.title}
+                bullets={item.bullets}
+                whyItMatters={item.whyItMatters}
+                credits={item.credits}
+                isBreaking={item.isBreaking}
+                isLive={item.isLive}
+                tags={item.tags}
+              />
+            {/each}
+          {/if}
+        </div>
+
+        {#if scrollable}
+          <div class="pointer-events-none absolute bottom-[1px] left-[1px] right-0 h-[4px]">
+            <div class="absolute top-0 h-full bg-black" style="left: {thumbPosition}px; width: 20vw"></div>
+          </div>
+        {/if}
+      </div>
+    </div>
+  {/if}
+</div>
+
+{#if tooltipVisible}
+  <div
+    class="fixed z-50 max-h-40 w-[min(26rem,calc(100vw-1.5rem))] border border-black/10 bg-white"
+    style="left: {tooltipX}px; top: {tooltipY}px;"
+    role="tooltip"
+    onmouseenter={() => (tooltipVisible = true)}
+    onmouseleave={hideCreditTooltip}
+  >
+    {#if tooltipCredits.length === 0}
+      <p class="px-3 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-black/30">Source unavailable</p>
+    {:else}
+      <div class="flex flex-col">
+        {#each tooltipCredits as credit}
+          <div class="flex items-center border-b border-black/5 py-2 pl-3 pr-3 last:border-0">
+            <div class="shrink-0 whitespace-nowrap pr-[30px] font-mono text-[0.55rem] uppercase leading-none tracking-widest text-black/40">{credit.source}</div>
+            <div class="min-w-0 flex-1 leading-none">
+              <a
+                href={credit.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={credit.url}
+                class="block min-w-0 truncate text-[0.65rem] leading-none text-black underline underline-offset-2"
+              >{credit.url}</a>
+            </div>
+          </div>
+        {/each}
       </div>
     {/if}
   </div>
-</div>
+{/if}

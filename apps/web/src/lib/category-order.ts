@@ -2,6 +2,7 @@ import type { Bucket } from '$lib/config/buckets.constants';
 import { BUCKET_ORDER, DIGEST_DISPLAY_BUCKETS } from '$lib/config/buckets.constants';
 
 export const CATEGORY_ORDER_STORAGE_KEY = '2min.today/category-order';
+export const CATEGORY_MINIMIZED_STORAGE_KEY = '2min.today/category-minimized';
 
 const displayBucketSet = new Set<string>(DIGEST_DISPLAY_BUCKETS);
 const bucketKeySet = new Set<string>(BUCKET_ORDER);
