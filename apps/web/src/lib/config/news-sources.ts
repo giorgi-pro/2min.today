@@ -1,5 +1,4 @@
-import fs from 'fs';
-import path from 'path';
+import newsSourcesYaml from './news-sources.yaml?raw';
 import { parse } from 'yaml';
 import type { Region } from '$lib/types/digest';
 import { VALID_REGIONS } from '$lib/types/digest';
@@ -86,8 +85,7 @@ function parseSources(raw: unknown): NewsSource[] {
   return out;
 }
 
-const raw = fs.readFileSync(path.join(process.cwd(), 'src/lib/config/news-sources.yaml'), 'utf8');
-const parsed = parse(raw) as unknown;
+const parsed = parse(newsSourcesYaml) as unknown;
 export const NEWS_SOURCES: NewsSource[] = parseSources(parsed);
 
 export function getNewsSources(): NewsSource[] {
