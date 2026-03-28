@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { activeRegions, searchQuery } from '@lib/digest-filter';
-  import type { Region } from '@lib/types/digest';
+  import { activeRegions, searchQuery } from '@utils/digest-filter';
+  import type { Region } from '../../../../../packages/types/digest.js';
   import BottomSection from '@ui/components/BottomSection.svelte';
   import Footer from '@ui/components/Footer.svelte';
   import DesktopLayout from '@ui/layout/DesktopLayout.svelte';

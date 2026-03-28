@@ -1,21 +1,19 @@
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
-import type { Logger } from "pino";
 import { env } from "@2min.today/config/env";
+import { digestLogger } from "@2min.today/logging";
+import type {
+  Cluster,
+  Credit,
+  EmbeddedItem,
+  SummarizedCluster,
+} from "@2min.today/types";
+import { BUCKET_ORDER, parseRegion, type Bucket } from "@2min.today/types";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { withFlashGenerationRetry } from "@lib/server/digest/flash-generate";
 import {
   getDigestSummarizeMaxClusters,
   getFlashModel,
   mergeFlashGenerationConfig,
 } from "@lib/server/digest/models";
-import { silentLogger } from "@2min.today/logging";
-import { parseRegion } from "@lib/types/digest";
-import { BUCKET_ORDER, type Bucket } from "@lib/config/buckets.constants";
-import type {
-  Cluster,
-  SummarizedCluster,
-  Credit,
-  EmbeddedItem,
-} from "@lib/types/digest";
 
 function extractCredits(items: EmbeddedItem[]): Credit[] {
   const seen = new Set<string>();
@@ -43,16 +41,14 @@ function normalizeSummaryTags(raw: unknown): string[] {
 
 export async function summarizeClusters(
   clusters: Cluster[],
-  log?: Logger,
 ): Promise<SummarizedCluster[]> {
-  const l = log ?? silentLogger;
   if (clusters.length === 0) return [];
 
   const maxClusters = getDigestSummarizeMaxClusters();
   const toSummarize =
     maxClusters != null ? clusters.slice(0, maxClusters) : clusters;
   if (maxClusters != null && clusters.length > toSummarize.length) {
-    l.info(
+    digestLogger.info(
       {
         totalClusters: clusters.length,
         summarizing: toSummarize.length,
@@ -63,7 +59,7 @@ export async function summarizeClusters(
   }
 
   const t0 = Date.now();
-  l.info(
+  digestLogger.info(
     { clusterCount: toSummarize.length, model: getFlashModel() },
     "summarize start",
   );
@@ -101,7 +97,10 @@ export async function summarizeClusters(
   const results: SummarizedCluster[] = [];
 
   for (const [clusterIndex, cluster] of toSummarize.entries()) {
-    l.debug({ clusterIndex, clusterId: cluster.id }, "summarize cluster");
+    digestLogger.debug(
+      { clusterIndex, clusterId: cluster.id },
+      "summarize cluster",
+    );
 
     const prompt = `You are a brutalist news editor for 2min.today.
 
@@ -173,7 +172,7 @@ STEP 2 — If no topic override applies, route by geography:
     });
   }
 
-  l.info(
+  digestLogger.info(
     { summarizedCount: results.length, durationMs: Date.now() - t0 },
     "summarize complete",
   );

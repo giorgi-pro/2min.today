@@ -24,8 +24,7 @@
     "fuse.js": "7.1.0",
     "svelte-dnd-action": "0.9.69",
     "twitter-api-v2": "1.29.0",
-    "uuid": "13.0.0",
-    "yaml": "2.8.3"
+    "uuid": "13.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.1",

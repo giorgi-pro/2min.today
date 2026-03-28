@@ -1,9 +1,11 @@
-import type { Logger } from "pino";
+import { digestLogger } from "@2min.today/logging";
+import type {
+  Bucket,
+  ClassifiedCluster,
+  SummarizedCluster,
+} from "@2min.today/types";
 import { getClassifySimilarityThreshold } from "@lib/server/digest/models";
-import { silentLogger } from "@2min.today/logging";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Bucket } from "@lib/config/buckets";
-import type { SummarizedCluster, ClassifiedCluster } from "@lib/types/digest";
 
 function cosineSimilarity(a: number[], b: number[]): number {
   let dot = 0;
@@ -20,13 +22,11 @@ function cosineSimilarity(a: number[], b: number[]): number {
 export async function classifyClusters(
   clusters: SummarizedCluster[],
   supabase: SupabaseClient,
-  log?: Logger,
 ): Promise<ClassifiedCluster[]> {
-  const l = log ?? silentLogger;
   if (clusters.length === 0) return [];
 
   const t0 = Date.now();
-  l.info({ clusterCount: clusters.length }, "classify start");
+  digestLogger.info({ clusterCount: clusters.length }, "classify start");
 
   const { data: anchors, error } = await supabase
     .from("bucket_anchors")
@@ -38,7 +38,7 @@ export async function classifyClusters(
     );
   }
 
-  l.info({ anchorCount: anchors.length }, "classify anchors loaded");
+  digestLogger.info({ anchorCount: anchors.length }, "classify anchors loaded");
 
   const similarityThreshold = getClassifySimilarityThreshold();
   const results: ClassifiedCluster[] = [];
@@ -56,7 +56,7 @@ export async function classifyClusters(
     }
 
     if (bestSim >= similarityThreshold) {
-      l.debug(
+      digestLogger.debug(
         { clusterIndex, bestBucket, bestSim },
         "classify embedding match",
       );
@@ -67,7 +67,7 @@ export async function classifyClusters(
       });
     } else {
       const fallback = cluster.llmBucket ?? "world";
-      l.debug(
+      digestLogger.debug(
         { clusterIndex, bestSim, llmBucket: cluster.llmBucket, fallback },
         "classify llm fallback",
       );
@@ -79,7 +79,7 @@ export async function classifyClusters(
     }
   }
 
-  l.info(
+  digestLogger.info(
     { classifiedCount: results.length, durationMs: Date.now() - t0 },
     "classify complete",
   );

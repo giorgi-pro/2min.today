@@ -1,10 +1,13 @@
-import { env } from "@config";
+import { env } from "@config/env";
 import { getSupabaseClient } from "@lib/supabase/client";
-import { buildMockDigest } from "@lib/mock-digest";
-import type { Bucket } from "@lib/config/buckets";
-import { normalizeClusterBucket } from "@lib/config/buckets.constants";
-import { parseRegion, type Credit } from "@lib/types/digest";
-import type { DigestCard, SummaryJson } from "@lib/types/news";
+import {
+  type Bucket,
+  type Credit,
+  type DigestCard,
+  type SummaryJson,
+  parseRegion,
+} from "@types";
+import { buildMockDigest, normalizeClusterBucket } from "@utils";
 
 export const load = async () => {
   const fuseThreshold = env.DIGEST_FUSE_THRESHOLD ?? 0.4;

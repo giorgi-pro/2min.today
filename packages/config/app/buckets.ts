@@ -2,8 +2,8 @@ import fs from "fs";
 import path from "path";
 import { parse } from "yaml";
 
-export type { Bucket } from "./buckets.constants";
-export { BUCKET_ORDER } from "./buckets.constants";
+export type { Bucket } from "../../types/buckets";
+export { BUCKET_ORDER } from "../../types/buckets";
 
 const raw = fs.readFileSync(
   path.join(process.cwd(), "src/lib/config/buckets.yaml"),

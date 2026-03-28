@@ -23,6 +23,7 @@
     "typescript": "5.9.2"
   },
   "dependencies": {
+    "@2min.today/types": "workspace:*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "svelte-dnd-action": "0.9.69",

@@ -1,8 +1,8 @@
-import { randomUUID } from "node:crypto";
-import { json } from "@sveltejs/kit";
-import { fetchRawItemsWithDiagnostics } from "@lib/pipeline/fetch";
 import { digestLogger } from "@2min.today/logging";
-import { env } from "@config";
+import { env } from "@config/env";
+import { fetchRawItemsWithDiagnostics } from "@lib/pipeline/fetch";
+import { json } from "@sveltejs/kit";
+import { randomUUID } from "node:crypto";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -15,7 +15,7 @@ export const GET: RequestHandler = async ({ url }) => {
   const log = digestLogger.child({ runId, route: "digest-sources" });
 
   try {
-    const { sources, dedupedCount } = await fetchRawItemsWithDiagnostics(log);
+    const { sources, dedupedCount } = await fetchRawItemsWithDiagnostics();
     const rawItemSum = sources.reduce((a, s) => a + s.itemCount, 0);
     log.info(
       { rawItemSum, dedupedItems: dedupedCount },

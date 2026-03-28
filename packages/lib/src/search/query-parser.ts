@@ -1,19 +1,15 @@
-export type TokenClass = "quoted-phrase" | "numeric" | "acronym" | "word";
+import type {
+  ParsedQuery,
+  RawToken,
+  Token,
+  Transform,
+} from "@2min.today/types";
 
-export interface Token {
-  text: string;
-  class: TokenClass;
-  threshold: number;
-}
-
-export interface ParsedQuery {
-  tokens: Token[];
-  searchString: string;
-  threshold: number;
-}
-
-type RawToken = { text: string; quoted: boolean };
-type Transform = (tokens: RawToken[]) => RawToken[];
+export type {
+  ParsedQuery,
+  Token,
+  TokenClass,
+} from "@2min.today/types";
 
 const STOP_WORDS = new Set([
   "a",

@@ -1,29 +1,17 @@
-import newsSourcesYaml from "./news-sources.yaml?raw";
+import {
+  type NewsSource,
+  type Region,
+  VALID_REGIONS,
+} from "@2min.today/types";
 import { parse } from "yaml";
-import type { Region } from "@lib/types/digest";
-import { VALID_REGIONS } from "@lib/types/digest";
+import newsSourcesYaml from "./news-sources.yaml?raw";
 
-export type NewsSourceType = "rss" | "x";
-
-export interface NewsSourceRss {
-  id: string;
-  type: "rss";
-  enabled: boolean;
-  url: string;
-  label: string;
-  region?: Region;
-}
-
-export interface NewsSourceX {
-  id: string;
-  type: "x";
-  enabled: boolean;
-  query: string;
-  max_results: number;
-  since_days: number;
-}
-
-export type NewsSource = NewsSourceRss | NewsSourceX;
+export type {
+  NewsSource,
+  NewsSourceRss,
+  NewsSourceType,
+  NewsSourceX,
+} from "@2min.today/types";
 
 function assert(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new Error(`news-sources.yaml: ${msg}`);

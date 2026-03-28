@@ -1,16 +1,15 @@
-import { XMLParser } from "fast-xml-parser";
-import { TwitterApi } from "twitter-api-v2";
-import type { Logger } from "pino";
 import { env } from "@2min.today/config/env";
+import { digestLogger } from "@2min.today/logging";
+import type { RawItem } from "@2min.today/types";
+import type { NewsSource } from "@config/app/news-sources";
 import {
   getNewsSources,
   type NewsSourceRss,
-  type NewsSourceX,
   type NewsSourceType,
-} from "@lib/config/news-sources";
-import type { NewsSource } from "@lib/config/news-sources";
-import { silentLogger } from "@2min.today/logging";
-import type { RawItem } from "@lib/types/digest";
+  type NewsSourceX,
+} from "@config/app/news-sources";
+import { XMLParser } from "fast-xml-parser";
+import { TwitterApi } from "twitter-api-v2";
 
 export interface FetchSourceResult {
   id: string;
@@ -129,7 +128,6 @@ async function fetchOneX(source: NewsSourceX): Promise<RawItem[]> {
 
 async function runSource(
   source: NewsSource,
-  log: Logger,
 ): Promise<{ items: RawItem[]; diag: FetchSourceResult }> {
   const t0 = Date.now();
   if (!source.enabled) {
@@ -166,7 +164,10 @@ async function runSource(
   } catch (e) {
     const durationMs = Date.now() - t0;
     const msg = e instanceof Error ? e.message : String(e);
-    log.error({ sourceId: source.id, errMessage: msg }, "fetch source failed");
+    digestLogger.error(
+      { sourceId: source.id, errMessage: msg },
+      "fetch source failed",
+    );
     return {
       items: [],
       diag: {
@@ -182,12 +183,9 @@ async function runSource(
   }
 }
 
-export async function fetchRawItemsWithDiagnostics(
-  log?: Logger,
-): Promise<FetchWithDiagnostics> {
-  const l = log ?? silentLogger;
+export async function fetchRawItemsWithDiagnostics(): Promise<FetchWithDiagnostics> {
   const allSources = getNewsSources();
-  const settled = await Promise.all(allSources.map((s) => runSource(s, l)));
+  const settled = await Promise.all(allSources.map((s) => runSource(s)));
 
   const items: RawItem[] = [];
   const sources: FetchSourceResult[] = [];
@@ -206,11 +204,9 @@ export async function fetchRawItemsWithDiagnostics(
   return { items: deduped, sources, dedupedCount: deduped.length };
 }
 
-export async function fetchRawItems(log?: Logger): Promise<RawItem[]> {
-  const l = log ?? silentLogger;
-  const { items, sources, dedupedCount } =
-    await fetchRawItemsWithDiagnostics(l);
+export async function fetchRawItems(): Promise<RawItem[]> {
+  const { items, sources, dedupedCount } = await fetchRawItemsWithDiagnostics();
   const rawItemSum = sources.reduce((a, s) => a + s.itemCount, 0);
-  l.info({ sources, rawItemSum, dedupedCount }, "fetch complete");
+  digestLogger.info({ sources, rawItemSum, dedupedCount }, "fetch complete");
   return items;
 }

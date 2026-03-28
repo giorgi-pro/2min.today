@@ -53,9 +53,6 @@ importers:
       uuid:
         specifier: 13.0.0
         version: 13.0.0
-      yaml:
-        specifier: 2.8.3
-        version: 2.8.3
     devDependencies:
       '@biomejs/biome':
         specifier: 2.1.1
@@ -117,12 +114,18 @@ importers:
 
   packages/config:
     dependencies:
+      '@2min.today/types':
+        specifier: workspace:*
+        version: link:../types
       '@t3-oss/env-core':
         specifier: 0.10.0
         version: 0.10.0(typescript@5.9.2)(zod@3.24.2)
       dotenv:
         specifier: 17.3.1
         version: 17.3.1
+      yaml:
+        specifier: 2.8.3
+        version: 2.8.3
       zod:
         specifier: 3.24.2
         version: 3.24.2
@@ -135,6 +138,9 @@ importers:
       '@2min.today/logging':
         specifier: workspace:*
         version: link:../logging
+      '@2min.today/types':
+        specifier: workspace:*
+        version: link:../types
       '@google/generative-ai':
         specifier: 0.24.1
         version: 0.24.1
@@ -190,6 +196,9 @@ importers:
       '@2min.today/lib':
         specifier: workspace:*
         version: link:../lib
+      '@2min.today/types':
+        specifier: workspace:*
+        version: link:../types
       '@google/generative-ai':
         specifier: 0.24.1
         version: 0.24.1
@@ -212,10 +221,22 @@ importers:
         specifier: 2.8.3
         version: 2.8.3
 
+  packages/types:
+    dependencies:
+      '@google/generative-ai':
+        specifier: 0.24.1
+        version: 0.24.1
+      svelte:
+        specifier: ^5.46.4
+        version: 5.55.0
+
   packages/typescript-config: {}
 
   packages/ui:
     dependencies:
+      '@2min.today/types':
+        specifier: workspace:*
+        version: link:../types
       '@fontsource-variable/inter':
         specifier: 5.2.8
         version: 5.2.8
@@ -253,6 +274,12 @@ importers:
       typescript:
         specifier: 5.9.2
         version: 5.9.2
+
+  packages/utils:
+    dependencies:
+      '@2min.today/types':
+        specifier: workspace:*
+        version: link:../types
 
 packages:
 

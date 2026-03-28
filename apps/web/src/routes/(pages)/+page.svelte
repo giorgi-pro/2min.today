@@ -3,36 +3,21 @@
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
   import { dragHandleZone, type DndEvent } from 'svelte-dnd-action';
-  import { DIGEST_DISPLAY_BUCKETS, type Bucket } from '@lib/config/buckets.constants';
+  import { DIGEST_DISPLAY_BUCKETS, type Bucket } from '../../../../../packages/types/buckets';
   import {
     CATEGORY_ORDER_STORAGE_KEY,
     CATEGORY_MINIMIZED_STORAGE_KEY,
     normalizeStoredBucketKey,
     resolveCategoryOrder,
-  } from '@lib/category-order';
-  import { buildMockDigest } from '@lib/mock-digest';
-  import { debouncedSearchQuery, activeRegions } from '@lib/digest-filter';
+  } from '@utils/category-order';
+  import { buildMockDigest } from '@utils';
+  import { debouncedSearchQuery, activeRegions } from '@utils/digest-filter';
   import { SearchHandler, ThresholdStrategy } from '@lib/search/search-handler';
-  import type { DigestCard } from '@lib/types/news';
-  import type { Region, Credit } from '@lib/types/digest';
+  import type { Category, DndBucketItem } from '@types';
+  import type { DigestCard } from '../../../../../packages/types/news';
+  import type { Region, Credit } from '../../../../../packages/types/digest';
   import CategoryRow from '@ui/components/digest/CategoryRow.svelte';
   import MobileView from '@ui/components/digest/MobileView.svelte';
-
-  type DndBucketItem = { id: Bucket; bucket: Bucket };
-
-  type Category = {
-    name: string;
-    summary: string[];
-    news: {
-      title: string;
-      bullets: string[];
-      whyItMatters: string;
-      credits: Credit[];
-      isBreaking: boolean;
-      isLive: boolean;
-      tags: string[];
-    }[];
-  };
 
   const { data } = $props<{
     data: {

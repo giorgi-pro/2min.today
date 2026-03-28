@@ -11,8 +11,9 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@2min.today/logging": "workspace:*",
     "@2min.today/config": "workspace:*",
+    "@2min.today/logging": "workspace:*",
+    "@2min.today/types": "workspace:*",
     "@google/generative-ai": "0.24.1",
     "@supabase/supabase-js": "2.100.0",
     "fast-xml-parser": "5.5.9",

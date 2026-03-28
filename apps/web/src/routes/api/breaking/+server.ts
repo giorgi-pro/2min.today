@@ -3,7 +3,7 @@ import { json } from "@sveltejs/kit";
 import { getSupabaseServiceRoleClient } from "@lib/supabase/server";
 import { breakingPipeline } from "@lib/pipeline/breaking";
 import { digestLogger } from "@2min.today/logging";
-import { env } from "@config";
+import { env } from "@config/env";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ url }) => {

@@ -1,4 +1,3 @@
-import type { EmbedContentRequest } from "@google/generative-ai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { Logger } from "pino";
 import { env } from "@2min.today/config/env";
@@ -8,8 +7,7 @@ import {
 } from "@lib/server/digest/models";
 import { silentLogger } from "@2min.today/logging";
 import type { RawItem, EmbeddedItem } from "@lib/types/digest";
-
-type EmbedRequest = EmbedContentRequest & { outputDimensionality?: number };
+import type { EmbedRequest } from "@2min.today/types";
 
 const BATCH_SIZE = 20;
 

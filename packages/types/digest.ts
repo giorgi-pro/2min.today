@@ -1,4 +1,4 @@
-import type { Bucket } from "@lib/config/buckets";
+import type { Bucket } from "./buckets";
 
 export type Region = "world" | "europe" | "americas" | "middle-east" | "usa";
 

@@ -1,5 +1,6 @@
 import Fuse, { type IFuseOptions } from "fuse.js";
-import { parseQuery, type ParsedQuery } from "./query-parser";
+import type { ParsedQuery } from "@2min.today/types";
+import { parseQuery } from "./query-parser";
 
 export interface SearchStrategy<T> {
   search(parsed: ParsedQuery, cards: T[]): T[];

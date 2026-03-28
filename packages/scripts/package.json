@@ -7,6 +7,7 @@
     "./*": "./**/*.ts"
   },
   "dependencies": {
+    "@2min.today/types": "workspace:*",
     "@2min.today/lib": "workspace:*",
     "@2min.today/config": "workspace:*",
     "@google/generative-ai": "0.24.1",

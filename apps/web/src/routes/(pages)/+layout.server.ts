@@ -1,4 +1,4 @@
-import { NEWS_SOURCES } from "@lib/config/news-sources";
+import { NEWS_SOURCES } from "@config/app/news-sources";
 import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = () => ({

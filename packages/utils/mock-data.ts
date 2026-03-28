@@ -1,4 +1,4 @@
-import type { Region, Credit } from "$lib/types/digest";
+import type { Credit, Region } from "@2min.today/types";
 
 export interface NewsItem {
   title: string;

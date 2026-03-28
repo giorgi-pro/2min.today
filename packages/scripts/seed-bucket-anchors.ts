@@ -1,10 +1,8 @@
-import type { EmbedContentRequest } from "@google/generative-ai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@supabase/supabase-js";
+import type { EmbedRequest } from "@2min.today/types";
 import { BUCKET_ANCHORS } from "../apps/web/src/lib/config/buckets";
 import { env } from "@2min.today/config/env";
-
-type EmbedRequest = EmbedContentRequest & { outputDimensionality?: number };
 
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 

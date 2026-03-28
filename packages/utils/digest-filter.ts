@@ -1,5 +1,9 @@
+import {
+  type Region,
+  type TimeMode,
+  VALID_REGIONS,
+} from "@2min.today/types";
 import { writable } from "svelte/store";
-import { VALID_REGIONS, type Region } from "@lib/types/digest";
 
 export const searchQuery = writable("");
 
@@ -60,5 +64,4 @@ export const activeRegions = {
   },
 };
 
-export type TimeMode = "local" | "utc";
 export const timeMode = writable<TimeMode>("local");

@@ -1,4 +1,4 @@
-import type { Bucket } from "../config/buckets";
+import type { Bucket } from "./buckets";
 import type { Credit, Region } from "./digest";
 
 export type SummaryJson = {

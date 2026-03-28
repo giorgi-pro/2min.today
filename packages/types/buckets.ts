@@ -32,9 +32,9 @@ export const DIGEST_DISPLAY_BUCKETS: Bucket[] = [
 
 export const BUCKET_ORDER: Bucket[] = [...DIGEST_DISPLAY_BUCKETS];
 
-const BUCKET_ORDER_SET = new Set<string>(BUCKET_ORDER);
+export const BUCKET_ORDER_SET = new Set<string>(BUCKET_ORDER);
 
-const LEGACY_CLUSTER_BUCKET: Record<string, Bucket> = {
+export const LEGACY_CLUSTER_BUCKET: Record<string, Bucket> = {
   World: "world",
   Business: "business",
   Tech: "tech",
@@ -46,13 +46,3 @@ const LEGACY_CLUSTER_BUCKET: Record<string, Bucket> = {
   Europe: "europe",
   Americas: "americas",
 };
-
-export function normalizeClusterBucket(raw: string | null | undefined): Bucket {
-  const s = raw?.trim() ?? "";
-  const lower = s.toLowerCase();
-  if (BUCKET_ORDER_SET.has(lower)) return lower as Bucket;
-  const legacy = LEGACY_CLUSTER_BUCKET[s];
-  if (legacy) return legacy;
-  if (lower === "global" || lower === "emerging") return "world";
-  return "world";
-}

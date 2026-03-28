@@ -1,8 +1,5 @@
-import type { Bucket } from "@lib/config/buckets.constants";
-import {
-  BUCKET_ORDER,
-  DIGEST_DISPLAY_BUCKETS,
-} from "@lib/config/buckets.constants";
+import type { Bucket } from "@2min.today/types";
+import { BUCKET_ORDER, DIGEST_DISPLAY_BUCKETS } from "@2min.today/types";
 
 export const CATEGORY_ORDER_STORAGE_KEY = "2min.today/category-order";
 export const CATEGORY_MINIMIZED_STORAGE_KEY = "2min.today/category-minimized";
