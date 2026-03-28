@@ -19,6 +19,7 @@ pnpm format       # Format with Prettier (*.ts, *.tsx, *.md)
 ```
 
 To run a single app:
+
 ```bash
 pnpm turbo dev --filter=web
 pnpm turbo dev --filter=docs
@@ -26,11 +27,13 @@ pnpm turbo build --filter=web
 ```
 
 Type-check the SvelteKit app specifically:
+
 ```bash
 cd apps/web && pnpm check-types   # runs svelte-check
 ```
 
 Seed bucket classification anchors (run from repo root):
+
 ```bash
 pnpm --filter @2min.today/web run seed:anchors
 ```
@@ -48,6 +51,7 @@ There is no test framework. Manual API testing uses the Bruno collection in `.br
 ### Backend Pipeline (`apps/web/src/routes/api/digest/+server.ts`)
 
 The digest API is the core of the product. The 6-phase pipeline in `lib/pipeline/index.ts`:
+
 1. **Fetch** — Parses RSS + X from `lib/config/news-sources.yaml` → `RawItem[]` (fetch-only diagnostics: `GET /api/digest/sources?secret=`)
 2. **Embed** — Gemini embedding per story → `EmbeddedItem[]`
 3. **Cluster** — Cosine similarity grouping → `Cluster[]` (threshold: `CLUSTER_SIMILARITY_THRESHOLD`, default 0.85)
@@ -62,6 +66,7 @@ The digest API is the core of the product. The 6-phase pipeline in `lib/pipeline
 Protected by cron auth. Triggered by GitHub Actions (`.github/workflows/daily-digest.yml`) or Vercel cron.
 
 Model constants are in `apps/web/src/lib/server/digest/models.ts`:
+
 - `FLASH_MODEL`, `EMBEDDING_MODEL`, `EMBEDDING_DIMENSION` — see `apps/web/.env.example` (defaults in `lib/server/digest/models.ts` getters)
 - `FLASH_GENERATION_MIN_INTERVAL_MS` — optional; unset = **UnconstrainedFlow** (no pacing, no 429 retries); set to e.g. `15000` = **ConstrainedFlow** (one Flash call every 15s + 429 retries with backoff)
 

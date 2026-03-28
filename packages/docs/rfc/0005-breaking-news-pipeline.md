@@ -5,6 +5,7 @@
 **Author:** Project Owner
 **Depends on:** RFC-001 (Daily Digest Pipeline)
 **Target files:**
+
 - `apps/web/src/routes/api/breaking/+server.ts` — entry point (GET handler)
 - `apps/web/src/lib/pipeline/breaking/index.ts` — barrel
 - `apps/web/src/lib/pipeline/breaking/score.ts` — heuristic scorer
@@ -103,55 +104,61 @@ const MAX_AGE_MINUTES = 20;
 
 ### Signal weights
 
-| Signal | Points |
-|--------|--------|
-| Title prefix matches `BREAKING`, `URGENT`, `FLASH`, `ALERT` (case-insensitive) | +5 |
-| Title contains `breaking news` or `just in` | +3 |
-| Title contains `killed`, `dead`, `deaths`, `explosion`, `attack`, `crash` | +2 |
-| Title contains `earthquake`, `tsunami`, `hurricane`, `tornado` | +2 |
-| Title contains `resign`, `fired`, `arrested`, `indicted`, `charged` | +2 |
-| Title contains `war`, `invasion`, `sanctions`, `ceasefire` | +2 |
-| Title contains `emergency`, `evacuation`, `shutdown` | +1 |
-| Published within the last 5 minutes | +1 |
-| Source is Reuters or AP News | +1 |
+| Signal                                                                         | Points |
+| ------------------------------------------------------------------------------ | ------ |
+| Title prefix matches `BREAKING`, `URGENT`, `FLASH`, `ALERT` (case-insensitive) | +5     |
+| Title contains `breaking news` or `just in`                                    | +3     |
+| Title contains `killed`, `dead`, `deaths`, `explosion`, `attack`, `crash`      | +2     |
+| Title contains `earthquake`, `tsunami`, `hurricane`, `tornado`                 | +2     |
+| Title contains `resign`, `fired`, `arrested`, `indicted`, `charged`            | +2     |
+| Title contains `war`, `invasion`, `sanctions`, `ceasefire`                     | +2     |
+| Title contains `emergency`, `evacuation`, `shutdown`                           | +1     |
+| Published within the last 5 minutes                                            | +1     |
+| Source is Reuters or AP News                                                   | +1     |
 
 ### Full TypeScript
 
 ```ts
-import type { RawItem } from '$lib/types/digest';
-import type { BreakingCandidate } from '$lib/types/breaking';
+import type { RawItem } from "$lib/types/digest";
+import type { BreakingCandidate } from "$lib/types/breaking";
 
 const BREAKING_THRESHOLD = 3;
 const MAX_AGE_MINUTES = 20;
 
 const SCORE_MAP: Array<{ pattern: RegExp; points: number }> = [
-  { pattern: /^(breaking|urgent|flash|alert)[:\s]/i,               points: 5 },
-  { pattern: /\b(breaking news|just in)\b/i,                       points: 3 },
-  { pattern: /\b(killed|dead|deaths|explosion|attack|crash)\b/i,   points: 2 },
-  { pattern: /\b(earthquake|tsunami|hurricane|tornado)\b/i,        points: 2 },
+  { pattern: /^(breaking|urgent|flash|alert)[:\s]/i, points: 5 },
+  { pattern: /\b(breaking news|just in)\b/i, points: 3 },
+  { pattern: /\b(killed|dead|deaths|explosion|attack|crash)\b/i, points: 2 },
+  { pattern: /\b(earthquake|tsunami|hurricane|tornado)\b/i, points: 2 },
   { pattern: /\b(resign(ed)?|fired|arrested|indicted|charged)\b/i, points: 2 },
-  { pattern: /\b(war|invasion|sanctions|ceasefire)\b/i,            points: 2 },
-  { pattern: /\b(emergency|evacuation|shutdown)\b/i,               points: 1 },
+  { pattern: /\b(war|invasion|sanctions|ceasefire)\b/i, points: 2 },
+  { pattern: /\b(emergency|evacuation|shutdown)\b/i, points: 1 },
 ];
 
-const TRUSTED_SOURCES = new Set(['Reuters', 'AP News', 'Associated Press']);
+const TRUSTED_SOURCES = new Set(["Reuters", "AP News", "Associated Press"]);
 
 export function scoreItems(items: RawItem[]): BreakingCandidate[] {
   const now = Date.now();
   const cutoff = new Date(now - MAX_AGE_MINUTES * 60 * 1000);
 
   return items
-    .filter(item => item.published >= cutoff)
-    .map(item => {
+    .filter((item) => item.published >= cutoff)
+    .map((item) => {
       let score = 0;
       for (const { pattern, points } of SCORE_MAP) {
         if (pattern.test(item.title)) score += points;
       }
       if (now - item.published.getTime() < 5 * 60 * 1000) score += 1;
       if (TRUSTED_SOURCES.has(item.source)) score += 1;
-      return { url: item.url, title: item.title, source: item.source, published: item.published, score };
+      return {
+        url: item.url,
+        title: item.title,
+        source: item.source,
+        published: item.published,
+        score,
+      };
     })
-    .filter(c => c.score >= BREAKING_THRESHOLD)
+    .filter((c) => c.score >= BREAKING_THRESHOLD)
     .sort((a, b) => b.score - a.score);
 }
 ```
@@ -163,23 +170,28 @@ export function scoreItems(items: RawItem[]): BreakingCandidate[] {
 One Flash call per story. Produces a two-bullet card — deliberately shorter than the nightly digest's three-bullet summary to signal it's a raw, early report.
 
 ```ts
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { env } from '$env/dynamic/private';
-import type { BreakingCandidate } from '$lib/types/breaking';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { env } from "$env/dynamic/private";
+import type { BreakingCandidate } from "$lib/types/breaking";
 
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 
 const model = genAI.getGenerativeModel({
-  model: 'gemini-2.5-flash',
+  model: "gemini-2.5-flash",
   generationConfig: {
-    responseMimeType: 'application/json',
+    responseMimeType: "application/json",
     responseSchema: {
-      type: 'object',
+      type: "object",
       properties: {
-        headline: { type: 'string' },
-        bullets: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 2 },
+        headline: { type: "string" },
+        bullets: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 2,
+          maxItems: 2,
+        },
       },
-      required: ['headline', 'bullets'],
+      required: ["headline", "bullets"],
     },
   },
 });
@@ -216,8 +228,8 @@ export async function generateBreakingCard(
 Checks for duplicate by `source_url` before writing. Inserts into `clusters` with `is_live = true`. Returns `true` if inserted, `false` if already exists (skips silently).
 
 ```ts
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { BreakingCandidate } from '$lib/types/breaking';
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { BreakingCandidate } from "$lib/types/breaking";
 
 export async function upsertLiveStory(
   supabase: SupabaseClient,
@@ -225,21 +237,21 @@ export async function upsertLiveStory(
   card: { headline: string; bullets: [string, string] },
 ): Promise<boolean> {
   const { data: existing } = await supabase
-    .from('clusters')
-    .select('id')
-    .eq('source_url', candidate.url)
+    .from("clusters")
+    .select("id")
+    .eq("source_url", candidate.url)
     .limit(1);
 
   if (existing?.length) return false;
 
-  await supabase.from('clusters').insert({
+  await supabase.from("clusters").insert({
     source_url: candidate.url,
     is_live: true,
     bucket: null,
     summary: {
       headline: card.headline,
       bullets: card.bullets,
-      why_it_matters: '',
+      why_it_matters: "",
     },
     published_at: candidate.published.toISOString(),
   });
@@ -253,11 +265,11 @@ export async function upsertLiveStory(
 ## 6. Pipeline Barrel (`lib/pipeline/breaking/index.ts`)
 
 ```ts
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { fetchRawItems } from '../fetch';
-import { scoreItems } from './score';
-import { generateBreakingCard } from './generate';
-import { upsertBreakingStory } from './upsert';
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { fetchRawItems } from "../fetch";
+import { scoreItems } from "./score";
+import { generateBreakingCard } from "./generate";
+import { upsertBreakingStory } from "./upsert";
 
 export const breakingPipeline = {
   async run(supabase: SupabaseClient): Promise<number> {
@@ -283,19 +295,19 @@ export const breakingPipeline = {
 Guarded by a separate `BREAKING_SECRET` env var (distinct from `CRON_SECRET` to limit blast radius if either leaks).
 
 ```ts
-import { json } from '@sveltejs/kit';
-import { supabase } from '$lib/supabase/server';
-import { breakingPipeline } from '$lib/pipeline/breaking';
-import { env } from '$env/dynamic/private';
-import type { RequestEvent } from '@sveltejs/kit';
+import { json } from "@sveltejs/kit";
+import { supabase } from "$lib/supabase/server";
+import { breakingPipeline } from "$lib/pipeline/breaking";
+import { env } from "$env/dynamic/private";
+import type { RequestEvent } from "@sveltejs/kit";
 
 export const GET = async ({ url }: RequestEvent) => {
-  if (url.searchParams.get('secret') !== env.BREAKING_SECRET) {
-    return new Response('Unauthorized', { status: 401 });
+  if (url.searchParams.get("secret") !== env.BREAKING_SECRET) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
   const published = await breakingPipeline.run(supabase);
-  return json({ status: 'ok', published });
+  return json({ status: "ok", published });
 };
 ```
 
@@ -312,7 +324,7 @@ name: Breaking News Check
 
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: "*/15 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -328,10 +340,10 @@ jobs:
 
 ### Required GitHub Secrets
 
-| Secret | Value |
-|--------|-------|
-| `APP_URL` | Your Vercel deployment URL, e.g. `https://2min.today` |
-| `BREAKING_SECRET` | Same value as `BREAKING_SECRET` in Vercel env vars |
+| Secret            | Value                                                 |
+| ----------------- | ----------------------------------------------------- |
+| `APP_URL`         | Your Vercel deployment URL, e.g. `https://2min.today` |
+| `BREAKING_SECRET` | Same value as `BREAKING_SECRET` in Vercel env vars    |
 
 GitHub Actions free tier: public repos get unlimited minutes; private repos get 2,000 min/month. Each run takes < 5 seconds → 2,880 runs/month × 5 s = ~4 minutes/month. Effectively $0.
 

@@ -1,4 +1,4 @@
-export type TokenClass = 'quoted-phrase' | 'numeric' | 'acronym' | 'word';
+export type TokenClass = "quoted-phrase" | "numeric" | "acronym" | "word";
 
 export interface Token {
   text: string;
@@ -16,9 +16,37 @@ type RawToken = { text: string; quoted: boolean };
 type Transform = (tokens: RawToken[]) => RawToken[];
 
 const STOP_WORDS = new Set([
-  'a', 'an', 'the', 'and', 'or', 'but', 'of', 'in', 'on', 'at', 'to', 'for',
-  'is', 'are', 'was', 'were', 'be', 'been', 'it', 'its', 'this', 'that',
-  'these', 'those', 'with', 'from', 'by', 'about', 'as', 'into', 'through',
+  "a",
+  "an",
+  "the",
+  "and",
+  "or",
+  "but",
+  "of",
+  "in",
+  "on",
+  "at",
+  "to",
+  "for",
+  "is",
+  "are",
+  "was",
+  "were",
+  "be",
+  "been",
+  "it",
+  "its",
+  "this",
+  "that",
+  "these",
+  "those",
+  "with",
+  "from",
+  "by",
+  "about",
+  "as",
+  "into",
+  "through",
 ]);
 
 const THRESHOLD_QUOTED = 0.1;
@@ -26,16 +54,23 @@ const THRESHOLD_NUMERIC = 0.1;
 const THRESHOLD_ACRONYM = 0.15;
 
 function sanitize(tokens: RawToken[]): RawToken[] {
-  return tokens.map((t) => ({
-    ...t,
-    text: t.quoted
-      ? t.text
-      : t.text.replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/\s+/g, ' ').trim(),
-  })).filter((t) => t.text.length > 0);
+  return tokens
+    .map((t) => ({
+      ...t,
+      text: t.quoted
+        ? t.text
+        : t.text
+            .replace(/[^a-zA-Z0-9\s\-]/g, "")
+            .replace(/\s+/g, " ")
+            .trim(),
+    }))
+    .filter((t) => t.text.length > 0);
 }
 
 function dropStopWords(tokens: RawToken[]): RawToken[] {
-  return tokens.filter((t) => t.quoted || !STOP_WORDS.has(t.text.toLowerCase()));
+  return tokens.filter(
+    (t) => t.quoted || !STOP_WORDS.has(t.text.toLowerCase()),
+  );
 }
 
 function dropTooShort(tokens: RawToken[]): RawToken[] {
@@ -50,14 +85,22 @@ function dropShortNonAcronyms(tokens: RawToken[]): RawToken[] {
   });
 }
 
-const sanitizePipeline: Transform[] = [sanitize, dropStopWords, dropTooShort, dropShortNonAcronyms];
+const sanitizePipeline: Transform[] = [
+  sanitize,
+  dropStopWords,
+  dropTooShort,
+  dropShortNonAcronyms,
+];
 
-function extractQuotedPhrases(raw: string): { quoted: RawToken[]; remainder: string } {
+function extractQuotedPhrases(raw: string): {
+  quoted: RawToken[];
+  remainder: string;
+} {
   const quoted: RawToken[] = [];
   const remainder = raw.replace(/"([^"]+)"/g, (_, phrase: string) => {
     const text = phrase.trim();
     if (text) quoted.push({ text, quoted: true });
-    return ' ';
+    return " ";
   });
   return { quoted, remainder };
 }
@@ -71,19 +114,30 @@ function splitRemainder(remainder: string): RawToken[] {
 }
 
 function classifyToken(raw: RawToken): Token {
-  if (raw.quoted) return { text: raw.text, class: 'quoted-phrase', threshold: THRESHOLD_QUOTED };
-  if (/\d/.test(raw.text)) return { text: raw.text, class: 'numeric', threshold: THRESHOLD_NUMERIC };
-  if (/^[A-Z]{2,4}$/.test(raw.text)) return { text: raw.text, class: 'acronym', threshold: THRESHOLD_ACRONYM };
-  return { text: raw.text, class: 'word', threshold: -1 };
+  if (raw.quoted)
+    return {
+      text: raw.text,
+      class: "quoted-phrase",
+      threshold: THRESHOLD_QUOTED,
+    };
+  if (/\d/.test(raw.text))
+    return { text: raw.text, class: "numeric", threshold: THRESHOLD_NUMERIC };
+  if (/^[A-Z]{2,4}$/.test(raw.text))
+    return { text: raw.text, class: "acronym", threshold: THRESHOLD_ACRONYM };
+  return { text: raw.text, class: "word", threshold: -1 };
 }
 
 function resolveThreshold(tokens: Token[], globalThreshold: number): number {
-  if (tokens.some((t) => t.class === 'quoted-phrase' || t.class === 'numeric')) return THRESHOLD_NUMERIC;
-  if (tokens.some((t) => t.class === 'acronym')) return THRESHOLD_ACRONYM;
+  if (tokens.some((t) => t.class === "quoted-phrase" || t.class === "numeric"))
+    return THRESHOLD_NUMERIC;
+  if (tokens.some((t) => t.class === "acronym")) return THRESHOLD_ACRONYM;
   return globalThreshold;
 }
 
-export function parseQuery(raw: string, globalThreshold: number): ParsedQuery | null {
+export function parseQuery(
+  raw: string,
+  globalThreshold: number,
+): ParsedQuery | null {
   const { quoted, remainder } = extractQuotedPhrases(raw);
   const split = splitRemainder(remainder);
 
@@ -94,11 +148,13 @@ export function parseQuery(raw: string, globalThreshold: number): ParsedQuery | 
 
   const classified = filtered.map(classifyToken);
   const threshold = resolveThreshold(classified, globalThreshold);
-  const tokens = classified.map((t) => (t.threshold === -1 ? { ...t, threshold } : t));
+  const tokens = classified.map((t) =>
+    t.threshold === -1 ? { ...t, threshold } : t,
+  );
 
   return {
     tokens,
-    searchString: tokens.map((t) => t.text).join(' '),
+    searchString: tokens.map((t) => t.text).join(" "),
     threshold,
   };
 }

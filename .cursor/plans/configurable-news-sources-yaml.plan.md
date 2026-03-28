@@ -61,9 +61,9 @@ Top-level `sources:` array. Discriminated by `type`:
 - Iterate **enabled** sources only.
 - RSS: keep existing `Promise.allSettled` pattern per feed (timeout, XML parse, `RawItem` mapping).
 - X: if one or more enabled `x` entries, run search per entry (v1: typically one; if multiple, run in parallel and concatenate, document in code).
-- `**fetchRawItems()`:** same public contract (`Promise<RawItem[]>`), merge + dedupe by `id` as today.
+- `**fetchRawItems()`:\*\* same public contract (`Promise<RawItem[]>`), merge + dedupe by `id` as today.
 - **Diagnostics:** implement internal `fetchRawItemsWithDiagnostics()` (or equivalent) returning `{ items: RawItem[]; sources: FetchSourceResult[] }` where each result is `{ id, type, enabled, ok, itemCount, durationMs, error?: string }`.
-- `fetchRawItems()` calls that helper, `**console.log`** a single structured summary (e.g. JSON line or one line per source) for prod/dev visibility.
+- `fetchRawItems()` calls that helper, `**console.log`\*\* a single structured summary (e.g. JSON line or one line per source) for prod/dev visibility.
 - **Breaking:** `[breaking/index.ts](apps/web/src/lib/pipeline/breaking/index.ts)` unchanged import of `fetchRawItems` — YAML applies automatically.
 
 ## 4. Debug endpoint (required deliverable)
@@ -71,7 +71,7 @@ Top-level `sources:` array. Discriminated by `type`:
 - **Route:** `[apps/web/src/routes/api/digest/sources/+server.ts](apps/web/src/routes/api/digest/sources/+server.ts)`
 - **Method:** `GET`
 - **Auth:** `url.searchParams.get('secret') === env.CRON_SECRET` (same as `[digest/+server.ts](apps/web/src/routes/api/digest/+server.ts)`); 401 otherwise.
-- **Behavior:** Call the same `**fetchRawItemsWithDiagnostics()`** (or exported runner) — **no** `pipeline.run`, no Supabase writes.
+- **Behavior:** Call the same `**fetchRawItemsWithDiagnostics()`** (or exported runner) — **no\*\* `pipeline.run`, no Supabase writes.
 - **Response:** `200` JSON, e.g. `{ status: 'ok', sources: FetchSourceResult[], totalItems: number, dedupedItems: number }` (exact field names as implemented). On total failure optional `status: 'error'` with message.
 - **Docs:** Add curl example to `[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)` (or setup index) and one line in `[CLAUDE.md](CLAUDE.md)` if appropriate.
 
@@ -102,6 +102,3 @@ flowchart TB
   diag --> digest
   diag --> debug
 ```
-
-
-

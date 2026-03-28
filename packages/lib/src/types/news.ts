@@ -1,5 +1,5 @@
-import type { Bucket } from '../config/buckets';
-import type { Credit, Region } from './digest';
+import type { Bucket } from "../config/buckets";
+import type { Credit, Region } from "./digest";
 
 export type SummaryJson = {
   headline: string;

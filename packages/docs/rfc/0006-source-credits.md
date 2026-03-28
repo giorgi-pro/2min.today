@@ -5,6 +5,7 @@
 **Author:** Project Owner
 **Depends on:** RFC-001 (Daily Digest Pipeline)
 **Target files:**
+
 - `apps/web/src/lib/types/digest.ts` — add `Credit` interface, type `sources` on `SummarizedCluster`
 - `apps/web/src/lib/pipeline/summarize.ts` — populate `sources` from cluster items
 - `apps/web/src/lib/pipeline/upsert.ts` — persist `sources` inside `summary` jsonb
@@ -34,8 +35,8 @@ Replace the single source label (e.g. "Reuters") on each news card with a `©` s
 
 ```ts
 export interface Credit {
-  source: string;  // display name, e.g. "Reuters"
-  url: string;     // original article URL
+  source: string; // display name, e.g. "Reuters"
+  url: string; // original article URL
 }
 ```
 
@@ -52,7 +53,7 @@ export interface SummarizedCluster extends Cluster {
   whyItMatters: string;
   tags: string[];
   region: Region;
-  credits: Credit[];  // ← new; derived from cluster.items, not from Gemini
+  credits: Credit[]; // ← new; derived from cluster.items, not from Gemini
 }
 ```
 
@@ -90,7 +91,7 @@ results.push({
   whyItMatters: parsed.whyItMatters,
   tags: normalizeSummaryTags(parsed.tags),
   region: feedRegion ?? parseRegion(parsed.region),
-  credits: extractCredits(cluster.items),  // ← new
+  credits: extractCredits(cluster.items), // ← new
 });
 ```
 
@@ -129,7 +130,7 @@ type SummaryJson = {
 
 export type DigestCard = {
   // ...existing fields...
-  credits: Credit[];   // replaces sources: unknown[]
+  credits: Credit[]; // replaces sources: unknown[]
 };
 ```
 
@@ -185,7 +186,7 @@ type Props = {
   title: string;
   bullets: string[];
   whyItMatters: string;
-  credits: Credit[];    // replaces source: string
+  credits: Credit[]; // replaces source: string
   isBreaking: boolean;
   isLive: boolean;
   tags: string[];

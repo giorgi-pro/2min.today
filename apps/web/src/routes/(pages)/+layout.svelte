@@ -1,12 +1,12 @@
 <script lang="ts">
-  import '@ui/styles/index.css'
-  import { MediaQuery } from 'svelte/reactivity'
-  import DesktopLayout from '@ui/layout/DesktopLayout.svelte'
-  import MobileLayout from '@ui/layout/MobileLayout.svelte'
-  import Footer from '@ui/components/Footer.svelte'
-  import BottomSection from '@ui/components/BottomSection.svelte'
-  import { searchQuery, activeRegions } from '@lib/digest-filter'
-  import type { Region } from '@lib/types/digest'
+  import { activeRegions, searchQuery } from '@lib/digest-filter';
+  import type { Region } from '@lib/types/digest';
+  import BottomSection from '@ui/components/BottomSection.svelte';
+  import Footer from '@ui/components/Footer.svelte';
+  import DesktopLayout from '@ui/layout/DesktopLayout.svelte';
+  import MobileLayout from '@ui/layout/MobileLayout.svelte';
+  import '@ui/styles/index.css';
+  import { MediaQuery } from 'svelte/reactivity';
 
   let { data, children } = $props()
 

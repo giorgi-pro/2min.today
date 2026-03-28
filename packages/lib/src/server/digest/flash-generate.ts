@@ -11,7 +11,7 @@
  *   "retry in Ns" hint when present.
  *   Use for free-tier pacing (~4 RPM at 15s, under the 5 RPM free-tier ceiling).
  */
-import { getFlashGenerationMinIntervalMs } from './models';
+import { getFlashGenerationMinIntervalMs } from "./models";
 
 let nextFlashGenerateAllowedAt = 0;
 
@@ -43,7 +43,9 @@ export async function acquireFlashGenerationSlot(): Promise<void> {
 
 const MAX_FLASH_RETRIES = 12;
 
-export async function withFlashGenerationRetry<T>(run: () => Promise<T>): Promise<T> {
+export async function withFlashGenerationRetry<T>(
+  run: () => Promise<T>,
+): Promise<T> {
   const intervalMs = getFlashGenerationMinIntervalMs();
   if (intervalMs == null) {
     return run();
@@ -67,5 +69,5 @@ export async function withFlashGenerationRetry<T>(run: () => Promise<T>): Promis
       backoffMs = Math.min(backoffMs * 2, 90_000);
     }
   }
-  throw new Error('Unreachable');
+  throw new Error("Unreachable");
 }

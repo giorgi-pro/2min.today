@@ -1,5 +1,5 @@
-import Fuse, { type IFuseOptions } from 'fuse.js';
-import { parseQuery, type ParsedQuery } from './query-parser';
+import Fuse, { type IFuseOptions } from "fuse.js";
+import { parseQuery, type ParsedQuery } from "./query-parser";
 
 export interface SearchStrategy<T> {
   search(parsed: ParsedQuery, cards: T[]): T[];
@@ -8,12 +8,15 @@ export interface SearchStrategy<T> {
 export class ThresholdStrategy<T> implements SearchStrategy<T> {
   private fuseOptions: IFuseOptions<T>;
 
-  constructor(fuseOptions: Omit<IFuseOptions<T>, 'threshold'>) {
+  constructor(fuseOptions: Omit<IFuseOptions<T>, "threshold">) {
     this.fuseOptions = fuseOptions;
   }
 
   search(parsed: ParsedQuery, cards: T[]): T[] {
-    const index = new Fuse(cards, { ...this.fuseOptions, threshold: parsed.threshold });
+    const index = new Fuse(cards, {
+      ...this.fuseOptions,
+      threshold: parsed.threshold,
+    });
     return index.search(parsed.searchString).map((r) => r.item);
   }
 }

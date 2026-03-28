@@ -1,14 +1,17 @@
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
-import { env } from '@2min.today/config/env';
-import { withFlashGenerationRetry } from '@lib/server/digest/flash-generate';
-import { getFlashModel, mergeFlashGenerationConfig } from '@lib/server/digest/models';
-import type { BreakingCandidate } from '@lib/types/breaking';
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { env } from "@2min.today/config/env";
+import { withFlashGenerationRetry } from "@lib/server/digest/flash-generate";
+import {
+  getFlashModel,
+  mergeFlashGenerationConfig,
+} from "@lib/server/digest/models";
+import type { BreakingCandidate } from "@lib/types/breaking";
 
 function breakingFlashModel() {
   return new GoogleGenerativeAI(env.GEMINI_API_KEY).getGenerativeModel({
     model: getFlashModel(),
     generationConfig: mergeFlashGenerationConfig({
-      responseMimeType: 'application/json',
+      responseMimeType: "application/json",
       responseSchema: {
         type: SchemaType.OBJECT,
         properties: {
@@ -20,7 +23,7 @@ function breakingFlashModel() {
             maxItems: 2,
           },
         },
-        required: ['headline', 'bullets'],
+        required: ["headline", "bullets"],
       },
     }),
   });
@@ -43,7 +46,12 @@ export async function generateLiveCard(
   candidate: BreakingCandidate,
 ): Promise<{ headline: string; bullets: [string, string] }> {
   return withFlashGenerationRetry(async () => {
-    const result = await breakingFlashModel().generateContent(prompt(candidate.title));
-    return JSON.parse(result.response.text()) as { headline: string; bullets: [string, string] };
+    const result = await breakingFlashModel().generateContent(
+      prompt(candidate.title),
+    );
+    return JSON.parse(result.response.text()) as {
+      headline: string;
+      bullets: [string, string];
+    };
   });
 }

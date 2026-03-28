@@ -62,15 +62,15 @@ Uses the **service role key** (bypasses RLS, required for cron writes).
 Passed down to pipeline modules via dependency injection — no module imports the client globally.
 
 ```ts
-import { createClient } from '@supabase/supabase-js';
-import { env } from '@config';
+import { createClient } from "@supabase/supabase-js";
+import { env } from "@config";
 
 export const supabase = createClient(
   env.SUPABASE_URL,
   env.SUPABASE_SERVICE_ROLE_KEY,
   {
     auth: { persistSession: false }, // no cookies needed for cron
-  }
+  },
 );
 ```
 
@@ -83,7 +83,7 @@ export const supabase = createClient(
 ## 2. Types (`lib/types/digest.ts`)
 
 ```ts
-import type { Bucket } from '$lib/config/buckets';
+import type { Bucket } from "$lib/config/buckets";
 
 export interface RawItem {
   id: string;
@@ -138,16 +138,16 @@ Used by `classify.ts` and `scripts/seed-bucket-anchors.ts` — both import from 
 # After editing anchor text, re-run: npx tsx scripts/seed-bucket-anchors.ts
 # Classification model: "geography-first, topic-override"
 buckets:
-  usa:         "United States America US federal government Congress White House president domestic American politics policy Trump Biden legislation court ruling"
-  europe:      "Europe European Union EU UK Britain France Germany Spain Italy Netherlands Poland Hungary NATO European parliament Brexit"
+  usa: "United States America US federal government Congress White House president domestic American politics policy Trump Biden legislation court ruling"
+  europe: "Europe European Union EU UK Britain France Germany Spain Italy Netherlands Poland Hungary NATO European parliament Brexit"
   middle-east: "Middle East Iran Iraq Israel Palestine Saudi Arabia Syria Yemen Gulf OPEC Arab Lebanon Egypt Turkey conflict"
-  americas:    "Latin America Brazil Mexico Canada Argentina Colombia Caribbean South America Central America"
-  world:       "world news international relations diplomacy geopolitics global affairs Asia Africa India China Japan Australia current affairs society culture environment disasters"
-  business:    "financial markets economy business corporate earnings monetary policy trade tariffs currency stock market Wall Street"
-  tech:        "technology innovation AI hardware software digital breakthroughs startups cybersecurity"
-  science:     "scientific discoveries research physics biology space exploration climate"
-  health:      "health medicine public health biomedical research wellness lifestyle habits nutrition mental health parenting child development fitness diet sleep screen time digital wellbeing"
-  sports:      "sports football soccer basketball tennis cricket rugby olympics athletics competitions leagues tournaments championships racing cycling swimming"
+  americas: "Latin America Brazil Mexico Canada Argentina Colombia Caribbean South America Central America"
+  world: "world news international relations diplomacy geopolitics global affairs Asia Africa India China Japan Australia current affairs society culture environment disasters"
+  business: "financial markets economy business corporate earnings monetary policy trade tariffs currency stock market Wall Street"
+  tech: "technology innovation AI hardware software digital breakthroughs startups cybersecurity"
+  science: "scientific discoveries research physics biology space exploration climate"
+  health: "health medicine public health biomedical research wellness lifestyle habits nutrition mental health parenting child development fitness diet sleep screen time digital wellbeing"
+  sports: "sports football soccer basketball tennis cricket rugby olympics athletics competitions leagues tournaments championships racing cycling swimming"
 ```
 
 ### `lib/config/buckets.ts`
@@ -155,13 +155,26 @@ buckets:
 Add **`yaml`** as a normal dependency in `apps/web` (order of **~4 KB gzipped**). It is **installed once** with the app; `parse()` runs **only when this module is first evaluated**, after which `BUCKET_ANCHORS` is a plain object and the rest of the pipeline gets **full TypeScript** inference and checking — **no YAML parsing per cluster, per request, or in a loop**.
 
 ```ts
-import { parse } from 'yaml';
-import fs from 'fs';
-import path from 'path';
+import { parse } from "yaml";
+import fs from "fs";
+import path from "path";
 
-const raw = fs.readFileSync(path.join(process.cwd(), 'src/lib/config/buckets.yaml'), 'utf8');
+const raw = fs.readFileSync(
+  path.join(process.cwd(), "src/lib/config/buckets.yaml"),
+  "utf8",
+);
 export const BUCKET_ANCHORS = parse(raw).buckets as Record<string, string>;
-export type Bucket = 'usa' | 'europe' | 'middle-east' | 'americas' | 'world' | 'business' | 'tech' | 'science' | 'health' | 'sports';
+export type Bucket =
+  | "usa"
+  | "europe"
+  | "middle-east"
+  | "americas"
+  | "world"
+  | "business"
+  | "tech"
+  | "science"
+  | "health"
+  | "sports";
 ```
 
 All 10 buckets have anchor embeddings in `bucket_anchors`. There is no `emerging` bucket — the classify step uses a hybrid approach: embedding similarity first, then LLM fallback from the summarize prompt, then `world` as the final catch-all (see §5 `classify.ts`).
@@ -174,18 +187,21 @@ Glue layer that wires all steps in order and exports `pipeline.run(supabase, opt
 The Supabase client is passed to **classify** and **upsert** only; **clustering** is in-memory. An optional Pino **`log`** on **`opts`** is threaded through **fetch → embed → summarize → classify** for structured phase logs (see `lib/pipeline/index.ts`).
 
 ```ts
-import { fetchRawItems } from './fetch';
-import { embedItems } from './embed';
-import { clusterItems } from './cluster';
-import { summarizeClusters } from './summarize';
-import { classifyClusters } from './classify';
-import { upsertClusters } from './upsert';
-import type { Logger } from 'pino';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { ClassifiedCluster } from '../types/digest';
+import { fetchRawItems } from "./fetch";
+import { embedItems } from "./embed";
+import { clusterItems } from "./cluster";
+import { summarizeClusters } from "./summarize";
+import { classifyClusters } from "./classify";
+import { upsertClusters } from "./upsert";
+import type { Logger } from "pino";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ClassifiedCluster } from "../types/digest";
 
 export const pipeline = {
-  async run(supabase: SupabaseClient, opts?: { log?: Logger }): Promise<ClassifiedCluster[]> {
+  async run(
+    supabase: SupabaseClient,
+    opts?: { log?: Logger },
+  ): Promise<ClassifiedCluster[]> {
     const log = opts?.log;
     const rawItems = await fetchRawItems(log);
     const embedded = await embedItems(rawItems, log);
@@ -207,15 +223,15 @@ export const pipeline = {
 
 ```ts
 const itemContent =
-  entry['content:encoded']?.[0] ??
+  entry["content:encoded"]?.[0] ??
   entry.content?.[0]?._ ??
   entry.description?.[0] ??
-  entry['media:description']?.[0] ??
-  '';
+  entry["media:description"]?.[0] ??
+  "";
 
 const cleanContent = itemContent
-  .replace(/<[^>]+>/g, ' ')
-  .replace(/\s+/g, ' ')
+  .replace(/<[^>]+>/g, " ")
+  .replace(/\s+/g, " ")
   .trim()
   .slice(0, 800);
 ```
@@ -234,7 +250,7 @@ Return `RawItem[]` from `fetchRawItems` (deduplicate by URL/tweet ID inside this
 
 - Use official `@google/generative-ai` Node SDK.
 - Model: `gemini-embedding-2-preview`.
-- **`outputDimensionality: 768`** on every `embedContent` request so vectors match `vector(768)` in Supabase (see *Embedding vector size* above).
+- **`outputDimensionality: 768`** on every `embedContent` request so vectors match `vector(768)` in Supabase (see _Embedding vector size_ above).
 - Batch size: 20 (max per call).
 - Return `EmbeddedItem[]`.
 
@@ -254,9 +270,11 @@ Compare each incoming item's embedding to existing cluster **centroids** using c
 
 ```ts
 function cosineSimilarity(a: number[], b: number[]): number {
-  let dot = 0, normA = 0, normB = 0;
+  let dot = 0,
+    normA = 0,
+    normB = 0;
   for (let i = 0; i < a.length; i++) {
-    dot   += a[i] * b[i];
+    dot += a[i] * b[i];
     normA += a[i] * a[i];
     normB += b[i] * b[i];
   }
@@ -303,14 +321,16 @@ return clusters
 #### Full TypeScript
 
 ```ts
-import { v4 as uuidv4 } from 'uuid';
-import { getClusterSimilarityThreshold } from '$lib/server/digest/models';
-import type { EmbeddedItem, Cluster } from '../types/digest';
+import { v4 as uuidv4 } from "uuid";
+import { getClusterSimilarityThreshold } from "$lib/server/digest/models";
+import type { EmbeddedItem, Cluster } from "../types/digest";
 
 function cosineSimilarity(a: number[], b: number[]): number {
-  let dot = 0, normA = 0, normB = 0;
+  let dot = 0,
+    normA = 0,
+    normB = 0;
   for (let i = 0; i < a.length; i++) {
-    dot   += a[i] * b[i];
+    dot += a[i] * b[i];
     normA += a[i] * a[i];
     normB += b[i] * b[i];
   }
@@ -338,7 +358,10 @@ export async function clusterItems(items: EmbeddedItem[]): Promise<Cluster[]> {
     let bestSim = -1;
 
     for (let i = 0; i < clusters.length; i++) {
-      const sim = cosineSimilarity(item.embedding, clusters[i].centroidEmbedding);
+      const sim = cosineSimilarity(
+        item.embedding,
+        clusters[i].centroidEmbedding,
+      );
       if (sim > bestSim) {
         bestSim = sim;
         bestIdx = i;
@@ -347,7 +370,9 @@ export async function clusterItems(items: EmbeddedItem[]): Promise<Cluster[]> {
 
     if (bestSim >= similarityThreshold && bestIdx !== -1) {
       clusters[bestIdx].items.push(item);
-      clusters[bestIdx].centroidEmbedding = computeCentroid(clusters[bestIdx].items);
+      clusters[bestIdx].centroidEmbedding = computeCentroid(
+        clusters[bestIdx].items,
+      );
     } else {
       clusters.push({
         id: uuidv4(),
@@ -366,7 +391,7 @@ export async function clusterItems(items: EmbeddedItem[]): Promise<Cluster[]> {
 - **O(n × k)** where n = items (~60–100/day) and k = clusters (~15–30). Runs in < 5 ms for realistic daily volumes — no fancy data structures needed.
 - Deterministic: item order from `fetch.ts` determines cluster assignment. RSS items arrive in published-date order, so closely related stories (published minutes apart) naturally cluster together.
 - Centroid recomputation on every merge keeps the cluster center stable as more sources join, preventing drift toward the first item only.
-- The **default 0.85** is deliberately high — it groups *the same story told by different outlets* (e.g. "Fed raises rates" from Reuters, AP, Bloomberg) while keeping genuinely distinct stories apart (e.g. "Fed raises rates" vs "Tech layoffs"). Tune **`CLUSTER_SIMILARITY_THRESHOLD`** when feed volume produces too many clusters (e.g. try **0.78–0.82**).
+- The **default 0.85** is deliberately high — it groups _the same story told by different outlets_ (e.g. "Fed raises rates" from Reuters, AP, Bloomberg) while keeping genuinely distinct stories apart (e.g. "Fed raises rates" vs "Tech layoffs"). Tune **`CLUSTER_SIMILARITY_THRESHOLD`** when feed volume produces too many clusters (e.g. try **0.78–0.82**).
 
 #### Deduplication against already-persisted clusters
 
@@ -387,20 +412,32 @@ The entry point (`+server.ts` §8) already checks for existing rows and returns 
 
 ```ts
 const model = genAI.getGenerativeModel({
-  model: 'gemini-2.5-flash',
+  model: "gemini-2.5-flash",
   generationConfig: {
-    responseMimeType: 'application/json',
+    responseMimeType: "application/json",
     responseSchema: {
-      type: 'object',
+      type: "object",
       properties: {
-        headline: { type: 'string' },
-        bullets: { type: 'array', items: { type: 'string' }, minItems: 3, maxItems: 3 },
-        whyItMatters: { type: 'string' },
-        tags: { type: 'array', items: { type: 'string' } },
-        region: { type: 'string' },
-        bucket: { type: 'string' },
+        headline: { type: "string" },
+        bullets: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 3,
+          maxItems: 3,
+        },
+        whyItMatters: { type: "string" },
+        tags: { type: "array", items: { type: "string" } },
+        region: { type: "string" },
+        bucket: { type: "string" },
       },
-      required: ['headline', 'bullets', 'whyItMatters', 'tags', 'region', 'bucket'],
+      required: [
+        "headline",
+        "bullets",
+        "whyItMatters",
+        "tags",
+        "region",
+        "bucket",
+      ],
     },
   },
 });
@@ -445,17 +482,19 @@ From a **reader’s perspective**, the homepage either sees **yesterday’s data
 
 ```ts
 const now = new Date();
-const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+const todayStart = new Date(
+  Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+);
 const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 
 await supabase
-  .from('clusters')
+  .from("clusters")
   .delete()
-  .gte('published_at', todayStart.toISOString())
-  .lt('published_at', todayEnd.toISOString());
+  .gte("published_at", todayStart.toISOString())
+  .lt("published_at", todayEnd.toISOString());
 
-await supabase.from('clusters').upsert(
-  classifiedClusters.map(c => ({
+await supabase.from("clusters").upsert(
+  classifiedClusters.map((c) => ({
     id: c.id,
     embedding: c.centroidEmbedding,
     raw_items: c.items,
@@ -468,7 +507,7 @@ await supabase.from('clusters').upsert(
     category_line: c.categoryLine,
     published_at: new Date().toISOString(),
   })),
-  { onConflict: 'id' }
+  { onConflict: "id" },
 );
 ```
 
@@ -507,10 +546,10 @@ create table if not exists bucket_anchors (
 Run **once** after applying the migration, and **again after any change to `buckets.yaml` anchor text** (e.g. adding geographic buckets, broadening anchor text). Idempotent (upsert on primary key).
 
 ```ts
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { createClient } from '@supabase/supabase-js';
-import { BUCKET_ANCHORS } from '../apps/web/src/lib/config/buckets';
-import { env } from '@2min.today/config/env';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createClient } from "@supabase/supabase-js";
+import { BUCKET_ANCHORS } from "../apps/web/src/lib/config/buckets";
+import { env } from "@2min.today/config/env";
 
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: env.EMBEDDING_MODEL });
@@ -520,18 +559,18 @@ const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 async function seedAnchors() {
   for (const [bucket, text] of Object.entries(BUCKET_ANCHORS)) {
     const result = await model.embedContent({
-      content: { role: 'user', parts: [{ text }] },
+      content: { role: "user", parts: [{ text }] },
       outputDimensionality: env.EMBEDDING_DIMENSION,
     });
     const embedding = result.embedding.values;
 
     await supabase
-      .from('bucket_anchors')
-      .upsert({ bucket, embedding }, { onConflict: 'bucket' });
+      .from("bucket_anchors")
+      .upsert({ bucket, embedding }, { onConflict: "bucket" });
 
     console.log(`✓ Seeded ${bucket}`);
   }
-  console.log('All bucket anchors seeded.');
+  console.log("All bucket anchors seeded.");
 }
 
 seedAnchors().catch(console.error);
@@ -558,32 +597,34 @@ the Supabase JS client (it treats the left side as a literal column name). `.gte
 pre-computed ISO strings is the correct approach and hits the native index on `published_at`.
 
 ```ts
-import { json } from '@sveltejs/kit';
-import { supabase } from '$lib/supabase/server';
-import { pipeline } from '$lib/pipeline';
-import { env } from '@config';
-import type { RequestEvent } from '@sveltejs/kit';
+import { json } from "@sveltejs/kit";
+import { supabase } from "$lib/supabase/server";
+import { pipeline } from "$lib/pipeline";
+import { env } from "@config";
+import type { RequestEvent } from "@sveltejs/kit";
 
 export const GET = async ({ url }: RequestEvent) => {
-  if (url.searchParams.get('secret') !== env.CRON_SECRET) {
-    return new Response('Unauthorized', { status: 401 });
+  if (url.searchParams.get("secret") !== env.CRON_SECRET) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
   const now = new Date();
-  const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const todayEnd   = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+  const todayStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
+  const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 
   const { data: existing } = await supabase
-    .from('clusters')
-    .select('id')
-    .gte('published_at', todayStart.toISOString())
-    .lt('published_at', todayEnd.toISOString())
+    .from("clusters")
+    .select("id")
+    .gte("published_at", todayStart.toISOString())
+    .lt("published_at", todayEnd.toISOString())
     .limit(1);
 
-  if (existing?.length) return json({ status: 'already-run-today' });
+  if (existing?.length) return json({ status: "already-run-today" });
 
   const result = await pipeline.run(supabase);
-  return json({ status: 'success', clustersCreated: result.length });
+  return json({ status: "success", clustersCreated: result.length });
 };
 ```
 
@@ -594,7 +635,7 @@ name: Daily Digest
 
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
   workflow_dispatch:
 
 jobs:
@@ -621,10 +662,13 @@ Both pipeline triggers (nightly digest + breaking news) use the same two GitHub 
 Anon client using SvelteKit **public** env (prefixed `PUBLIC_`, exposed to the server and optionally to the browser). Add **`PUBLIC_SUPABASE_URL`** and **`PUBLIC_SUPABASE_ANON_KEY`** to `apps/web/.env.example`, `.env.local`, and Vercel.
 
 ```ts
-import { createClient } from '@supabase/supabase-js';
-import { env } from '@config';
+import { createClient } from "@supabase/supabase-js";
+import { env } from "@config";
 
-export const supabaseClient = createClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_ANON_KEY);
+export const supabaseClient = createClient(
+  env.PUBLIC_SUPABASE_URL,
+  env.PUBLIC_SUPABASE_ANON_KEY,
+);
 ```
 
 ### `routes/+page.server.ts`
@@ -645,8 +689,8 @@ Persisted **`summary` jsonb** (written by `upsert.ts`) must align with this read
 (`sources` optional until the pipeline attaches them.)
 
 ```ts
-import { supabaseClient } from '$lib/supabase/client';
-import type { Bucket } from '$lib/config/buckets';
+import { supabaseClient } from "$lib/supabase/client";
+import type { Bucket } from "$lib/config/buckets";
 
 type SummaryJson = {
   headline: string;
@@ -665,34 +709,39 @@ type DigestCard = {
 
 export const load = async () => {
   const now = new Date();
-  const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const todayStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
   const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 
   const { data, error } = await supabaseClient
-    .from('clusters')
-    .select('id, bucket, category_line, summary, published_at')
-    .gte('published_at', todayStart.toISOString())
-    .lt('published_at', todayEnd.toISOString())
-    .order('published_at', { ascending: false });
+    .from("clusters")
+    .select("id, bucket, category_line, summary, published_at")
+    .gte("published_at", todayStart.toISOString())
+    .lt("published_at", todayEnd.toISOString())
+    .order("published_at", { ascending: false });
 
   if (error) {
     console.error(error);
     return { digest: {} as Partial<Record<Bucket, DigestCard[]>> };
   }
 
-  const digest = (data ?? []).reduce<Partial<Record<Bucket, DigestCard[]>>>((acc, row) => {
-    const b = row.bucket as Bucket;
-    const s = row.summary as SummaryJson;
-    if (!acc[b]) acc[b] = [];
-    acc[b]!.push({
-      headline: s.headline,
-      bullets: s.bullets,
-      whyItMatters: s.why_it_matters,
-      categoryLine: row.category_line,
-      sources: Array.isArray(s.sources) ? s.sources : [],
-    });
-    return acc;
-  }, {});
+  const digest = (data ?? []).reduce<Partial<Record<Bucket, DigestCard[]>>>(
+    (acc, row) => {
+      const b = row.bucket as Bucket;
+      const s = row.summary as SummaryJson;
+      if (!acc[b]) acc[b] = [];
+      acc[b]!.push({
+        headline: s.headline,
+        bullets: s.bullets,
+        whyItMatters: s.why_it_matters,
+        categoryLine: row.category_line,
+        sources: Array.isArray(s.sources) ? s.sources : [],
+      });
+      return acc;
+    },
+    {},
+  );
 
   return { digest };
 };

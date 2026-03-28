@@ -1,6 +1,6 @@
-import { v4 as uuidv4 } from 'uuid';
-import { getClusterSimilarityThreshold } from '@lib/server/digest/models';
-import type { EmbeddedItem, Cluster } from '@lib/types/digest';
+import { v4 as uuidv4 } from "uuid";
+import { getClusterSimilarityThreshold } from "@lib/server/digest/models";
+import type { EmbeddedItem, Cluster } from "@lib/types/digest";
 
 function cosineSimilarity(a: number[], b: number[]): number {
   let dot = 0;
@@ -35,7 +35,10 @@ export async function clusterItems(items: EmbeddedItem[]): Promise<Cluster[]> {
     let bestSim = -1;
 
     for (let i = 0; i < clusters.length; i++) {
-      const sim = cosineSimilarity(item.embedding, clusters[i].centroidEmbedding);
+      const sim = cosineSimilarity(
+        item.embedding,
+        clusters[i].centroidEmbedding,
+      );
       if (sim > bestSim) {
         bestSim = sim;
         bestIdx = i;
@@ -44,7 +47,9 @@ export async function clusterItems(items: EmbeddedItem[]): Promise<Cluster[]> {
 
     if (bestSim >= similarityThreshold && bestIdx !== -1) {
       clusters[bestIdx].items.push(item);
-      clusters[bestIdx].centroidEmbedding = computeCentroid(clusters[bestIdx].items);
+      clusters[bestIdx].centroidEmbedding = computeCentroid(
+        clusters[bestIdx].items,
+      );
     } else {
       clusters.push({
         id: uuidv4(),

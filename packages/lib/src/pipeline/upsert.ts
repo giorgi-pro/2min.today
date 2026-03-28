@@ -1,5 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { ClassifiedCluster } from '@lib/types/digest';
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ClassifiedCluster } from "@lib/types/digest";
 
 export async function upsertClusters(
   clusters: ClassifiedCluster[],
@@ -8,16 +8,18 @@ export async function upsertClusters(
   if (clusters.length === 0) return [];
 
   const now = new Date();
-  const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const todayStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
   const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 
   await supabase
-    .from('clusters')
+    .from("clusters")
     .delete()
-    .gte('published_at', todayStart.toISOString())
-    .lt('published_at', todayEnd.toISOString());
+    .gte("published_at", todayStart.toISOString())
+    .lt("published_at", todayEnd.toISOString());
 
-  const { error } = await supabase.from('clusters').upsert(
+  const { error } = await supabase.from("clusters").upsert(
     clusters.map((c) => ({
       id: c.id,
       embedding: c.centroidEmbedding,
@@ -34,7 +36,7 @@ export async function upsertClusters(
       category_line: c.categoryLine,
       published_at: new Date().toISOString(),
     })),
-    { onConflict: 'id' },
+    { onConflict: "id" },
   );
 
   if (error) throw new Error(`Upsert failed: ${error.message}`);

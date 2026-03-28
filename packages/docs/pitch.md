@@ -1,9 +1,11 @@
 # Project Pitch: 2min.today
 
 ### **The Goal**
+
 Deliver a daily, informationally dense **global digest**: one coherent edition that compresses the day’s major stories into roughly a **two-minute read**, with high signal and low noise in a typography-first, **editorial brutalist** UI.
 
 ### **The Premise**
+
 Most news AI products are either noisy or over-built. **2min.today** behaves like a digital broadsheet: one scheduled pipeline turns many reputable inputs into a single edition, instead of an endless feed.
 
 ---
@@ -12,15 +14,15 @@ Most news AI products are either noisy or over-built. **2min.today** behaves lik
 
 Aligned with [ADR-001](./adr/0001-backend%20technology%20stack%20selection.md), [ADR-002](./adr/0002-daily-digest-pipeline-architecture-and-implementation.md), and [RFC-001](./rfc/0001-daily-digest-pipeline.md).
 
-| Component | Implementation |
-| :--- | :--- |
-| **App shell** | **SvelteKit 5** (`apps/web`): server routes for APIs, SSR `load` for the homepage digest — one TypeScript codebase, no separate backend service. |
-| **UI** | **Tailwind** + shared **`@ui`** (`packages/ui`). Editorial palette and surfaces in `apps/web/tailwind.config.ts` (tomato / teal / slate, tonal layers); **Inter** as the primary face (variable opsz/weight via Google Fonts in `app.html`). |
-| **Ingestion** | **RSS** + **X API v2** recent search, configured in `apps/web/src/lib/config/news-sources.yaml` (per-source `enabled`); `lib/pipeline/fetch.ts` merges and dedupes. |
-| **Deduping** | Per-item **Gemini embeddings** (`gemini-embedding-2-preview`), **cosine similarity**, and **Supabase `pgvector`** so multiple articles about one event collapse into a single cluster. |
-| **Synthesis** | **Gemini 2.5 Flash** (`gemini-2.5-flash`) with **structured JSON** (`headline`, exactly **three** bullets, **`why_it_matters`**) — no ad-hoc prose parsing. |
-| **Persistence** | **Supabase** `clusters` (+ `bucket_anchors` seeded from `apps/web/src/lib/config/buckets.yaml`). Service role for the pipeline; anon + RLS for public reads. |
-| **Scheduling** | **Nightly digest:** cron hits `GET /api/digest` (Vercel Cron as in ADR-002; path and schedule in project config). **Breaking:** [RFC-005](./rfc/0005-breaking-news-pipeline.md) — GitHub Actions every **15 minutes** calls `GET /api/breaking`; heuristics first, then one Flash call per qualifying story; rows use `is_live` on the same `clusters` table. |
+| Component       | Implementation                                                                                                                                                                                                                                                                                                                                                |
+| :-------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **App shell**   | **SvelteKit 5** (`apps/web`): server routes for APIs, SSR `load` for the homepage digest — one TypeScript codebase, no separate backend service.                                                                                                                                                                                                              |
+| **UI**          | **Tailwind** + shared **`@ui`** (`packages/ui`). Editorial palette and surfaces in `apps/web/tailwind.config.ts` (tomato / teal / slate, tonal layers); **Inter** as the primary face (variable opsz/weight via Google Fonts in `app.html`).                                                                                                                  |
+| **Ingestion**   | **RSS** + **X API v2** recent search, configured in `apps/web/src/lib/config/news-sources.yaml` (per-source `enabled`); `lib/pipeline/fetch.ts` merges and dedupes.                                                                                                                                                                                           |
+| **Deduping**    | Per-item **Gemini embeddings** (`gemini-embedding-2-preview`), **cosine similarity**, and **Supabase `pgvector`** so multiple articles about one event collapse into a single cluster.                                                                                                                                                                        |
+| **Synthesis**   | **Gemini 2.5 Flash** (`gemini-2.5-flash`) with **structured JSON** (`headline`, exactly **three** bullets, **`why_it_matters`**) — no ad-hoc prose parsing.                                                                                                                                                                                                   |
+| **Persistence** | **Supabase** `clusters` (+ `bucket_anchors` seeded from `apps/web/src/lib/config/buckets.yaml`). Service role for the pipeline; anon + RLS for public reads.                                                                                                                                                                                                  |
+| **Scheduling**  | **Nightly digest:** cron hits `GET /api/digest` (Vercel Cron as in ADR-002; path and schedule in project config). **Breaking:** [RFC-005](./rfc/0005-breaking-news-pipeline.md) — GitHub Actions every **15 minutes** calls `GET /api/breaking`; heuristics first, then one Flash call per qualifying story; rows use `is_live` on the same `clusters` table. |
 
 ---
 

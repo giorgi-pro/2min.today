@@ -6,6 +6,7 @@
 ## Context
 
 `2min.today` must produce **one single daily edition** at 00:00 UTC that:
+
 - ingests RSS feeds + X API v2 Recent Search tweets,
 - runs Gemini-powered summarization (`gemini-2.5-flash`),
 - generates embeddings (`gemini-embedding-2-preview`),
@@ -51,7 +52,7 @@ graph TD
 - Each cluster embedding compared (cosine) to 5 pre-embedded bucket anchors.
 - **Threshold** is **`CLASSIFY_SIMILARITY_THRESHOLD`** (env, 0–1, **default 0.65**). At or above → assign best bucket; below → route to **`Emerging`**; Gemini generates one crisp **category line**.
 - **`emerging`** rows are **stored** like other clusters; the **homepage digest** (`+page.server.ts` / `DIGEST_DISPLAY_BUCKETS` in `buckets.constants.ts`) **lists only the five YAML buckets**, so `emerging` does not appear as a section in the main UI.
-- *Product note:* “auto-archives after 24 h” for Emerging remains a future/optional behaviour if not implemented in `upsert` / cron.
+- _Product note:_ “auto-archives after 24 h” for Emerging remains a future/optional behaviour if not implemented in `upsert` / cron.
 
 ### File Layout
 
@@ -121,6 +122,7 @@ Supabase JS does **not** rely on multi-statement Postgres transactions for the d
 ## Consequences
 
 **Positive**
+
 - One `git push` deploys the full daily engine.
 - End-to-end latency < 2 s on free tier.
 - Zero ops cost. Zero external dependencies beyond Gemini + Supabase.
@@ -128,12 +130,14 @@ Supabase JS does **not** rely on multi-statement Postgres transactions for the d
 - Homepage stays **server-driven**: one `load`, digest data serialized to the page, no extra client round-trip for rows.
 
 **Negative / Mitigations**
+
 - Rate limits → batched calls + 60 s backoff.
 - Cron overlap → idempotent key on `published_at` date.
 - X API quota (10,000 tweets/month Basic tier) → ~20–40 items/day leaves ample headroom; cache last fetch timestamp in Supabase to avoid duplicate pulls.
 - Secrets management → private keys in `apps/web/.env.example` + `.env.local` (gitignored); **`PUBLIC_` Supabase vars** for SSR reads documented alongside; same keys in Vercel.
 
 **Alternatives Considered (and rejected)**
+
 - Separate GitHub Actions worker → breaks single-repo cohesion.
 - Real-time edge functions → unnecessary for daily digest.
 - External vector DB (Pinecone) → violates $0 rule and adds latency.

@@ -9,6 +9,7 @@
     "postinstall": "svelte-kit sync",
     "preview": "vite preview --port 3000",
     "lint": "biome lint .",
+    "format": "biome check --write .",
     "check-types": "svelte-check --tsconfig ./tsconfig.json",
     "seed:anchors": "tsx ../../scripts/seed-bucket-anchors.ts"
   },

@@ -1,8 +1,8 @@
-import type { EmbedContentRequest } from '@google/generative-ai';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { createClient } from '@supabase/supabase-js';
-import { BUCKET_ANCHORS } from '../apps/web/src/lib/config/buckets';
-import { env } from '@2min.today/config/env';
+import type { EmbedContentRequest } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createClient } from "@supabase/supabase-js";
+import { BUCKET_ANCHORS } from "../apps/web/src/lib/config/buckets";
+import { env } from "@2min.today/config/env";
 
 type EmbedRequest = EmbedContentRequest & { outputDimensionality?: number };
 
@@ -14,15 +14,15 @@ async function seedAnchors() {
   const model = genAI.getGenerativeModel({ model: env.EMBEDDING_MODEL });
   for (const [bucket, text] of Object.entries(BUCKET_ANCHORS)) {
     const req: EmbedRequest = {
-      content: { role: 'user', parts: [{ text }] },
+      content: { role: "user", parts: [{ text }] },
       outputDimensionality: env.EMBEDDING_DIMENSION,
     };
     const result = await model.embedContent(req);
     const embedding = result.embedding.values;
 
     const { error } = await supabase
-      .from('bucket_anchors')
-      .upsert({ bucket, embedding }, { onConflict: 'bucket' });
+      .from("bucket_anchors")
+      .upsert({ bucket, embedding }, { onConflict: "bucket" });
 
     if (error) {
       console.error(`Failed to seed ${bucket}:`, error.message);
@@ -31,7 +31,7 @@ async function seedAnchors() {
 
     console.log(`Seeded ${bucket}`);
   }
-  console.log('All bucket anchors seeded.');
+  console.log("All bucket anchors seeded.");
 }
 
 seedAnchors().catch(console.error);

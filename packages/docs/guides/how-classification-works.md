@@ -6,10 +6,10 @@ Every news cluster goes through two classification stages before it reaches the 
 
 There are two kinds of buckets:
 
-| Kind | Buckets |
-|---|---|
+| Kind           | Buckets                                             |
+| -------------- | --------------------------------------------------- |
 | **Geographic** | `usa`, `europe`, `middle-east`, `americas`, `world` |
-| **Topical** | `business`, `tech`, `science`, `health`, `sports` |
+| **Topical**    | `business`, `tech`, `science`, `health`, `sports`   |
 
 The rule is **geography-first, topic-override**: a story lands in a topic bucket if it is clearly and primarily about that topic. Otherwise it routes by where it happened. `world` is the geographic catch-all for anything that doesn't fit a more specific region.
 
@@ -23,23 +23,23 @@ The prompt instructs Gemini to follow a two-step decision:
 
 **STEP 1 — Topic override check (wins regardless of geography)**
 
-| Bucket | What qualifies |
-|---|---|
+| Bucket     | What qualifies                                                                            |
+| ---------- | ----------------------------------------------------------------------------------------- |
 | `business` | financial markets, economy, corporate earnings, monetary policy, trade, tariffs, currency |
-| `tech` | technology, AI, software, hardware, cybersecurity, startups |
-| `science` | scientific research, space, climate science |
-| `health` | medicine, public health, wellness, lifestyle, mental health, parenting |
-| `sports` | sports, athletics, competitions, leagues, tournaments |
+| `tech`     | technology, AI, software, hardware, cybersecurity, startups                               |
+| `science`  | scientific research, space, climate science                                               |
+| `health`   | medicine, public health, wellness, lifestyle, mental health, parenting                    |
+| `sports`   | sports, athletics, competitions, leagues, tournaments                                     |
 
 **STEP 2 — Geographic routing (only if no topic override applies)**
 
-| Bucket | What qualifies |
-|---|---|
-| `usa` | US-domestic politics, government, law, society, culture, crime |
-| `europe` | EU/UK/European politics, government, society, culture |
-| `middle-east` | MENA region politics, conflicts, society |
-| `americas` | Latin America, Canada, Caribbean politics, society |
-| `world` | Multi-region, unclear geography, or anything that doesn't fit above |
+| Bucket        | What qualifies                                                      |
+| ------------- | ------------------------------------------------------------------- |
+| `usa`         | US-domestic politics, government, law, society, culture, crime      |
+| `europe`      | EU/UK/European politics, government, society, culture               |
+| `middle-east` | MENA region politics, conflicts, society                            |
+| `americas`    | Latin America, Canada, Caribbean politics, society                  |
+| `world`       | Multi-region, unclear geography, or anything that doesn't fit above |
 
 The result is stored as `llmBucket` on the `SummarizedCluster`. If Gemini returns an unrecognized value it is set to `null`.
 
@@ -51,9 +51,9 @@ After summarization, each cluster's **centroid embedding** (the element-wise ave
 
 Each anchor is the embedding of a short descriptive phrase for its bucket — for example:
 
-- `usa` → *"United States America US federal government Congress White House president domestic American politics policy Trump Biden legislation court ruling"*
-- `health` → *"health medicine public health biomedical research wellness lifestyle habits nutrition mental health parenting child development fitness diet sleep screen time digital wellbeing"*
-- `sports` → *"sports football soccer basketball tennis cricket rugby olympics athletics competitions leagues tournaments championships racing cycling swimming"*
+- `usa` → _"United States America US federal government Congress White House president domestic American politics policy Trump Biden legislation court ruling"_
+- `health` → _"health medicine public health biomedical research wellness lifestyle habits nutrition mental health parenting child development fitness diet sleep screen time digital wellbeing"_
+- `sports` → _"sports football soccer basketball tennis cricket rugby olympics athletics competitions leagues tournaments championships racing cycling swimming"_
 
 The bucket with the **highest cosine similarity** is selected as the candidate. If that score is at or above the threshold (default **0.65**, tunable via `CLASSIFY_SIMILARITY_THRESHOLD` in `.env`), it wins outright.
 

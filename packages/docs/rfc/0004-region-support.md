@@ -18,21 +18,23 @@ Add a `region` dimension to every digest card so users can filter the daily dige
 
 Five regions are supported. `world` is the canonical fallback (replaces legacy `global` in stored JSON; `parseRegion` maps `global` → `world`).
 
-| Value | Meaning |
-|-------|---------|
-| `world` | Worldwide scope, or region is unclear / not one of the below |
-| `europe` | Primarily Europe, EU, UK, Eastern Europe |
-| `americas` | Latin America, Caribbean, Canada, or multi-country stories spanning the Americas |
-| `middle-east` | Middle East and North Africa (MENA) |
-| `usa` | United States domestic stories |
+| Value         | Meaning                                                                          |
+| ------------- | -------------------------------------------------------------------------------- |
+| `world`       | Worldwide scope, or region is unclear / not one of the below                     |
+| `europe`      | Primarily Europe, EU, UK, Eastern Europe                                         |
+| `americas`    | Latin America, Caribbean, Canada, or multi-country stories spanning the Americas |
+| `middle-east` | Middle East and North Africa (MENA)                                              |
+| `usa`         | United States domestic stories                                                   |
 
 **`usa` vs `americas` rules (strict):**
+
 - Story is primarily about the United States (domestic policy, US institutions, US cities) → `usa`
 - Story explicitly involves the USA **plus** at least one other American country → `americas`
 - Story is about a non-US country in the Americas (Venezuela, Brazil, Mexico, Canada, etc.) → `americas`
-- Story is about a US foreign policy action *directed at another region* (e.g. US sanctions on Iran) → region of the *target* country, not `usa`
+- Story is about a US foreign policy action _directed at another region_ (e.g. US sanctions on Iran) → region of the _target_ country, not `usa`
 
 **Unmapped regions → `world`:**
+
 - Asia, South/East Asia, Oceania, Sub-Saharan Africa (except where also MENA) → `world`
 - Worldwide institutions (UN, WHO, IMF, WTO) with no dominant regional focus → `world`
 - Technology, science, and health stories with no primary geographic anchor → `world`
@@ -45,14 +47,14 @@ Five regions are supported. `world` is the canonical fallback (replaces legacy `
 
 RSS feeds that publish geographically segmented editions are tagged at ingestion time. Every item from a tagged feed inherits its region and **skips Gemini region inference entirely**.
 
-| Feed | Region tag |
-|------|-----------|
-| `reuters.com/world/europe/` | `europe` |
-| `reuters.com/world/americas/` | `americas` |
-| `reuters.com/world/middle-east/` | `middle-east` |
-| `reuters.com/world/us/` | `usa` |
-| `reuters.com/topNews`, `reuters.com/worldNews` | *(no tag — infer)* |
-| AP, TechCrunch, Bloomberg, WSJ, X | *(no tag — infer)* |
+| Feed                                           | Region tag         |
+| ---------------------------------------------- | ------------------ |
+| `reuters.com/world/europe/`                    | `europe`           |
+| `reuters.com/world/americas/`                  | `americas`         |
+| `reuters.com/world/middle-east/`               | `middle-east`      |
+| `reuters.com/world/us/`                        | `usa`              |
+| `reuters.com/topNews`, `reuters.com/worldNews` | _(no tag — infer)_ |
+| AP, TechCrunch, Bloomberg, WSJ, X              | _(no tag — infer)_ |
 
 The `feedRegion` field is added to `RawItem` and propagated through `EmbeddedItem` → `Cluster` → `SummarizedCluster` → `ClassifiedCluster`.
 
@@ -61,6 +63,7 @@ The `feedRegion` field is added to `RawItem` and propagated through `EmbeddedIte
 For clusters where `feedRegion` is absent, `region` is added to the Gemini structured output schema in `summarize.ts`. It is an enum field alongside `headline`, `bullets`, `whyItMatters`, `tags`. No extra API call — same `generateContent` invocation, ~10 additional output tokens per cluster.
 
 **Prompt instruction added:**
+
 ```
 "region": one of ["world","europe","americas","middle-east","usa"].
 Assign "usa" only for US-domestic stories. Assign "americas" for multi-country
@@ -84,11 +87,11 @@ feedRegion (Tier 1) → if present, use it
 ### `apps/web/src/lib/types/digest.ts`
 
 ```ts
-export type Region = 'world' | 'europe' | 'americas' | 'middle-east' | 'usa';
+export type Region = "world" | "europe" | "americas" | "middle-east" | "usa";
 
 export interface RawItem {
   // ...existing fields...
-  feedRegion?: Region;  // set at fetch time for regionally-segmented feeds
+  feedRegion?: Region; // set at fetch time for regionally-segmented feeds
 }
 
 export interface SummarizedCluster extends Cluster {
@@ -167,7 +170,7 @@ Applied in `filteredCards` in `+page.svelte`, after Fuse search results.
 ### Toggle behaviour
 
 - Each named region (`europe`, `americas`, `middle-east`, `usa`) is an **independent toggle**. Clicking a region that is already active deselects it; clicking an inactive region adds it to the active set.
-- **Multiple regions can be active simultaneously.** The filter shows cards whose `region` matches *any* of the active regions.
+- **Multiple regions can be active simultaneously.** The filter shows cards whose `region` matches _any_ of the active regions.
 - Empty active set = no filter = full digest shown.
 
 ### Global switch behaviour

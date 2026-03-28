@@ -1,20 +1,27 @@
-import type { Bucket } from '@lib/config/buckets';
+import type { Bucket } from "@lib/config/buckets";
 
-export type Region = 'world' | 'europe' | 'americas' | 'middle-east' | 'usa';
+export type Region = "world" | "europe" | "americas" | "middle-east" | "usa";
 
 export interface Credit {
   source: string;
   url: string;
 }
 
-export const VALID_REGIONS = new Set<Region>(['world', 'europe', 'americas', 'middle-east', 'usa']);
+export const VALID_REGIONS = new Set<Region>([
+  "world",
+  "europe",
+  "americas",
+  "middle-east",
+  "usa",
+]);
 
 export function parseRegion(value: unknown): Region {
-  if (typeof value === 'string') {
-    const normalized = value === 'global' || value === 'Global' ? 'world' : value;
+  if (typeof value === "string") {
+    const normalized =
+      value === "global" || value === "Global" ? "world" : value;
     if (VALID_REGIONS.has(normalized as Region)) return normalized as Region;
   }
-  return 'world';
+  return "world";
 }
 
 export interface RawItem {

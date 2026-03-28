@@ -1,16 +1,21 @@
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
-import type { Logger } from 'pino';
-import { env } from '@2min.today/config/env';
-import { withFlashGenerationRetry } from '@lib/server/digest/flash-generate';
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import type { Logger } from "pino";
+import { env } from "@2min.today/config/env";
+import { withFlashGenerationRetry } from "@lib/server/digest/flash-generate";
 import {
   getDigestSummarizeMaxClusters,
   getFlashModel,
   mergeFlashGenerationConfig,
-} from '@lib/server/digest/models';
-import { silentLogger } from '@2min.today/logging';
-import { parseRegion } from '@lib/types/digest';
-import { BUCKET_ORDER, type Bucket } from '@lib/config/buckets.constants';
-import type { Cluster, SummarizedCluster, Credit, EmbeddedItem } from '@lib/types/digest';
+} from "@lib/server/digest/models";
+import { silentLogger } from "@2min.today/logging";
+import { parseRegion } from "@lib/types/digest";
+import { BUCKET_ORDER, type Bucket } from "@lib/config/buckets.constants";
+import type {
+  Cluster,
+  SummarizedCluster,
+  Credit,
+  EmbeddedItem,
+} from "@lib/types/digest";
 
 function extractCredits(items: EmbeddedItem[]): Credit[] {
   const seen = new Set<string>();
@@ -28,7 +33,7 @@ function normalizeSummaryTags(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [];
   const out: string[] = [];
   for (const x of raw) {
-    if (typeof x !== 'string') continue;
+    if (typeof x !== "string") continue;
     const t = x.trim();
     if (t) out.push(t);
     if (out.length >= 5) break;
@@ -36,38 +41,59 @@ function normalizeSummaryTags(raw: unknown): string[] {
   return out;
 }
 
-export async function summarizeClusters(clusters: Cluster[], log?: Logger): Promise<SummarizedCluster[]> {
+export async function summarizeClusters(
+  clusters: Cluster[],
+  log?: Logger,
+): Promise<SummarizedCluster[]> {
   const l = log ?? silentLogger;
   if (clusters.length === 0) return [];
 
   const maxClusters = getDigestSummarizeMaxClusters();
-  const toSummarize = maxClusters != null ? clusters.slice(0, maxClusters) : clusters;
+  const toSummarize =
+    maxClusters != null ? clusters.slice(0, maxClusters) : clusters;
   if (maxClusters != null && clusters.length > toSummarize.length) {
     l.info(
-      { totalClusters: clusters.length, summarizing: toSummarize.length, limit: maxClusters },
-      'summarize capped by DIGEST_SUMMARIZE_MAX_CLUSTERS',
+      {
+        totalClusters: clusters.length,
+        summarizing: toSummarize.length,
+        limit: maxClusters,
+      },
+      "summarize capped by DIGEST_SUMMARIZE_MAX_CLUSTERS",
     );
   }
 
   const t0 = Date.now();
-  l.info({ clusterCount: toSummarize.length, model: getFlashModel() }, 'summarize start');
+  l.info(
+    { clusterCount: toSummarize.length, model: getFlashModel() },
+    "summarize start",
+  );
 
-  const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY ?? '');
+  const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY ?? "");
   const model = genAI.getGenerativeModel({
     model: getFlashModel(),
     generationConfig: mergeFlashGenerationConfig({
-      responseMimeType: 'application/json',
+      responseMimeType: "application/json",
       responseSchema: {
         type: SchemaType.OBJECT,
         properties: {
           headline: { type: SchemaType.STRING },
-          bullets: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+          bullets: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING },
+          },
           whyItMatters: { type: SchemaType.STRING },
           tags: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
           region: { type: SchemaType.STRING },
           bucket: { type: SchemaType.STRING },
         },
-        required: ['headline', 'bullets', 'whyItMatters', 'tags', 'region', 'bucket'],
+        required: [
+          "headline",
+          "bullets",
+          "whyItMatters",
+          "tags",
+          "region",
+          "bucket",
+        ],
       },
     }),
   });
@@ -75,7 +101,7 @@ export async function summarizeClusters(clusters: Cluster[], log?: Logger): Prom
   const results: SummarizedCluster[] = [];
 
   for (const [clusterIndex, cluster] of toSummarize.entries()) {
-    l.debug({ clusterIndex, clusterId: cluster.id }, 'summarize cluster');
+    l.debug({ clusterIndex, clusterId: cluster.id }, "summarize cluster");
 
     const prompt = `You are a brutalist news editor for 2min.today.
 
@@ -126,8 +152,14 @@ STEP 2 — If no topic override applies, route by geography:
       };
     });
 
-    const rawBucket = typeof parsed.bucket === 'string' ? parsed.bucket.toLowerCase().trim() : null;
-    const llmBucket = rawBucket && (BUCKET_ORDER as string[]).includes(rawBucket) ? (rawBucket as Bucket) : null;
+    const rawBucket =
+      typeof parsed.bucket === "string"
+        ? parsed.bucket.toLowerCase().trim()
+        : null;
+    const llmBucket =
+      rawBucket && (BUCKET_ORDER as string[]).includes(rawBucket)
+        ? (rawBucket as Bucket)
+        : null;
 
     results.push({
       ...cluster,
@@ -141,6 +173,9 @@ STEP 2 — If no topic override applies, route by geography:
     });
   }
 
-  l.info({ summarizedCount: results.length, durationMs: Date.now() - t0 }, 'summarize complete');
+  l.info(
+    { summarizedCount: results.length, durationMs: Date.now() - t0 },
+    "summarize complete",
+  );
   return results;
 }

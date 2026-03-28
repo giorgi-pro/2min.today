@@ -1,9 +1,9 @@
-import { writable } from 'svelte/store';
-import { VALID_REGIONS, type Region } from '@lib/types/digest';
+import { writable } from "svelte/store";
+import { VALID_REGIONS, type Region } from "@lib/types/digest";
 
-export const searchQuery = writable('');
+export const searchQuery = writable("");
 
-export const debouncedSearchQuery = writable('');
+export const debouncedSearchQuery = writable("");
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 searchQuery.subscribe((q) => {
@@ -14,16 +14,18 @@ searchQuery.subscribe((q) => {
   }, 150);
 });
 
-const REGIONS_STORAGE_KEY = 'regions';
+const REGIONS_STORAGE_KEY = "regions";
 
 function readStoredRegions(): Set<Region> {
-  if (typeof window === 'undefined') return new Set();
+  if (typeof window === "undefined") return new Set();
   try {
     const raw = localStorage.getItem(REGIONS_STORAGE_KEY);
     if (!raw) return new Set();
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return new Set();
-    return new Set(parsed.filter((v): v is Region => VALID_REGIONS.has(v) && v !== 'world'));
+    return new Set(
+      parsed.filter((v): v is Region => VALID_REGIONS.has(v) && v !== "world"),
+    );
   } catch {
     return new Set();
   }
@@ -32,7 +34,7 @@ function readStoredRegions(): Set<Region> {
 const _activeRegions = writable<Set<Region>>(readStoredRegions());
 
 _activeRegions.subscribe((regions) => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   if (regions.size === 0) {
     localStorage.removeItem(REGIONS_STORAGE_KEY);
   } else {
@@ -45,7 +47,11 @@ export const activeRegions = {
   toggle(r: Region) {
     _activeRegions.update((s) => {
       const next = new Set(s);
-      if (next.has(r)) { next.delete(r); } else { next.add(r); }
+      if (next.has(r)) {
+        next.delete(r);
+      } else {
+        next.add(r);
+      }
       return next;
     });
   },
@@ -54,5 +60,5 @@ export const activeRegions = {
   },
 };
 
-export type TimeMode = 'local' | 'utc';
-export const timeMode = writable<TimeMode>('local');
+export type TimeMode = "local" | "utc";
+export const timeMode = writable<TimeMode>("local");

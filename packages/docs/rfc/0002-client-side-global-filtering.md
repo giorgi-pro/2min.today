@@ -23,10 +23,10 @@ Tags are **3–5 crisp keywords** in the ideal case, generated in the **same** G
 
 All are read on the server in **`+page.server.ts`** via `$env/dynamic/private` (same pattern as other private vars). Document in [`apps/web/.env.example`](../../apps/web/.env.example).
 
-| Variable | Required | Default | Behaviour |
-|----------|----------|---------|-----------|
-| `USE_MOCK_DATA` | No | off | **Only** the string **`true`** counts as enabled: `env.USE_MOCK_DATA?.trim() === 'true'` (case-sensitive). Values such as `1`, `yes`, or `TRUE` are **not** mock mode. When enabled, `load` **does not** query Supabase; returns **`buildMockDigest()`** (see §3). |
-| `DIGEST_FUSE_THRESHOLD` | No | `0.4` if unset or invalid | Parsed as float; returned to the client as `data.fuseThreshold` for Fuse.js (avoids needing a `PUBLIC_` duplicate). |
+| Variable                | Required | Default                   | Behaviour                                                                                                                                                                                                                                                          |
+| ----------------------- | -------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `USE_MOCK_DATA`         | No       | off                       | **Only** the string **`true`** counts as enabled: `env.USE_MOCK_DATA?.trim() === 'true'` (case-sensitive). Values such as `1`, `yes`, or `TRUE` are **not** mock mode. When enabled, `load` **does not** query Supabase; returns **`buildMockDigest()`** (see §3). |
+| `DIGEST_FUSE_THRESHOLD` | No       | `0.4` if unset or invalid | Parsed as float; returned to the client as `data.fuseThreshold` for Fuse.js (avoids needing a `PUBLIC_` duplicate).                                                                                                                                                |
 
 Production: leave `USE_MOCK_DATA` unset, empty, or any value other than exactly `true`.
 
@@ -46,20 +46,16 @@ Production: leave `USE_MOCK_DATA` unset, empty, or any value other than exactly 
    - **No** global selected set, **`localStorage`**, or click-to-filter on tags. Chips are **presentational** (`<span>`).
 
 3. **Search-only filtering**
-
    - If debounced query is non-empty, **`filteredCards`** = Fuse results over **`allCards`**; if empty, **`filteredCards`** = **`allCards`**.
 
 4. **Idempotency and data**
-
    - Pipeline still produces exactly one daily edition; `published_at` idempotency unchanged (RFC-001).
    - Homepage SSR delivers the full digest once; search filtering is **client-side only**.
 
 5. **Performance**
-
    - Rebuild the Fuse index when `allCards` / digest data changes (`$derived` or equivalent — **no stale index**).
 
 6. **Hydration**
-
    - No tag selection from storage; first paint matches SSR for tags. Search state starts empty until the user types.
 
 ## Out of scope
@@ -210,7 +206,7 @@ Merged with the **existing** marquee / bucket layout. Implemented behaviour:
 - **`liveToCategories(filteredDigest)`** with fixed **`DIGEST_DISPLAY_BUCKETS`** order (not full **`BUCKET_ORDER`**).
 - **No** digest-level search chrome beyond the header field and optional empty state (see below).
 - **Tiles:** tags as **presentational** **`#`**-prefixed tokens under “Why it matters” (no filter behaviour).
-- **`showFilteredEmpty`:** *No matches. Try broadening your search.*
+- **`showFilteredEmpty`:** _No matches. Try broadening your search._
 
 Illustrative core (abbreviated):
 
@@ -274,7 +270,7 @@ After deploy, the **next** pipeline run fills `tags` for new writes; **no backfi
 
 ## 8. Error handling and edge cases
 
-- **Zero results** after search: show *No matches. Try broadening your search.* User broadens or clears the **header** search field.
+- **Zero results** after search: show _No matches. Try broadening your search._ User broadens or clears the **header** search field.
 - **Empty `tags` on a card:** render no tag row for that tile.
 - **Pipeline parse errors on `tags`:** treat as `[]` for that cluster; still persist headline / bullets / why when possible.
 - **Invalid `DIGEST_FUSE_THRESHOLD`:** fallback `0.4`.

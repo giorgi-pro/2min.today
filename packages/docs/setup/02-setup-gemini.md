@@ -18,14 +18,14 @@ GEMINI_API_KEY="AIzaSy..."
 
 Set in `apps/web/.env` (see `.env.example`). Code reads them in `lib/server/digest/models.ts` (`getFlashModel`, `getEmbeddingModel`, `getEmbeddingDimension`, `getClusterSimilarityThreshold`, `getClassifySimilarityThreshold`).
 
-| Variable | Default (if unset) | Role |
-|----------|--------------------|------|
-| `FLASH_MODEL` | `gemini-2.5-flash` | Summarize, Emerging label, breaking cards |
-| `EMBEDDING_MODEL` | `gemini-embedding-2-preview` | Digest + bucket-anchor embeddings |
-| `EMBEDDING_DIMENSION` | `768` | Gemini `outputDimensionality`; must match `vector(N)` in SQL |
-| `FLASH_GENERATION_MIN_INTERVAL_MS` | *(empty)* | See below |
-| `CLUSTER_SIMILARITY_THRESHOLD` | `0.85` | Item vs cluster-centroid cosine when merging stories; lower → fewer clusters |
-| `CLASSIFY_SIMILARITY_THRESHOLD` | `0.65` | Centroid vs bucket-anchor cosine; below → `Emerging` |
+| Variable                           | Default (if unset)           | Role                                                                         |
+| ---------------------------------- | ---------------------------- | ---------------------------------------------------------------------------- |
+| `FLASH_MODEL`                      | `gemini-2.5-flash`           | Summarize, Emerging label, breaking cards                                    |
+| `EMBEDDING_MODEL`                  | `gemini-embedding-2-preview` | Digest + bucket-anchor embeddings                                            |
+| `EMBEDDING_DIMENSION`              | `768`                        | Gemini `outputDimensionality`; must match `vector(N)` in SQL                 |
+| `FLASH_GENERATION_MIN_INTERVAL_MS` | _(empty)_                    | See below                                                                    |
+| `CLUSTER_SIMILARITY_THRESHOLD`     | `0.85`                       | Item vs cluster-centroid cosine when merging stories; lower → fewer clusters |
+| `CLASSIFY_SIMILARITY_THRESHOLD`    | `0.65`                       | Centroid vs bucket-anchor cosine; below → `Emerging`                         |
 
 ## 4. Flash pacing (ConstrainedFlow / UnconstrainedFlow)
 

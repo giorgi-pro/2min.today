@@ -36,6 +36,7 @@ Logging uses **Pino** (`digestLogger`). Every run gets a unique `runId` (UUID) a
 All sources are defined in `lib/config/news-sources.yaml`. Each entry has a `type` (`rss` or `x`) and an `enabled` flag — toggle sources without code changes.
 
 **RSS sources** are fetched in parallel with `Promise.all`. Each source:
+
 - Sends an HTTP GET with a 10-second `AbortSignal` timeout.
 - Parses XML with `fast-xml-parser`.
 - Extracts per-item: `title`, `content` (prefers `content:encoded` → `content` → `description`, HTML-stripped, sliced to 800 chars), `url`, `published`, `source` label, and optional `feedRegion`.
@@ -70,6 +71,7 @@ Groups items that cover the same story into clusters. This step is **entirely in
 **Algorithm:** greedy single-linkage by cosine similarity.
 
 For each item in order:
+
 1. Compute cosine similarity between the item's embedding and each existing cluster's **centroid** embedding.
 2. If the best similarity ≥ **`CLUSTER_SIMILARITY_THRESHOLD`** (env, **0–1**, **default 0.85**), add the item to that cluster and recompute the centroid as the mean of all member embeddings.
 3. Otherwise, start a new single-item cluster.
@@ -87,11 +89,13 @@ One Flash `generateContent` call per cluster. This is the slowest phase.
 **Cap:** if `DIGEST_SUMMARIZE_MAX_CLUSTERS` is set (positive int), only the first N clusters are summarized — useful for debugging without waiting for the full run.
 
 **Model config:** uses `FLASH_MODEL` (default `gemini-2.5-flash`) with `mergeFlashGenerationConfig`, which applies optional env overrides:
+
 - `FLASH_GENERATION_TEMPERATURE` — sampling temperature.
 - `FLASH_THINKING_BUDGET` — token thinking budget (Gemini 2.5; `0` = minimal, `-1` = dynamic).
 - `FLASH_THINKING_LEVEL` — `MINIMAL | LOW | MEDIUM | HIGH` (Gemini 3+ style; may error on 2.5).
 
 **Prompt asks Flash to return structured JSON:**
+
 - `headline` — max 12 words.
 - `bullets` — exactly 3 bullets, max 25 words each.
 - `whyItMatters` — max 30 words.
@@ -100,10 +104,10 @@ One Flash `generateContent` call per cluster. This is the slowest phase.
 
 **Flash pacing — two modes** (controlled by `FLASH_GENERATION_MIN_INTERVAL_MS`):
 
-| Mode | When | Behaviour |
-|------|------|-----------|
-| **UnconstrainedFlow** | env unset or empty | Each call runs immediately, once. No 429 retry. Use with billing or high RPM. |
-| **ConstrainedFlow** | env set to a positive int (e.g. `15000`) | Enforces a minimum gap between call _starts_ (ms). On 429: exponential backoff up to 12 attempts, honouring the API's `retry in Ns` hint. `15000` ≈ 4 RPM, safely under the free-tier 5 RPM ceiling. |
+| Mode                  | When                                     | Behaviour                                                                                                                                                                                            |
+| --------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **UnconstrainedFlow** | env unset or empty                       | Each call runs immediately, once. No 429 retry. Use with billing or high RPM.                                                                                                                        |
+| **ConstrainedFlow**   | env set to a positive int (e.g. `15000`) | Enforces a minimum gap between call _starts_ (ms). On 429: exponential backoff up to 12 attempts, honouring the API's `retry in Ns` hint. `15000` ≈ 4 RPM, safely under the free-tier 5 RPM ceiling. |
 
 > **Why this feels "infinite":** with ConstrainedFlow at 15 s and 20 clusters, summarize alone takes ≥ 20 × 15 s = **5 minutes** minimum, plus actual API latency on each call.
 
@@ -118,6 +122,7 @@ Assigns each cluster to one of the five homepage buckets — or marks it `Emergi
 **Setup:** loads all rows from the `bucket_anchors` Supabase table. These are pre-embedded anchor phrases for each bucket (`world`, `business`, `tech`, `science`, `health`), seeded once via `scripts/seed-bucket-anchors.ts`. Throws if the table is empty.
 
 **Per cluster:**
+
 1. Compute cosine similarity between the cluster's **centroid** embedding and each bucket anchor embedding.
 2. Compare the best similarity to **`CLASSIFY_SIMILARITY_THRESHOLD`** (env, `0`–`1`, default `0.65`).
    - **At or above threshold** → assign best-matching bucket. `categoryLine` is `null`.
@@ -154,6 +159,7 @@ When `pipeline.run` resolves, the handler logs total wall-clock duration and ret
 ```
 
 On error:
+
 ```json
 { "status": "error", "message": "..." }
 ```
@@ -178,15 +184,15 @@ The five homepage sections (`DIGEST_DISPLAY_BUCKETS` in `lib/config/buckets.cons
 
 Rough estimates for a typical day (~100 raw items, ~20 clusters, free-tier Gemini):
 
-| Phase | Typical duration |
-|-------|-----------------|
-| Fetch | 5–15 s (parallel network) |
-| Embed | 15–45 s (5 batches × parallel calls) |
-| Cluster | < 1 s (in-memory) |
-| Summarize (ConstrainedFlow 15 s) | 5–10 min |
-| Summarize (UnconstrainedFlow) | 30–90 s |
-| Classify | 5–30 s + pacing for Emerging |
-| Upsert | 1–3 s |
+| Phase                            | Typical duration                     |
+| -------------------------------- | ------------------------------------ |
+| Fetch                            | 5–15 s (parallel network)            |
+| Embed                            | 15–45 s (5 batches × parallel calls) |
+| Cluster                          | < 1 s (in-memory)                    |
+| Summarize (ConstrainedFlow 15 s) | 5–10 min                             |
+| Summarize (UnconstrainedFlow)    | 30–90 s                              |
+| Classify                         | 5–30 s + pacing for Emerging         |
+| Upsert                           | 1–3 s                                |
 
 The **total wall time** is dominated by summarize. If the `curl` call appears to hang, it is almost certainly waiting on Flash calls — not stuck.
 
@@ -194,19 +200,19 @@ The **total wall time** is dominated by summarize. If the `curl` call appears to
 
 ## Useful env vars at a glance
 
-| Variable | Default | Effect |
-|----------|---------|--------|
-| `CRON_SECRET` | — | Protects `/api/digest` |
-| `LOG_LEVEL` | `info` | Pino log level (`debug` shows per-batch and per-cluster lines) |
-| `LOG_PRETTY` | auto | `1`/`true` = pretty; `0`/`false` = JSON; unset = pretty in dev, JSON in prod |
-| `FLASH_MODEL` | `gemini-2.5-flash` | Flash model for summarize + classify |
-| `FLASH_GENERATION_MIN_INTERVAL_MS` | unset | Unset = UnconstrainedFlow; positive int (e.g. `15000`) = ConstrainedFlow |
-| `FLASH_GENERATION_TEMPERATURE` | unset | Sampling temperature override |
-| `FLASH_THINKING_BUDGET` | unset | Gemini 2.5 thinking token budget |
-| `EMBEDDING_MODEL` | `gemini-embedding-2-preview` | Embedding model |
-| `EMBEDDING_DIMENSION` | `768` | Must match `vector(N)` in SQL migration |
-| `CLUSTER_SIMILARITY_THRESHOLD` | `0.85` | Item-to-centroid merge cutoff; lower → fewer clusters |
-| `CLASSIFY_SIMILARITY_THRESHOLD` | `0.65` | Cosine cutoff: below → Emerging |
-| `DIGEST_SUMMARIZE_MAX_CLUSTERS` | unset | Cap Flash calls for debugging |
-| `DIGEST_FUSE_THRESHOLD` | `0.4` | Homepage search fuziness |
-| `USE_MOCK_DATA` | `false` | Only exact `true` enables mock from `load`. When `false`, an empty live digest shows no cards (no client-side mock substitute). |
+| Variable                           | Default                      | Effect                                                                                                                          |
+| ---------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `CRON_SECRET`                      | —                            | Protects `/api/digest`                                                                                                          |
+| `LOG_LEVEL`                        | `info`                       | Pino log level (`debug` shows per-batch and per-cluster lines)                                                                  |
+| `LOG_PRETTY`                       | auto                         | `1`/`true` = pretty; `0`/`false` = JSON; unset = pretty in dev, JSON in prod                                                    |
+| `FLASH_MODEL`                      | `gemini-2.5-flash`           | Flash model for summarize + classify                                                                                            |
+| `FLASH_GENERATION_MIN_INTERVAL_MS` | unset                        | Unset = UnconstrainedFlow; positive int (e.g. `15000`) = ConstrainedFlow                                                        |
+| `FLASH_GENERATION_TEMPERATURE`     | unset                        | Sampling temperature override                                                                                                   |
+| `FLASH_THINKING_BUDGET`            | unset                        | Gemini 2.5 thinking token budget                                                                                                |
+| `EMBEDDING_MODEL`                  | `gemini-embedding-2-preview` | Embedding model                                                                                                                 |
+| `EMBEDDING_DIMENSION`              | `768`                        | Must match `vector(N)` in SQL migration                                                                                         |
+| `CLUSTER_SIMILARITY_THRESHOLD`     | `0.85`                       | Item-to-centroid merge cutoff; lower → fewer clusters                                                                           |
+| `CLASSIFY_SIMILARITY_THRESHOLD`    | `0.65`                       | Cosine cutoff: below → Emerging                                                                                                 |
+| `DIGEST_SUMMARIZE_MAX_CLUSTERS`    | unset                        | Cap Flash calls for debugging                                                                                                   |
+| `DIGEST_FUSE_THRESHOLD`            | `0.4`                        | Homepage search fuziness                                                                                                        |
+| `USE_MOCK_DATA`                    | `false`                      | Only exact `true` enables mock from `load`. When `false`, an empty live digest shows no cards (no client-side mock substitute). |

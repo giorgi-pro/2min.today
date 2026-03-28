@@ -1,2 +1,28 @@
 {
-}
+    "[typescript]":      { "editor.defaultFormatter": "biomejs.biome", "editor.formatOnSave": true },
+    "[typescriptreact]": { "editor.defaultFormatter": "biomejs.biome", "editor.formatOnSave": true },
+    "[javascript]":      { "editor.defaultFormatter": "biomejs.biome", "editor.formatOnSave": true },
+    "[javascriptreact]": { "editor.defaultFormatter": "biomejs.biome", "editor.formatOnSave": true },
+    "[json]":            { "editor.defaultFormatter": "biomejs.biome", "editor.formatOnSave": true },
+  
+    "biome.enabled": true,
+    "biome.configPath": "biome.json",
+  
+    "eslint.enable": false,
+    "prettier.enable": false,
+  
+    "editor.codeActionsOnSave": {
+      "source.fixAll.biome": "always",
+      "source.organizeImports": "always"
+    },
+  
+    "files.exclude": {
+      "**/node_modules": true,
+      // "**/.cursor": true,
+      "**/.git": true,
+      "**/.gitignore": true,
+      // "**/.env.example": true,
+      "public/**": true
+    },
+  }
+  

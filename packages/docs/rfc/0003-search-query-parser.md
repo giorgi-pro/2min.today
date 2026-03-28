@@ -50,15 +50,15 @@ Split on whitespace. Quoted substrings extracted in Step 1 survive as single tok
 
 Every token falls into exactly one class. Classification is checked in this priority order:
 
-| Priority | Class | Rule | Fuse threshold | Example |
-|----------|-------|------|---------------|---------|
-| 1 | `quoted-phrase` | Wrapped in `"…"` after sanitize | `0.1` (near-exact) | `"climate change"` |
-| 2 | `stop-word` | Token (lowercased) is in stop-word list | **Drop** (skip entirely) | `the`, `and`, `of`, `in`, `a` |
-| 3 | `too-short` | Length ≤ 1 after stripping quotes | **Drop** | `p`, `i` |
-| 4 | `numeric` | Contains at least one digit | `0.1` (near-exact) | `2024`, `COVID-19`, `G20` |
-| 5 | `acronym` | All uppercase, length 2–4, no digits | `0.15` (tight) | `US`, `EU`, `UN`, `NATO` |
-| 6 | `short-word` | Length = 2, not acronym, not stop-word | **Drop** | `in`, `at`, `be` (if not caught by stop-word list) |
-| 7 | `word` | Everything else (length ≥ 3, mixed/lower case) | inherits global `fuseThreshold` from `data.fuseThreshold` | `india`, `climate` |
+| Priority | Class           | Rule                                           | Fuse threshold                                            | Example                                            |
+| -------- | --------------- | ---------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------- |
+| 1        | `quoted-phrase` | Wrapped in `"…"` after sanitize                | `0.1` (near-exact)                                        | `"climate change"`                                 |
+| 2        | `stop-word`     | Token (lowercased) is in stop-word list        | **Drop** (skip entirely)                                  | `the`, `and`, `of`, `in`, `a`                      |
+| 3        | `too-short`     | Length ≤ 1 after stripping quotes              | **Drop**                                                  | `p`, `i`                                           |
+| 4        | `numeric`       | Contains at least one digit                    | `0.1` (near-exact)                                        | `2024`, `COVID-19`, `G20`                          |
+| 5        | `acronym`       | All uppercase, length 2–4, no digits           | `0.15` (tight)                                            | `US`, `EU`, `UN`, `NATO`                           |
+| 6        | `short-word`    | Length = 2, not acronym, not stop-word         | **Drop**                                                  | `in`, `at`, `be` (if not caught by stop-word list) |
+| 7        | `word`          | Everything else (length ≥ 3, mixed/lower case) | inherits global `fuseThreshold` from `data.fuseThreshold` | `india`, `climate`                                 |
 
 ### Step 4 — Build search string
 
@@ -127,7 +127,7 @@ The implementation uses two complementary patterns to keep orchestration declara
 Parsing is a list of named `Transform` functions. Each transform takes a `Token[]` and returns a `Token[]`. The pipeline is composed declaratively — adding a rule means appending one entry to the array, not editing existing logic.
 
 ```ts
-type Transform = (tokens: Token[]) => Token[]
+type Transform = (tokens: Token[]) => Token[];
 
 const pipeline: Transform[] = [
   sanitize,
@@ -138,7 +138,7 @@ const pipeline: Transform[] = [
   classifyNumeric,
   classifyAcronym,
   classifyWord,
-]
+];
 ```
 
 `runPipeline(raw, pipeline)` folds the raw string through each transform in order and produces a `ParsedQuery | null` (null when all tokens are dropped).
@@ -147,11 +147,11 @@ Each transform is a focused, pure, independently testable function. The pipeline
 
 ### Strategy (execution)
 
-Once the query is parsed, *how* we search is a separate concern. A `SearchStrategy` interface decouples query parsing from Fuse execution:
+Once the query is parsed, _how_ we search is a separate concern. A `SearchStrategy` interface decouples query parsing from Fuse execution:
 
 ```ts
 interface SearchStrategy {
-  search(parsed: ParsedQuery, cards: CardRow[]): CardRow[]
+  search(parsed: ParsedQuery, cards: CardRow[]): CardRow[];
 }
 ```
 
@@ -169,9 +169,9 @@ class SearchHandler {
   ) {}
 
   handle(raw: string, cards: CardRow[]): CardRow[] {
-    const parsed = runPipeline(raw, this.pipeline)
-    if (!parsed) return cards
-    return this.strategy.search(parsed, cards)
+    const parsed = runPipeline(raw, this.pipeline);
+    if (!parsed) return cards;
+    return this.strategy.search(parsed, cards);
   }
 }
 ```
@@ -180,7 +180,7 @@ class SearchHandler {
 
 ### Why not Builder or Strategy alone?
 
-**Strategy** alone would mean swapping the entire algorithm. Here only the *execution* step varies; the parsing pipeline is stable and additive. **Builder** (`new QueryParser().withStopWords()...build()`) adds construction overhead when an ordered array of functions already expresses the same thing more directly. The **Pipeline + Strategy** split maps cleanly onto the two distinct concerns: *what tokens survive and how are they classified* vs *how do we turn those tokens into search results*.
+**Strategy** alone would mean swapping the entire algorithm. Here only the _execution_ step varies; the parsing pipeline is stable and additive. **Builder** (`new QueryParser().withStopWords()...build()`) adds construction overhead when an ordered array of functions already expresses the same thing more directly. The **Pipeline + Strategy** split maps cleanly onto the two distinct concerns: _what tokens survive and how are they classified_ vs _how do we turn those tokens into search results_.
 
 ---
 
@@ -188,13 +188,14 @@ class SearchHandler {
 
 `ThresholdStrategy` uses the strictest threshold among all surviving tokens:
 
-| Surviving token classes | Applied threshold |
-|-------------------------|-------------------|
-| Any `quoted-phrase` or `numeric` present | `0.1` |
-| Any `acronym` present (no numeric/quoted) | `0.15` |
-| All `word` tokens | global `fuseThreshold` (`data.fuseThreshold`, default `0.4`) |
+| Surviving token classes                   | Applied threshold                                            |
+| ----------------------------------------- | ------------------------------------------------------------ |
+| Any `quoted-phrase` or `numeric` present  | `0.1`                                                        |
+| Any `acronym` present (no numeric/quoted) | `0.15`                                                       |
+| All `word` tokens                         | global `fuseThreshold` (`data.fuseThreshold`, default `0.4`) |
 
 Future options deferred to a later RFC:
+
 - **Option B** — one Fuse search per token, intersect results
 - **Option C** — Fuse `$and` logical query with per-token threshold control
 
@@ -203,7 +204,7 @@ Future options deferred to a later RFC:
 ## Types
 
 ```ts
-export type TokenClass = 'quoted-phrase' | 'numeric' | 'acronym' | 'word';
+export type TokenClass = "quoted-phrase" | "numeric" | "acronym" | "word";
 
 export interface Token {
   text: string;
@@ -226,9 +227,12 @@ Before (RFC-002 baseline):
 
 ```ts
 const filteredCards = $derived.by(() => {
-  const tokens = debouncedQ.trim().split(/\s+/).filter((t) => t.length >= 2);
+  const tokens = debouncedQ
+    .trim()
+    .split(/\s+/)
+    .filter((t) => t.length >= 2);
   if (tokens.length === 0) return allCards;
-  return fuse.search(tokens.join(' ')).map((r) => r.item);
+  return fuse.search(tokens.join(" ")).map((r) => r.item);
 });
 ```
 
@@ -266,13 +270,13 @@ No new environment variables. No pipeline changes. No Supabase changes.
 
 ## Acceptance Criteria
 
-| Input | Expected behaviour |
-|-------|--------------------|
-| `"india p"` | Searches `"india"` only; `p` dropped (too-short) |
-| `"the war"` | Searches `"war"` only; `the` dropped (stop-word) |
-| `"2024 election"` | Searches `"2024 election"` with threshold `0.1` |
-| `"US economy"` | Searches `"US economy"` with threshold `0.15` |
+| Input                       | Expected behaviour                                        |
+| --------------------------- | --------------------------------------------------------- |
+| `"india p"`                 | Searches `"india"` only; `p` dropped (too-short)          |
+| `"the war"`                 | Searches `"war"` only; `the` dropped (stop-word)          |
+| `"2024 election"`           | Searches `"2024 election"` with threshold `0.1`           |
+| `"US economy"`              | Searches `"US economy"` with threshold `0.15`             |
 | `"climate change"` (quoted) | Searches `"climate change"` as one token, threshold `0.1` |
-| `"a in of"` | All dropped → no search, full digest shown |
-| `"G7 summit 2024"` | Numeric wins → threshold `0.1`; `summit` included |
-| `"p"` | Dropped → no search |
+| `"a in of"`                 | All dropped → no search, full digest shown                |
+| `"G7 summit 2024"`          | Numeric wins → threshold `0.1`; `summit` included         |
+| `"p"`                       | Dropped → no search                                       |

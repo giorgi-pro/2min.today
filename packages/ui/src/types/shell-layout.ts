@@ -1,6 +1,11 @@
-import type { Snippet } from 'svelte';
+import type { Snippet } from "svelte";
 
-export type ShellRegion = 'world' | 'europe' | 'americas' | 'middle-east' | 'usa';
+export type ShellRegion =
+  | "world"
+  | "europe"
+  | "americas"
+  | "middle-east"
+  | "usa";
 
 export interface ShellLayoutProps {
   searchQuery?: string;

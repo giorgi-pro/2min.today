@@ -1,35 +1,47 @@
-import type { EmbedContentRequest } from '@google/generative-ai';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { Logger } from 'pino';
-import { env } from '@2min.today/config/env';
-import { getEmbeddingDimension, getEmbeddingModel } from '@lib/server/digest/models';
-import { silentLogger } from '@2min.today/logging';
-import type { RawItem, EmbeddedItem } from '@lib/types/digest';
+import type { EmbedContentRequest } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import type { Logger } from "pino";
+import { env } from "@2min.today/config/env";
+import {
+  getEmbeddingDimension,
+  getEmbeddingModel,
+} from "@lib/server/digest/models";
+import { silentLogger } from "@2min.today/logging";
+import type { RawItem, EmbeddedItem } from "@lib/types/digest";
 
 type EmbedRequest = EmbedContentRequest & { outputDimensionality?: number };
 
 const BATCH_SIZE = 20;
 
-export async function embedItems(items: RawItem[], log?: Logger): Promise<EmbeddedItem[]> {
+export async function embedItems(
+  items: RawItem[],
+  log?: Logger,
+): Promise<EmbeddedItem[]> {
   const l = log ?? silentLogger;
   if (items.length === 0) return [];
 
   const t0 = Date.now();
-  l.info({ itemCount: items.length, batchSize: BATCH_SIZE }, 'embed start');
+  l.info({ itemCount: items.length, batchSize: BATCH_SIZE }, "embed start");
 
-  const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY ?? '');
+  const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY ?? "");
   const model = genAI.getGenerativeModel({ model: getEmbeddingModel() });
 
   const embedded: EmbeddedItem[] = [];
 
   for (let i = 0; i < items.length; i += BATCH_SIZE) {
     const batch = items.slice(i, i + BATCH_SIZE);
-    l.debug({ batchIndex: i / BATCH_SIZE, batchLen: batch.length }, 'embed batch');
+    l.debug(
+      { batchIndex: i / BATCH_SIZE, batchLen: batch.length },
+      "embed batch",
+    );
 
     const results = await Promise.all(
       batch.map(async (item) => {
         const req: EmbedRequest = {
-          content: { role: 'user', parts: [{ text: `${item.title}\n${item.content}` }] },
+          content: {
+            role: "user",
+            parts: [{ text: `${item.title}\n${item.content}` }],
+          },
           outputDimensionality: getEmbeddingDimension(),
         };
         const result = await model.embedContent(req);
@@ -40,6 +52,9 @@ export async function embedItems(items: RawItem[], log?: Logger): Promise<Embedd
     embedded.push(...results);
   }
 
-  l.info({ embeddedCount: embedded.length, durationMs: Date.now() - t0 }, 'embed complete');
+  l.info(
+    { embeddedCount: embedded.length, durationMs: Date.now() - t0 },
+    "embed complete",
+  );
   return embedded;
 }

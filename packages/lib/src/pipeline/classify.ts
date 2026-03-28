@@ -1,9 +1,9 @@
-import type { Logger } from 'pino';
-import { getClassifySimilarityThreshold } from '@lib/server/digest/models';
-import { silentLogger } from '@2min.today/logging';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Bucket } from '@lib/config/buckets';
-import type { SummarizedCluster, ClassifiedCluster } from '@lib/types/digest';
+import type { Logger } from "pino";
+import { getClassifySimilarityThreshold } from "@lib/server/digest/models";
+import { silentLogger } from "@2min.today/logging";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Bucket } from "@lib/config/buckets";
+import type { SummarizedCluster, ClassifiedCluster } from "@lib/types/digest";
 
 function cosineSimilarity(a: number[], b: number[]): number {
   let dot = 0;
@@ -26,21 +26,25 @@ export async function classifyClusters(
   if (clusters.length === 0) return [];
 
   const t0 = Date.now();
-  l.info({ clusterCount: clusters.length }, 'classify start');
+  l.info({ clusterCount: clusters.length }, "classify start");
 
-  const { data: anchors, error } = await supabase.from('bucket_anchors').select('bucket, embedding');
+  const { data: anchors, error } = await supabase
+    .from("bucket_anchors")
+    .select("bucket, embedding");
 
   if (error || !anchors?.length) {
-    throw new Error(`Failed to load bucket anchors: ${error?.message ?? 'no rows'}`);
+    throw new Error(
+      `Failed to load bucket anchors: ${error?.message ?? "no rows"}`,
+    );
   }
 
-  l.info({ anchorCount: anchors.length }, 'classify anchors loaded');
+  l.info({ anchorCount: anchors.length }, "classify anchors loaded");
 
   const similarityThreshold = getClassifySimilarityThreshold();
   const results: ClassifiedCluster[] = [];
 
   for (const [clusterIndex, cluster] of clusters.entries()) {
-    let bestBucket = '';
+    let bestBucket = "";
     let bestSim = -1;
 
     for (const anchor of anchors) {
@@ -52,15 +56,32 @@ export async function classifyClusters(
     }
 
     if (bestSim >= similarityThreshold) {
-      l.debug({ clusterIndex, bestBucket, bestSim }, 'classify embedding match');
-      results.push({ ...cluster, bucket: bestBucket as Bucket, categoryLine: null });
+      l.debug(
+        { clusterIndex, bestBucket, bestSim },
+        "classify embedding match",
+      );
+      results.push({
+        ...cluster,
+        bucket: bestBucket as Bucket,
+        categoryLine: null,
+      });
     } else {
-      const fallback = cluster.llmBucket ?? 'world';
-      l.debug({ clusterIndex, bestSim, llmBucket: cluster.llmBucket, fallback }, 'classify llm fallback');
-      results.push({ ...cluster, bucket: fallback as Bucket, categoryLine: null });
+      const fallback = cluster.llmBucket ?? "world";
+      l.debug(
+        { clusterIndex, bestSim, llmBucket: cluster.llmBucket, fallback },
+        "classify llm fallback",
+      );
+      results.push({
+        ...cluster,
+        bucket: fallback as Bucket,
+        categoryLine: null,
+      });
     }
   }
 
-  l.info({ classifiedCount: results.length, durationMs: Date.now() - t0 }, 'classify complete');
+  l.info(
+    { classifiedCount: results.length, durationMs: Date.now() - t0 },
+    "classify complete",
+  );
   return results;
 }
