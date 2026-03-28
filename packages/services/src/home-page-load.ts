@@ -67,6 +67,12 @@ export async function loadHomePageDigest(): Promise<HomePageLoadData> {
     return acc
   }, {})
 
+  const totalEntries = (data ?? []).length
+  const bucketCounts = Object.fromEntries(
+    Object.entries(digest).map(([b, cards]) => [b, cards?.length ?? 0]),
+  )
+  logger.info({ totalEntries, bucketCounts }, 'home page digest loaded')
+
   return {
     digest,
     summaries: {} as Partial<Record<Bucket, string[]>>,

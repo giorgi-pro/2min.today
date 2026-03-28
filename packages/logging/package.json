@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@2min.today/config": "workspace:*",
-    "pino": "^9.6.0"
+    "pino": "^9.6.0",
+    "pino-pretty": "13.1.3"
   }
 }

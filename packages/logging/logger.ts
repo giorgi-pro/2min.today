@@ -1,6 +1,7 @@
 import { env } from "@2min.today/config/env";
 import type { Logger } from "pino";
 import pino from "pino";
+import pinoPretty from "pino-pretty";
 
 function shouldUsePretty(): boolean {
   const flag = env.LOG_PRETTY;
@@ -17,12 +18,10 @@ function createDigestLogger(): Logger {
     timestamp: pino.stdTimeFunctions.isoTime,
   } as const;
   if (!shouldUsePretty()) return pino(baseOptions);
-  try {
-    const pretty = require("pino-pretty");
-    return pino(baseOptions, pretty({ colorize: true, singleLine: false }));
-  } catch {
-    return pino(baseOptions);
-  }
+  return pino(
+    baseOptions,
+    pinoPretty({ colorize: true, singleLine: false }),
+  );
 }
 
 let _logger: Logger | undefined;

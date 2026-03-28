@@ -1,6 +1,6 @@
 <script lang="ts">
-  import MobileCategoryNews from './MobileCategoryNews.svelte';
   import type { CategoryEntry } from '@2min.today/types';
+  import MobileCategoryNews from './MobileCategoryNews.svelte';
 
   interface Props {
     categories: CategoryEntry[];
@@ -20,7 +20,7 @@
     <div class="border-b-2 border-black">
       <button
         type="button"
-        class="sticky top-14 z-10 flex h-[30vh] w-full flex-col justify-between border-0 p-0 text-left
+        class="flex h-[30vh] w-full flex-col justify-between border-0 p-0 text-left
           {index % 2 === 0 ? 'bg-black text-white' : 'bg-white text-black border-b border-black'}"
         onclick={() => toggle(bucket)}
         aria-expanded={expandedBucket === bucket}
