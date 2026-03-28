@@ -27,7 +27,7 @@
   </div>
 
   <div class="tile-display-wrapper">
-    <p class="tile-display tile-display-ghost" aria-hidden="true">{ghost}</p>
-    <p class="tile-display tile-display-live">{displayTime()}</p>
+    <p class="tile-display tile-display-ghost text-black/[8%]" aria-hidden="true">{ghost}</p>
+    <p class="tile-display tile-display-live [text-shadow:0_0_2px_rgba(0,0,0,0.15)]">{displayTime()}</p>
   </div>
 </div>

@@ -48,8 +48,8 @@
   </div>
 
   <div class="tile-display-wrapper">
-    <p class="tile-display tile-display-ghost" aria-hidden="true">88<span>:</span>88<span>:</span>88</p>
-    <p class="tile-display tile-display-live">
+    <p class="tile-display tile-display-ghost text-black/[8%]" aria-hidden="true">88<span>:</span>88<span>:</span>88</p>
+    <p class="tile-display tile-display-live [text-shadow:0_0_2px_rgba(0,0,0,0.15)]">
       {hours}<span class="timer-colon" style="animation-delay: {animationDelay}">:</span>{minutes}<span class="timer-colon" style="animation-delay: {animationDelay}">:</span>{seconds}
     </p>
   </div>

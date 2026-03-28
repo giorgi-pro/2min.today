@@ -6,8 +6,8 @@
 
 /* ── Breaking news dot (NewsCard, CategoryRow) ───────────────────────── */
 @keyframes neon-pulse {
-  0%, 100% { box-shadow: 0 0 4px 1px rgba(255, 99, 71, 0.2); }
-  50%       { box-shadow: 0 0 2px 1px rgba(255, 99, 71, 0.5); }
+  0%, 100% { box-shadow: 0 0 4px 1px theme('colors.primary.DEFAULT / 20%'); }
+  50%       { box-shadow: 0 0 2px 1px theme('colors.primary.DEFAULT / 50%'); }
 }
 
 .dot-pulse {
@@ -21,30 +21,19 @@
 }
 
 .tile-display-wrapper {
-  position: relative;
-  line-height: 1;
+  @apply relative leading-none;
 }
 
 .tile-display {
-  font-size: 1.6rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  line-height: 1;
+  @apply text-[1.6rem] font-bold tracking-[0.04em] leading-none;
 }
 
 .tile-display-ghost {
-  position: absolute;
-  top: 0;
-  left: 0;
-  color: rgba(0, 0, 0, 0.08);
-  pointer-events: none;
-  user-select: none;
+  @apply absolute top-0 left-0 pointer-events-none select-none;
 }
 
 .tile-display-live {
-  position: relative;
-  color: #1B242C;
-  text-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
+  @apply relative text-on-surface;
 }
 
 /* ── Timer colon blink (TimerTile) ───────────────────────────────────── */
@@ -71,11 +60,7 @@
 }
 
 .signal-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 99, 71, 0.55);
-  pointer-events: none;
+  @apply absolute inset-0 rounded-full pointer-events-none border border-primary/55;
   animation: radio-wave 2.1s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
   will-change: transform, opacity;
 }
