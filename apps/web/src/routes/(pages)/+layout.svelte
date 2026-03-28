@@ -1,17 +1,17 @@
 <script lang="ts">
-  import { activeRegions, searchQuery } from '@utils/digest-filter';
-  import type { Region } from '../../../../../packages/types/digest.js';
-  import BottomSection from '@ui/components/BottomSection.svelte';
-  import Footer from '@ui/components/Footer.svelte';
-  import DesktopLayout from '@ui/layout/DesktopLayout.svelte';
-  import MobileLayout from '@ui/layout/MobileLayout.svelte';
-  import '@ui/styles/index.css';
-  import { MediaQuery } from 'svelte/reactivity';
+import BottomSection from '@ui/components/BottomSection.svelte'
+import Footer from '@ui/components/Footer.svelte'
+import DesktopLayout from '@ui/layout/DesktopLayout.svelte'
+import MobileLayout from '@ui/layout/MobileLayout.svelte'
+import { activeRegions, searchQuery } from '@utils/digest-filter'
+import type { Region } from '../../../../../packages/types/digest.js'
+import '@ui/styles/index.css'
+import { MediaQuery } from 'svelte/reactivity'
 
-  let { data, children } = $props()
+const { data, children } = $props()
 
-  const isMobile = new MediaQuery('max-width: 576px', false)
-  const Layout = $derived(isMobile.current ? MobileLayout : DesktopLayout)
+const isMobile = new MediaQuery('max-width: 576px', false)
+const Layout = $derived(isMobile.current ? MobileLayout : DesktopLayout)
 </script>
 
 <div class="min-h-screen flex flex-col bg-white">

@@ -1,223 +1,219 @@
 <script lang="ts">
-  import { flip } from 'svelte/animate';
-  import { onMount } from 'svelte';
-  import { browser } from '$app/environment';
-  import { dragHandleZone, type DndEvent } from 'svelte-dnd-action';
-  import { DIGEST_DISPLAY_BUCKETS, type Bucket } from '../../../../../packages/types/buckets';
-  import {
-    CATEGORY_ORDER_STORAGE_KEY,
-    CATEGORY_MINIMIZED_STORAGE_KEY,
-    normalizeStoredBucketKey,
-    resolveCategoryOrder,
-  } from '@utils/category-order';
-  import { buildMockDigest } from '@utils';
-  import { debouncedSearchQuery, activeRegions } from '@utils/digest-filter';
-  import { SearchHandler, ThresholdStrategy } from '@lib/search/search-handler';
-  import type { Category, DndBucketItem } from '@types';
-  import type { DigestCard } from '../../../../../packages/types/news';
-  import type { Region, Credit } from '../../../../../packages/types/digest';
-  import CategoryRow from '@ui/components/digest/CategoryRow.svelte';
-  import MobileView from '@ui/components/digest/MobileView.svelte';
+import { SearchHandler, ThresholdStrategy } from '@lib/search/search-handler'
+import type { Category, DndBucketItem } from '@types'
+import CategoryRow from '@ui/components/digest/CategoryRow.svelte'
+import MobileView from '@ui/components/digest/MobileView.svelte'
+import { buildMockDigest } from '@utils'
+import {
+  CATEGORY_MINIMIZED_STORAGE_KEY,
+  CATEGORY_ORDER_STORAGE_KEY,
+  normalizeStoredBucketKey,
+  resolveCategoryOrder,
+} from '@utils/category-order'
+import { activeRegions, debouncedSearchQuery } from '@utils/digest-filter'
+import { onMount } from 'svelte'
+import { flip } from 'svelte/animate'
+import { type DndEvent, dragHandleZone } from 'svelte-dnd-action'
+import { browser } from '$app/environment'
+import { type Bucket, DIGEST_DISPLAY_BUCKETS } from '../../../../../packages/types/buckets'
+import type { Credit, Region } from '../../../../../packages/types/digest'
+import type { DigestCard } from '../../../../../packages/types/news'
 
-  const { data } = $props<{
-    data: {
-      digest: Partial<Record<string, DigestCard[]>>;
-      summaries: Partial<Record<string, string[]>>;
-      fuseThreshold: number;
-      useMockData: boolean;
-    };
-  }>();
+const { data } = $props<{
+  data: {
+    digest: Partial<Record<string, DigestCard[]>>
+    summaries: Partial<Record<string, string[]>>
+    fuseThreshold: number
+    useMockData: boolean
+  }
+}>()
 
-  let debouncedQ = $state('');
-  let regions = $state<Set<Region>>(new Set());
+let debouncedQ = $state('')
+let regions = $state<Set<Region>>(new Set())
 
-  $effect(() => {
-    const u = debouncedSearchQuery.subscribe((v) => { debouncedQ = v; });
-    return () => u();
-  });
+$effect(() => {
+  const u = debouncedSearchQuery.subscribe(v => {
+    debouncedQ = v
+  })
+  return () => u()
+})
 
-  $effect(() => {
-    const u = activeRegions.subscribe((v) => { regions = v; });
-    return () => u();
-  });
+$effect(() => {
+  const u = activeRegions.subscribe(v => {
+    regions = v
+  })
+  return () => u()
+})
 
-  const sourceDigest = $derived(
-    data.digest && Object.keys(data.digest).length > 0
-      ? (data.digest as Partial<Record<Bucket, DigestCard[]>>)
-      : data.useMockData
-        ? (buildMockDigest().cards as Partial<Record<Bucket, DigestCard[]>>)
-        : ({} as Partial<Record<Bucket, DigestCard[]>>),
-  );
+const sourceDigest = $derived(
+  data.digest && Object.keys(data.digest).length > 0
+    ? (data.digest as Partial<Record<Bucket, DigestCard[]>>)
+    : data.useMockData
+      ? (buildMockDigest().cards as Partial<Record<Bucket, DigestCard[]>>)
+      : ({} as Partial<Record<Bucket, DigestCard[]>>),
+)
 
-  type CardRow = DigestCard & { bucket: Bucket };
+type CardRow = DigestCard & { bucket: Bucket }
 
-  const allCards = $derived(
-    Object.entries(sourceDigest)
-      .flatMap(([bucket, cards]) =>
-        (cards ?? []).map((c) => ({ ...c, bucket: bucket as Bucket })),
-      ) as CardRow[],
-  );
+const allCards = $derived(
+  Object.entries(sourceDigest).flatMap(([bucket, cards]) =>
+    (cards ?? []).map(c => ({ ...c, bucket: bucket as Bucket })),
+  ) as CardRow[],
+)
 
-  const handler = $derived(
-    new SearchHandler(
-      new ThresholdStrategy<CardRow>({
-        keys: [
-          'headline',
-          'whyItMatters',
-          { name: 'bullets', getFn: (c: CardRow) => c.bullets.join(' ') },
-        ],
-        ignoreLocation: true,
-      }),
-      data.fuseThreshold,
-    ),
-  );
+const handler = $derived(
+  new SearchHandler(
+    new ThresholdStrategy<CardRow>({
+      keys: ['headline', 'whyItMatters', { name: 'bullets', getFn: (c: CardRow) => c.bullets.join(' ') }],
+      ignoreLocation: true,
+    }),
+    data.fuseThreshold,
+  ),
+)
 
-  const searchedCards = $derived(handler.handle(debouncedQ, allCards));
+const searchedCards = $derived(handler.handle(debouncedQ, allCards))
 
-  const filteredCards = $derived(
-    regions.size === 0 ? searchedCards : searchedCards.filter((c) => regions.has(c.region)),
-  );
+const filteredCards = $derived(regions.size === 0 ? searchedCards : searchedCards.filter(c => regions.has(c.region)))
 
-  const filteredDigest = $derived(
-    filteredCards.reduce<Partial<Record<Bucket, DigestCard[]>>>((acc, card) => {
-      const b = card.bucket;
-      if (!acc[b]) acc[b] = [];
-      const list = acc[b] as DigestCard[];
-      list.push(card);
-      return acc;
-    }, {}),
-  );
+const filteredDigest = $derived(
+  filteredCards.reduce<Partial<Record<Bucket, DigestCard[]>>>((acc, card) => {
+    const b = card.bucket
+    if (!acc[b]) acc[b] = []
+    const list = acc[b] as DigestCard[]
+    list.push(card)
+    return acc
+  }, {}),
+)
 
-  const presentBuckets = $derived(
-    DIGEST_DISPLAY_BUCKETS.filter((b) => sourceDigest[b]?.length) as Bucket[],
-  );
+const presentBuckets = $derived(DIGEST_DISPLAY_BUCKETS.filter(b => sourceDigest[b]?.length) as Bucket[])
 
-  let savedBucketOrder = $state<Bucket[]>([]);
-  let minimizedBuckets = $state<Set<Bucket>>(new Set());
+let savedBucketOrder = $state<Bucket[]>([])
+let minimizedBuckets = $state<Set<Bucket>>(new Set())
 
-  onMount(() => {
-    const mq = window.matchMedia('(max-width: 576px)');
-    isMobile = mq.matches;
-    const mqHandler = (e: MediaQueryListEvent) => { isMobile = e.matches; };
-    mq.addEventListener('change', mqHandler);
+onMount(() => {
+  const mq = window.matchMedia('(max-width: 576px)')
+  isMobile = mq.matches
+  const mqHandler = (e: MediaQueryListEvent) => {
+    isMobile = e.matches
+  }
+  mq.addEventListener('change', mqHandler)
 
-    try {
-      const rawOrder = localStorage.getItem(CATEGORY_ORDER_STORAGE_KEY);
-      if (rawOrder) {
-        const parsed = JSON.parse(rawOrder) as unknown;
-        if (Array.isArray(parsed)) {
-          savedBucketOrder = parsed
-            .map((x) => (typeof x === 'string' ? normalizeStoredBucketKey(x) : null))
-            .filter((x): x is Bucket => x != null);
-        }
+  try {
+    const rawOrder = localStorage.getItem(CATEGORY_ORDER_STORAGE_KEY)
+    if (rawOrder) {
+      const parsed = JSON.parse(rawOrder) as unknown
+      if (Array.isArray(parsed)) {
+        savedBucketOrder = parsed
+          .map(x => (typeof x === 'string' ? normalizeStoredBucketKey(x) : null))
+          .filter((x): x is Bucket => x != null)
       }
-    } catch {
-      /* ignore */
     }
-    try {
-      const rawMin = localStorage.getItem(CATEGORY_MINIMIZED_STORAGE_KEY);
-      if (rawMin) {
-        const parsed = JSON.parse(rawMin) as unknown;
-        if (Array.isArray(parsed)) {
-          minimizedBuckets = new Set(
-            parsed
-              .map((x) => (typeof x === 'string' ? normalizeStoredBucketKey(x) : null))
-              .filter((x): x is Bucket => x != null),
-          );
-        }
+  } catch {
+    /* ignore */
+  }
+  try {
+    const rawMin = localStorage.getItem(CATEGORY_MINIMIZED_STORAGE_KEY)
+    if (rawMin) {
+      const parsed = JSON.parse(rawMin) as unknown
+      if (Array.isArray(parsed)) {
+        minimizedBuckets = new Set(
+          parsed
+            .map(x => (typeof x === 'string' ? normalizeStoredBucketKey(x) : null))
+            .filter((x): x is Bucket => x != null),
+        )
       }
-    } catch {
-      /* ignore */
     }
+  } catch {
+    /* ignore */
+  }
 
-    return () => mq.removeEventListener('change', mqHandler);
-  });
+  return () => mq.removeEventListener('change', mqHandler)
+})
 
-  const baseOrder = $derived(resolveCategoryOrder(savedBucketOrder, presentBuckets));
-  const displayOrder = $derived(baseOrder);
+const baseOrder = $derived(resolveCategoryOrder(savedBucketOrder, presentBuckets))
+const displayOrder = $derived(baseOrder)
 
-  function persistBucketOrder(next: Bucket[]) {
-    savedBucketOrder = next;
-    if (browser) {
-      localStorage.setItem(CATEGORY_ORDER_STORAGE_KEY, JSON.stringify(next));
+function persistBucketOrder(next: Bucket[]) {
+  savedBucketOrder = next
+  if (browser) {
+    localStorage.setItem(CATEGORY_ORDER_STORAGE_KEY, JSON.stringify(next))
+  }
+}
+
+function persistMinimized(next: Set<Bucket>) {
+  minimizedBuckets = next
+  if (browser) {
+    localStorage.setItem(CATEGORY_MINIMIZED_STORAGE_KEY, JSON.stringify([...next]))
+  }
+}
+
+function minimizeBucket(bucket: Bucket) {
+  const next = new Set(minimizedBuckets)
+  next.add(bucket)
+  persistMinimized(next)
+}
+
+function expandBucket(bucket: Bucket) {
+  const next = new Set(minimizedBuckets)
+  next.delete(bucket)
+  persistMinimized(next)
+}
+
+let isMobile = $state(false)
+
+let dndItems = $state<DndBucketItem[]>([])
+let dndDragging = $state(false)
+const flipDurationMs = 150
+
+$effect.pre(() => {
+  if (dndDragging) return
+  dndItems = displayOrder.map(b => ({ id: b, bucket: b }))
+})
+
+function handleDndConsider(e: CustomEvent<DndEvent<DndBucketItem>>) {
+  dndDragging = true
+  dndItems = e.detail.items
+}
+
+function handleDndFinalize(e: CustomEvent<DndEvent<DndBucketItem>>) {
+  dndItems = e.detail.items
+  persistBucketOrder(dndItems.map(i => i.bucket))
+  dndDragging = false
+}
+
+function styleCategoryDragPreview(element: HTMLElement, _data: unknown, _index: number) {
+  element.style.setProperty('outline', 'none', 'important')
+  element.style.setProperty('border', '2px solid #000000', 'important')
+  element.style.setProperty('background-color', '#ffffff', 'important')
+}
+
+const categoryByBucket = $derived(
+  presentBuckets.reduce<Partial<Record<Bucket, Category>>>((acc, b) => {
+    acc[b] = {
+      name: b,
+      summary: data.summaries?.[b] ?? (sourceDigest[b] ?? []).slice(0, 5).map(c => c.headline),
+      news: (filteredDigest[b] ?? []).map(c => ({
+        title: c.headline,
+        bullets: c.bullets,
+        whyItMatters: c.whyItMatters,
+        credits: c.credits,
+        isBreaking: c.isBreaking,
+        isLive: c.isLive,
+        tags: c.tags,
+      })),
     }
-  }
+    return acc
+  }, {}),
+)
 
-  function persistMinimized(next: Set<Bucket>) {
-    minimizedBuckets = next;
-    if (browser) {
-      localStorage.setItem(CATEGORY_MINIMIZED_STORAGE_KEY, JSON.stringify([...next]));
-    }
-  }
-
-  function minimizeBucket(bucket: Bucket) {
-    const next = new Set(minimizedBuckets);
-    next.add(bucket);
-    persistMinimized(next);
-  }
-
-  function expandBucket(bucket: Bucket) {
-    const next = new Set(minimizedBuckets);
-    next.delete(bucket);
-    persistMinimized(next);
-  }
-
-  let isMobile = $state(false);
-
-  let dndItems = $state<DndBucketItem[]>([]);
-  let dndDragging = $state(false);
-  const flipDurationMs = 150;
-
-  $effect.pre(() => {
-    if (dndDragging) return;
-    dndItems = displayOrder.map((b) => ({ id: b, bucket: b }));
-  });
-
-  function handleDndConsider(e: CustomEvent<DndEvent<DndBucketItem>>) {
-    dndDragging = true;
-    dndItems = e.detail.items;
-  }
-
-  function handleDndFinalize(e: CustomEvent<DndEvent<DndBucketItem>>) {
-    dndItems = e.detail.items;
-    persistBucketOrder(dndItems.map((i) => i.bucket));
-    dndDragging = false;
-  }
-
-  function styleCategoryDragPreview(element: HTMLElement, _data: unknown, _index: number) {
-    element.style.setProperty('outline', 'none', 'important');
-    element.style.setProperty('border', '2px solid #000000', 'important');
-    element.style.setProperty('background-color', '#ffffff', 'important');
-  }
-
-  const categoryByBucket = $derived(
-    presentBuckets.reduce<Partial<Record<Bucket, Category>>>((acc, b) => {
-      acc[b] = {
-        name: b,
-        summary: data.summaries?.[b] ?? (sourceDigest[b] ?? []).slice(0, 5).map((c) => c.headline),
-        news: (filteredDigest[b] ?? []).map((c) => ({
-          title: c.headline,
-          bullets: c.bullets,
-          whyItMatters: c.whyItMatters,
-          credits: c.credits,
-          isBreaking: c.isBreaking,
-          isLive: c.isLive,
-          tags: c.tags,
-        })),
-      };
-      return acc;
-    }, {}),
-  );
-
-  const mobileCategories = $derived(
-    displayOrder.map((b, i) => ({
-      bucket: b,
-      index: i,
-      summary: categoryByBucket[b]?.summary ?? [],
-      news: categoryByBucket[b]?.news ?? [],
-    })),
-  );
-
+const mobileCategories = $derived(
+  displayOrder.map((b, i) => ({
+    bucket: b,
+    index: i,
+    summary: categoryByBucket[b]?.summary ?? [],
+    news: categoryByBucket[b]?.news ?? [],
+  })),
+)
 </script>
 
 <svelte:head>

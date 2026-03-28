@@ -56,7 +56,7 @@ function sanitize(tokens: RawToken[]): RawToken[] {
       text: t.quoted
         ? t.text
         : t.text
-            .replace(/[^a-zA-Z0-9\s\-]/g, "")
+            .replace(/[^a-zA-Z0-9\s-]/g, "")
             .replace(/\s+/g, " ")
             .trim(),
     }))
