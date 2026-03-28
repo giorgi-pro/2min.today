@@ -1,6 +1,6 @@
 import { env } from "@2min.today/config/env";
-import pino from "pino";
 import type { Logger } from "pino";
+import pino from "pino";
 
 function shouldUsePretty(): boolean {
   const flag = env.LOG_PRETTY;
@@ -25,16 +25,16 @@ function createDigestLogger(): Logger {
   }
 }
 
-let _digestLogger: Logger | undefined;
-export const digestLogger: Logger = new Proxy({} as Logger, {
+let _logger: Logger | undefined;
+export const logger: Logger = new Proxy({} as Logger, {
   get(_, key) {
-    if (!_digestLogger) _digestLogger = createDigestLogger();
-    return _digestLogger[key as keyof Logger];
+    if (!_logger) _logger = createDigestLogger();
+    return _logger[key as keyof Logger];
   },
 });
 
 export const silentLogger: Logger = pino({ level: "silent" });
 
 export function createDigestChild(bindings: { runId: string }): Logger {
-  return digestLogger.child({ ...bindings, pipeline: "digest" });
+  return logger.child({ ...bindings, pipeline: "digest" });
 }

@@ -2,6 +2,8 @@
   "extends": "@2min.today/typescript-config/base.json",
   "compilerOptions": {
     "noEmit": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "paths": {
       "@lib/*": ["../lib/src/*"]
     }

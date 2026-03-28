@@ -1,10 +1,10 @@
+import { logger } from "@2min.today/logging";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 import type { Logger } from "pino";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { digestLogger } from "@2min.today/logging";
 import { fetchRawItems } from "../fetch";
-import { scoreItems } from "./score";
 import { generateLiveCard } from "./generate";
+import { scoreItems } from "./score";
 import { upsertLiveStory } from "./upsert";
 
 export const breakingPipeline = {
@@ -14,7 +14,7 @@ export const breakingPipeline = {
   ): Promise<number> {
     const log =
       opts?.log ??
-      digestLogger.child({
+      logger.child({
         runId: randomUUID(),
         route: "breaking",
         pipeline: "breaking",

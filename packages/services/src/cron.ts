@@ -1,4 +1,4 @@
-import { digestLogger } from '@2min.today/logging'
+import { logger } from '@2min.today/logging'
 
 export function cronUnauthorizedResponse(
   url: URL,
@@ -6,7 +6,7 @@ export function cronUnauthorizedResponse(
   debugMessage: string,
 ): Response | null {
   if (url.searchParams.get('secret') !== secret) {
-    digestLogger.debug(debugMessage)
+    logger.debug(debugMessage)
     return new Response('Unauthorized', { status: 401 })
   }
   return null

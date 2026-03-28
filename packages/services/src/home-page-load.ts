@@ -1,8 +1,8 @@
 import { env } from '@2min.today/config/env'
-import { getSupabaseClient } from '@2min.today/data/supabase/client'
-import { digestLogger } from '@2min.today/logging'
+import { logger } from '@2min.today/logging'
 import { type Bucket, type Credit, type DigestCard, parseRegion, type SummaryJson } from '@2min.today/types'
-import { buildMockDigest, normalizeClusterBucket } from '@2min.today/utils'
+import { getSupabaseClient } from '@data/supabase/client'
+import { buildMockDigest, normalizeClusterBucket } from '@utils'
 
 export type HomePageLoadData = {
   digest: Partial<Record<Bucket, DigestCard[]>>
@@ -37,7 +37,7 @@ export async function loadHomePageDigest(): Promise<HomePageLoadData> {
     .order('published_at', { ascending: false })
 
   if (error) {
-    digestLogger.error({ err: error, route: 'home-page-load' }, 'Supabase load error')
+    logger.error({ err: error, route: 'home-page-load' }, 'Supabase load error')
     return {
       digest: {} as Partial<Record<Bucket, DigestCard[]>>,
       summaries: {} as Partial<Record<Bucket, string[]>>,

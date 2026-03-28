@@ -1,5 +1,5 @@
 import { env } from "@2min.today/config/env";
-import { digestLogger } from "@2min.today/logging";
+import { logger } from "@2min.today/logging";
 import type { RawItem } from "@2min.today/types";
 import type { NewsSource } from "@config/app/news-sources";
 import {
@@ -164,7 +164,7 @@ async function runSource(
   } catch (e) {
     const durationMs = Date.now() - t0;
     const msg = e instanceof Error ? e.message : String(e);
-    digestLogger.error(
+    logger.error(
       { sourceId: source.id, errMessage: msg },
       "fetch source failed",
     );
@@ -207,6 +207,6 @@ export async function fetchRawItemsWithDiagnostics(): Promise<FetchWithDiagnosti
 export async function fetchRawItems(): Promise<RawItem[]> {
   const { items, sources, dedupedCount } = await fetchRawItemsWithDiagnostics();
   const rawItemSum = sources.reduce((a, s) => a + s.itemCount, 0);
-  digestLogger.info({ sources, rawItemSum, dedupedCount }, "fetch complete");
+  logger.info({ sources, rawItemSum, dedupedCount }, "fetch complete");
   return items;
 }

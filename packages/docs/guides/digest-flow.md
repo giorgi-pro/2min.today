@@ -27,7 +27,7 @@ Before touching the pipeline, the handler does three things:
    ```
 3. **Pipeline handoff** — calls `await pipeline.run(supabase, { log })` and waits. The handler does not respond until `pipeline.run` resolves or throws.
 
-Logging uses **Pino** (`digestLogger`). Every run gets a unique `runId` (UUID) attached to a child logger that flows through all pipeline phases. Set `LOG_LEVEL` and `LOG_PRETTY` in `.env` to control verbosity and format (see `.env.example`).
+Logging uses **Pino** (`logger`). Every run gets a unique `runId` (UUID) attached to a child logger that flows through all pipeline phases. Set `LOG_LEVEL` and `LOG_PRETTY` in `.env` to control verbosity and format (see `.env.example`).
 
 ---
 

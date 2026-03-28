@@ -1,5 +1,5 @@
 import { env } from "@2min.today/config/env";
-import { digestLogger } from "@2min.today/logging";
+import { logger } from "@2min.today/logging";
 import type {
   Cluster,
   Credit,
@@ -48,7 +48,7 @@ export async function summarizeClusters(
   const toSummarize =
     maxClusters != null ? clusters.slice(0, maxClusters) : clusters;
   if (maxClusters != null && clusters.length > toSummarize.length) {
-    digestLogger.info(
+    logger.info(
       {
         totalClusters: clusters.length,
         summarizing: toSummarize.length,
@@ -59,7 +59,7 @@ export async function summarizeClusters(
   }
 
   const t0 = Date.now();
-  digestLogger.info(
+  logger.info(
     { clusterCount: toSummarize.length, model: getFlashModel() },
     "summarize start",
   );
@@ -97,7 +97,7 @@ export async function summarizeClusters(
   const results: SummarizedCluster[] = [];
 
   for (const [clusterIndex, cluster] of toSummarize.entries()) {
-    digestLogger.debug(
+    logger.debug(
       { clusterIndex, clusterId: cluster.id },
       "summarize cluster",
     );
@@ -172,7 +172,7 @@ STEP 2 — If no topic override applies, route by geography:
     });
   }
 
-  digestLogger.info(
+  logger.info(
     { summarizedCount: results.length, durationMs: Date.now() - t0 },
     "summarize complete",
   );

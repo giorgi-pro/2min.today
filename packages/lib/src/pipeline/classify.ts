@@ -1,4 +1,4 @@
-import { digestLogger } from "@2min.today/logging";
+import { logger } from "@2min.today/logging";
 import type {
   Bucket,
   ClassifiedCluster,
@@ -26,7 +26,7 @@ export async function classifyClusters(
   if (clusters.length === 0) return [];
 
   const t0 = Date.now();
-  digestLogger.info({ clusterCount: clusters.length }, "classify start");
+  logger.info({ clusterCount: clusters.length }, "classify start");
 
   const { data: anchors, error } = await supabase
     .from("bucket_anchors")
@@ -38,7 +38,7 @@ export async function classifyClusters(
     );
   }
 
-  digestLogger.info({ anchorCount: anchors.length }, "classify anchors loaded");
+  logger.info({ anchorCount: anchors.length }, "classify anchors loaded");
 
   const similarityThreshold = getClassifySimilarityThreshold();
   const results: ClassifiedCluster[] = [];
@@ -56,7 +56,7 @@ export async function classifyClusters(
     }
 
     if (bestSim >= similarityThreshold) {
-      digestLogger.debug(
+      logger.debug(
         { clusterIndex, bestBucket, bestSim },
         "classify embedding match",
       );
@@ -67,7 +67,7 @@ export async function classifyClusters(
       });
     } else {
       const fallback = cluster.llmBucket ?? "world";
-      digestLogger.debug(
+      logger.debug(
         { clusterIndex, bestSim, llmBucket: cluster.llmBucket, fallback },
         "classify llm fallback",
       );
@@ -79,7 +79,7 @@ export async function classifyClusters(
     }
   }
 
-  digestLogger.info(
+  logger.info(
     { classifiedCount: results.length, durationMs: Date.now() - t0 },
     "classify complete",
   );
