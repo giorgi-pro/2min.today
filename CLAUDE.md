@@ -44,35 +44,48 @@ There is no test framework. Manual API testing uses the Bruno collection in `.br
 
 ### Monorepo Structure
 
-- **`apps/web`** — SvelteKit 5 app (main product). Both frontend and backend API routes live here.
+- **`apps/web`** — SvelteKit 5 app. Frontend routes + thin API handlers that delegate to `@services`.
 - **`apps/docs`** — Next.js 16 + React 19 documentation site.
-- **`packages/ui`** — Shared component library (`@ui`). Currently has Svelte components (Header, Footer) and a React button stub. Imported via workspace alias.
+- **`packages/lib`** (`@lib`) — Core pipeline logic: `src/pipeline/` (6-phase digest), `src/pipeline/breaking/`, `src/search/`, `src/server/digest/` (Gemini model helpers).
+- **`packages/services`** (`@services`) — Orchestration layer. Route handlers call `runDigestCron`, `runBreakingCron`, `loadHomePage`, etc. from here.
+- **`packages/config`** (`@config`) — Env validation (`env/index.ts` via `@t3-oss/env-core` + zod), RSS sources (`app/news-sources.yaml`), bucket definitions (`app/buckets.yaml`).
+- **`packages/data`** (`@data`) — Supabase client factory (`supabase/client.ts`, `supabase/server.ts`). Migrations in `supabase/migrations/`.
+- **`packages/types`** (`@types`) — Shared TypeScript types (digest, buckets, breaking, homepage, search, etc.).
+- **`packages/utils`** (`@utils`) — Pure utilities: `normalizeClusterBucket`, `digest-filter`, `mock-data`, etc.
+- **`packages/logging`** (`@logging`) — Pino logger singleton.
+- **`packages/ui`** (`@ui`) — Svelte 5 component library: shell layouts (`DesktopLayout`, `MobileLayout`), digest components (`CategoryRow`, `CategoryPanel`, `NewsCard`, `MobileView`), `Header`, `Footer`, `Menu`, `GlobalSearch`, region switches, and CSS modules (`styles/`).
 
-### Backend Pipeline (`apps/web/src/routes/api/digest/+server.ts`)
+Path aliases are defined in `apps/web/svelte.config.js` and resolve to the packages above.
 
-The digest API is the core of the product. The 6-phase pipeline in `lib/pipeline/index.ts`:
+### Backend Pipeline
 
-1. **Fetch** — Parses RSS + X from `lib/config/news-sources.yaml` → `RawItem[]` (fetch-only diagnostics: `GET /api/digest/sources?secret=`)
+The digest API handler is at `apps/web/src/routes/api/digest/+server.ts`. It calls `runDigestCron` from `@services`, which runs the 6-phase pipeline in `packages/lib/src/pipeline/index.ts`:
+
+1. **Fetch** — Parses RSS + X from `packages/config/app/news-sources.yaml` → `RawItem[]` (fetch-only diagnostics: `GET /api/digest/sources?secret=`)
 2. **Embed** — Gemini embedding per story → `EmbeddedItem[]`
 3. **Cluster** — Cosine similarity grouping → `Cluster[]` (threshold: `CLUSTER_SIMILARITY_THRESHOLD`, default 0.85)
 4. **Summarize** — One Flash call per cluster → headline + 3 bullets + "Why it Matters" (optional cap: `DIGEST_SUMMARIZE_MAX_CLUSTERS`)
 5. **Classify** — Compares centroid to bucket anchors in Supabase → assigns one of 10 buckets (threshold: `CLASSIFY_SIMILARITY_THRESHOLD`, default 0.65)
 6. **Upsert** — Persists to Supabase `clusters` table
 
-**Buckets** — 5 geographic: `usa`, `europe`, `middle-east`, `americas`, `world`; 5 topical: `business`, `tech`, `science`, `health`, `sports`. Legacy values are auto-normalized via `normalizeClusterBucket()`.
+**Buckets** — 5 geographic: `usa`, `europe`, `middle-east`, `americas`, `world`; 5 topical: `business`, `tech`, `science`, `health`, `sports`. Legacy values are auto-normalized via `normalizeClusterBucket()` in `@utils`.
 
-**Breaking news** — Separate pipeline at `lib/pipeline/breaking/` triggered by `POST /api/breaking`. Uses heuristic scoring (no embeddings), then one Flash call per candidate. Deduplicates via `source_url`. Workflow: `.github/workflows/breaking-news.yml` (manual dispatch only; cron commented out).
+**Breaking news** — Separate pipeline at `packages/lib/src/pipeline/breaking/` triggered by `POST /api/breaking`. Uses heuristic scoring (no embeddings), then one Flash call per candidate. Deduplicates via `source_url`. Workflow: `.github/workflows/breaking-news.yml` (manual dispatch only; cron commented out).
 
 Protected by cron auth. Triggered by GitHub Actions (`.github/workflows/daily-digest.yml`) or Vercel cron.
 
-Model constants are in `apps/web/src/lib/server/digest/models.ts`:
+Model constants are in `packages/lib/src/server/digest/models.ts`:
 
-- `FLASH_MODEL`, `EMBEDDING_MODEL`, `EMBEDDING_DIMENSION` — see `apps/web/.env.example` (defaults in `lib/server/digest/models.ts` getters)
+- `FLASH_MODEL`, `EMBEDDING_MODEL`, `EMBEDDING_DIMENSION` — defaults in model getters; override via env
 - `FLASH_GENERATION_MIN_INTERVAL_MS` — optional; unset = **UnconstrainedFlow** (no pacing, no 429 retries); set to e.g. `15000` = **ConstrainedFlow** (one Flash call every 15s + 429 retries with backoff)
 
 Local dev: set `USE_MOCK_DATA=true` in `apps/web/.env` to bypass Supabase and return static mock digest on the homepage.
 
-**Database** — Migrations in `apps/web/supabase/migrations/`. Tables: `clusters` (stores digests with HNSW pgvector index) and `bucket_anchors` (classification seed vectors). Run `seed:anchors` script after adding new buckets to `lib/config/buckets.yaml`.
+**Database** — Migrations in `packages/data/supabase/migrations/`. Tables: `clusters` (stores digests with HNSW pgvector index) and `bucket_anchors` (classification seed vectors). Run `seed:anchors` script after adding new buckets to `packages/config/app/buckets.yaml`.
+
+### Environment Variables
+
+All env vars are validated at startup via `packages/config/env/index.ts`. Required server-side vars: `GEMINI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`, `X_BEARER_TOKEN`, `CRON_SECRET`, `BREAKING_SECRET`, `FLASH_MODEL`, `EMBEDDING_MODEL`, `EMBEDDING_DIMENSION`. Required client-side: `PUBLIC_SUPABASE_ANON_KEY`, `PUBLIC_SUPABASE_URL`.
 
 ### Tech Stack Decisions (from ADR)
 
