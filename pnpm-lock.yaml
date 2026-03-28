@@ -26,6 +26,9 @@ importers:
       '@2min.today/logging':
         specifier: workspace:*
         version: link:../../packages/logging
+      '@2min.today/services':
+        specifier: workspace:*
+        version: link:../../packages/services
       '@2min.today/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -130,6 +133,28 @@ importers:
         specifier: 3.24.2
         version: 3.24.2
 
+  packages/data:
+    dependencies:
+      '@2min.today/config':
+        specifier: workspace:*
+        version: link:../config
+      '@supabase/supabase-js':
+        specifier: 2.100.0
+        version: 2.100.0
+    devDependencies:
+      '@2min.today/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@biomejs/biome':
+        specifier: 2.1.1
+        version: 2.1.1
+      '@types/node':
+        specifier: ^22.15.3
+        version: 22.19.15
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+
   packages/lib:
     dependencies:
       '@2min.today/config':
@@ -220,6 +245,43 @@ importers:
       yaml:
         specifier: 2.8.3
         version: 2.8.3
+
+  packages/services:
+    dependencies:
+      '@2min.today/config':
+        specifier: workspace:*
+        version: link:../config
+      '@2min.today/data':
+        specifier: workspace:*
+        version: link:../data
+      '@2min.today/lib':
+        specifier: workspace:*
+        version: link:../lib
+      '@2min.today/logging':
+        specifier: workspace:*
+        version: link:../logging
+      '@2min.today/types':
+        specifier: workspace:*
+        version: link:../types
+      '@2min.today/utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@supabase/supabase-js':
+        specifier: 2.100.0
+        version: 2.100.0
+    devDependencies:
+      '@2min.today/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@biomejs/biome':
+        specifier: 2.1.1
+        version: 2.1.1
+      '@types/node':
+        specifier: ^22.15.3
+        version: 22.19.15
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
 
   packages/types:
     dependencies:

@@ -1,0 +1,7 @@
+{
+  "extends": "@2min.today/typescript-config/base.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["*.ts"]
+}

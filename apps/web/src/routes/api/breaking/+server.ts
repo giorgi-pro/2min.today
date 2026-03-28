@@ -1,28 +1,21 @@
-import { randomUUID } from 'node:crypto'
 import { digestLogger } from '@2min.today/logging'
+import { cronUnauthorizedResponse, runBreakingCron } from '@2min.today/services'
 import { env } from '@config/env'
-import { breakingPipeline } from '@lib/pipeline/breaking'
-import { getSupabaseServiceRoleClient } from '@lib/supabase/server'
+import { getSupabaseServiceRoleClient } from '@data/supabase/server'
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
 export const GET: RequestHandler = async ({ url }) => {
-  if (url.searchParams.get('secret') !== env.BREAKING_SECRET) {
-    digestLogger.debug('breaking unauthorized')
-    return new Response('Unauthorized', { status: 401 })
-  }
-
-  const runId = randomUUID()
-  const log = digestLogger.child({ runId, route: 'breaking-handler' })
+  const unauthorized = cronUnauthorizedResponse(url, env.BREAKING_SECRET, 'breaking unauthorized')
+  if (unauthorized) return unauthorized
 
   try {
     const supabase = getSupabaseServiceRoleClient()
-    const published = await breakingPipeline.run(supabase, { log })
-    log.info({ published }, 'breaking handler success')
+    const published = await runBreakingCron(supabase)
     return json({ status: 'ok', published })
   } catch (e) {
     const errMessage = e instanceof Error ? e.message : 'Unknown error'
-    log.error({ err: errMessage }, 'breaking pipeline failed')
+    digestLogger.error({ err: errMessage, route: 'breaking-handler' }, 'breaking pipeline failed')
     return json({ status: 'error', message: errMessage }, { status: 500 })
   }
 }

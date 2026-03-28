@@ -1,0 +1,24 @@
+{
+  "name": "@2min.today/data",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./supabase/client": "./supabase/client.ts",
+    "./supabase/server": "./supabase/server.ts"
+  },
+  "scripts": {
+    "lint": "biome lint .",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@2min.today/config": "workspace:*",
+    "@supabase/supabase-js": "2.100.0"
+  },
+  "devDependencies": {
+    "@2min.today/typescript-config": "workspace:*",
+    "@biomejs/biome": "2.1.1",
+    "@types/node": "^22.15.3",
+    "typescript": "5.9.2"
+  }
+}

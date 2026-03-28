@@ -1,0 +1,10 @@
+{
+  "extends": "@2min.today/typescript-config/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "@lib/*": ["../lib/src/*"]
+    }
+  },
+  "include": ["*.ts", "src/**/*.ts"]
+}

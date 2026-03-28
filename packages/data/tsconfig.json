@@ -1,0 +1,11 @@
+{
+  "extends": "@2min.today/typescript-config/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "@2min.today/config/env": ["../config/env/index.ts"],
+      "@2min.today/config/*": ["../config/*"]
+    }
+  },
+  "include": ["supabase/**/*.ts"]
+}
