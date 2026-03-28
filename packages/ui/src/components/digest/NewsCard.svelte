@@ -27,7 +27,7 @@
 
 
 <div
-  class="news-tile relative flex h-full min-w-[min(100%,280px)] flex-col border-r border-black/10 py-2 px-2 pb-[4px] {isLive ? 'bg-white' : ''}"
+  class="news-tile relative flex h-full min-w-[min(100%,280px)] shrink-0 flex-col border-r border-black/10 py-2 px-2 pb-[4px] {isLive ? 'bg-white' : ''}"
   onmouseleave={onCardMouseLeave}
   role="presentation"
 >
