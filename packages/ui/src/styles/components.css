@@ -3,3 +3,82 @@
     @apply cursor-text text-[0.55rem] leading-tight opacity-60;
   }
 }
+
+/* ── Breaking news dot (NewsCard, CategoryRow) ───────────────────────── */
+@keyframes neon-pulse {
+  0%, 100% { box-shadow: 0 0 4px 1px rgba(255, 99, 71, 0.2); }
+  50%       { box-shadow: 0 0 2px 1px rgba(255, 99, 71, 0.5); }
+}
+
+.dot-pulse {
+  animation: neon-pulse 2s ease-in-out infinite;
+}
+
+/* ── DSEG7 display tiles (TimeTile, TimerTile) ───────────────────────── */
+.time-tile,
+.timer-tile {
+  font-family: 'DSEG7', monospace;
+}
+
+.tile-display-wrapper {
+  position: relative;
+  line-height: 1;
+}
+
+.tile-display {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.tile-display-ghost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+  user-select: none;
+}
+
+.tile-display-live {
+  position: relative;
+  color: #1B242C;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
+}
+
+/* ── Timer colon blink (TimerTile) ───────────────────────────────────── */
+@keyframes blink {
+  to { visibility: hidden; }
+}
+
+.timer-colon {
+  animation: blink 1s steps(2, start) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timer-colon {
+    animation: none;
+    visibility: visible;
+  }
+}
+
+/* ── GlobalSwitch signal rings ───────────────────────────────────────── */
+@keyframes radio-wave {
+  0%   { transform: scale(1);    opacity: 0.55; }
+  70%  {                         opacity: 0.12; }
+  100% { transform: scale(2.35); opacity: 0;    }
+}
+
+.signal-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 99, 71, 0.55);
+  pointer-events: none;
+  animation: radio-wave 2.1s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  will-change: transform, opacity;
+}
+
+.signal-ring--b { animation-delay: -0.7s; }
+.signal-ring--c { animation-delay: -1.4s; }

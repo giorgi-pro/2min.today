@@ -47,60 +47,12 @@
     </button>
   </div>
 
-  <div class="display-wrapper">
-    <p class="display ghost" aria-hidden="true">88<span>:</span>88<span>:</span>88</p>
-    <p class="display live">
-      {hours}<span class="colon" style="animation-delay: {animationDelay}">:</span>{minutes}<span class="colon" style="animation-delay: {animationDelay}">:</span>{seconds}
+  <div class="tile-display-wrapper">
+    <p class="tile-display tile-display-ghost" aria-hidden="true">88<span>:</span>88<span>:</span>88</p>
+    <p class="tile-display tile-display-live">
+      {hours}<span class="timer-colon" style="animation-delay: {animationDelay}">:</span>{minutes}<span class="timer-colon" style="animation-delay: {animationDelay}">:</span>{seconds}
     </p>
   </div>
 
   <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-black/40">{dateLabel()}</p>
 </div>
-
-<style>
-  .timer-tile {
-    font-family: 'DSEG7', monospace;
-  }
-
-  .display-wrapper {
-    position: relative;
-    line-height: 1;
-  }
-
-  .display {
-    font-size: 1.6rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    line-height: 1;
-  }
-
-  .ghost {
-    position: absolute;
-    top: 0;
-    left: 0;
-    color: rgba(0, 0, 0, 0.08);
-    pointer-events: none;
-    user-select: none;
-  }
-
-  .live {
-    position: relative;
-    color: #1B242C;
-    text-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
-  }
-
-  .colon {
-    animation: blink 1s steps(2, start) infinite;
-  }
-
-  @keyframes blink {
-    to { visibility: hidden; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .colon {
-      animation: none;
-      visibility: visible;
-    }
-  }
-</style>

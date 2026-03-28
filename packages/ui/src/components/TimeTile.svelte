@@ -26,41 +26,8 @@
     </button>
   </div>
 
-  <div class="display-wrapper">
-    <p class="display ghost" aria-hidden="true">{ghost}</p>
-    <p class="display live">{displayTime()}</p>
+  <div class="tile-display-wrapper">
+    <p class="tile-display tile-display-ghost" aria-hidden="true">{ghost}</p>
+    <p class="tile-display tile-display-live">{displayTime()}</p>
   </div>
 </div>
-
-<style>
-  .time-tile {
-    font-family: 'DSEG7', monospace;
-  }
-
-  .display-wrapper {
-    position: relative;
-    line-height: 1;
-  }
-
-  .display {
-    font-size: 1.6rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    line-height: 1;
-  }
-
-  .ghost {
-    position: absolute;
-    top: 0;
-    left: 0;
-    color: rgba(0, 0, 0, 0.08);
-    pointer-events: none;
-    user-select: none;
-  }
-
-  .live {
-    position: relative;
-    color: #1B242C;
-    text-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
-  }
-</style>

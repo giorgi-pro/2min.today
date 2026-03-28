@@ -171,13 +171,6 @@
   }
 </script>
 
-<style>
-  @keyframes neon-pulse {
-    0%, 100% { box-shadow: 0 0 4px 1px rgba(255, 99, 71, 0.2); }
-    50%       { box-shadow: 0 0 2px 1px rgba(255, 99, 71, 0.5); }
-  }
-  .dot-pulse { animation: neon-pulse 2s ease-in-out infinite; }
-</style>
 
 <div
   role={reorderable ? 'group' : undefined}
