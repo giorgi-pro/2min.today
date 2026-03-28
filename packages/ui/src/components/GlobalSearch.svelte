@@ -2,11 +2,15 @@
   interface Props {
     class?: string;
     value?: string;
+    onfocus?: () => void;
+    onblur?: () => void;
   }
 
   let {
     class: className,
     value = $bindable(''),
+    onfocus,
+    onblur,
   }: Props = $props();
 </script>
 
@@ -21,5 +25,7 @@
     bind:value
     placeholder="Search..."
     class="w-full rounded-none border-b-2 border-black bg-transparent px-[0.7rem] py-2 font-sans text-sm text-on-surface caret-primary transition-colors placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-on-surface/30 focus:border-primary focus:outline-none md:text-base"
+    {onfocus}
+    {onblur}
   />
 </div>

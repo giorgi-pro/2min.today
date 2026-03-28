@@ -26,11 +26,7 @@
         aria-expanded={expandedBucket === bucket}
       >
         <span class="m-6 text-xl font-black uppercase leading-none tracking-tight">{bucket}</span>
-        <ul class="summary-text m-3 space-y-1 text-right">
-          {#each summary as line (line)}
-            <li>{line}.</li>
-          {/each}
-        </ul>
+        <p class="summary-text m-3 text-right">{summary.join(' • ')}</p>
       </button>
 
       <div
