@@ -1,6 +1,7 @@
 <script lang="ts">
   import { dragHandle } from 'svelte-dnd-action';
 
+  // TODO: replace use:action with {@attach} once svelte-dnd-action supports Svelte 5 attach API
   function optionalDragHandle(node: HTMLElement, enabled: boolean) {
     let destroyDh: (() => void) | undefined;
     function apply(next: boolean) {
@@ -13,16 +14,12 @@
     }
     apply(enabled);
     return {
-      update(next: boolean) {
-        apply(next);
-      },
-      destroy() {
-        destroyDh?.();
-      },
+      update(next: boolean) { apply(next); },
+      destroy() { destroyDh?.(); },
     };
   }
 
-  type Props = {
+  interface Props {
     name: string;
     summary: string[];
     inverted: boolean;
@@ -30,7 +27,7 @@
     marqueeEnabled: boolean;
     onclick: (e: MouseEvent) => void;
     reorderHandle?: boolean;
-  };
+  }
 
   let {
     name,
@@ -55,9 +52,8 @@
 >
   <span class="m-6 whitespace-nowrap text-xl font-black uppercase leading-none tracking-tight">{name}</span>
   <ul class="summary-text m-3 space-y-1 text-right">
-    {#each summary as line}
+    {#each summary as line (line)}
       <li>{line}.</li>
     {/each}
   </ul>
-
 </div>

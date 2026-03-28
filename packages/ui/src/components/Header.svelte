@@ -2,8 +2,7 @@
   import GlobalSearch from './GlobalSearch.svelte';
   import Logo from './Logo.svelte';
   import Menu from './Menu.svelte';
-
-  type Region = 'world' | 'europe' | 'americas' | 'middle-east' | 'usa';
+  import type { Region } from '@2min.today/types';
 
   interface Props {
     searchQuery?: string;

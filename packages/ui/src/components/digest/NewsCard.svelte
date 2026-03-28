@@ -1,22 +1,10 @@
 <script lang="ts">
   import NewsTags from './NewsTags.svelte';
+  import type { NewsItem } from '@2min.today/types';
 
-  type Credit = { source: string; url: string };
-
-  type Props = {
-    title: string;
-    bullets: string[];
-    whyItMatters: string;
-    credits: Credit[];
-    isBreaking: boolean;
-    isLive: boolean;
-    tags: string[];
-  };
-
-  const { title, bullets, whyItMatters, credits, isBreaking, isLive, tags }: Props = $props();
+  const { title, bullets, whyItMatters, credits, isBreaking, isLive, tags }: NewsItem = $props();
 
   let open = $state(false);
-  let cardEl: HTMLDivElement;
   let hoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
   function openSources() {
@@ -39,7 +27,6 @@
 
 
 <div
-  bind:this={cardEl}
   class="news-tile relative flex h-full min-w-[min(100%,280px)] flex-col border-r border-black/10 py-2 px-2 pb-[4px] {isLive ? 'bg-white' : ''}"
   onmouseleave={onCardMouseLeave}
   role="presentation"
@@ -61,7 +48,7 @@
       class="mb-3 mx-1 flex-none text-lg font-bold leading-snug tracking-tight {isLive ? 'text-[#181c20]' : 'text-black'}"
     >{title}</h2>
     <ul class="min-h-0 w-0 min-w-full flex-1 space-y-1.5 overflow-hidden mx-1">
-      {#each bullets as bullet}
+      {#each bullets as bullet (bullet)}
         <li class="flex gap-2 text-[0.8rem] leading-snug {isLive ? 'text-[#3d4754]' : 'text-black'}">
           <span class="mt-[0.35rem] block h-[3px] w-[3px] shrink-0 {isLive ? 'bg-[#637588]' : 'bg-black'}"></span>
           <span>{bullet}</span>
@@ -93,7 +80,7 @@
             <p class="px-3 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-black/30">Source unavailable</p>
           {:else}
             <div class="flex flex-col">
-              {#each credits as credit}
+              {#each credits as credit (credit.url)}
                 <div class="flex items-center border-b border-black/5 py-2 pl-3 pr-3 last:border-0">
                   <div
                     class="shrink-0 whitespace-nowrap pr-[30px] font-mono text-[0.55rem] uppercase leading-none tracking-widest text-black/40"

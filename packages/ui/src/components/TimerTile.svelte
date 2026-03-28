@@ -1,7 +1,13 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
+  import { padTime, formatDateLabel } from '@utils';
 
-  const { utc, ontoggle }: { utc: boolean; ontoggle: () => void } = $props();
+  interface Props {
+    utc: boolean;
+    ontoggle: () => void;
+  }
+
+  const { utc, ontoggle }: Props = $props();
 
   let now = $state(new Date());
   let animationDelay = $state('0ms');
@@ -9,30 +15,15 @@
 
   onMount(() => {
     animationDelay = `-${now.getMilliseconds()}ms`;
-    interval = setInterval(() => {
-      now = new Date();
-    }, 1000);
+    interval = setInterval(() => { now = new Date(); }, 1000);
   });
 
   onDestroy(() => clearInterval(interval));
 
-  const pad = (n: number) => String(n).padStart(2, '0');
-
-  const hours = $derived(pad(utc ? now.getUTCHours() : now.getHours()));
-  const minutes = $derived(pad(utc ? now.getUTCMinutes() : now.getMinutes()));
-  const seconds = $derived(pad(utc ? now.getUTCSeconds() : now.getSeconds()));
-
-  const DAY_NAMES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-  const MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-
-  const dateLabel = $derived(() => {
-    const day = utc ? now.getUTCDay() : now.getDay();
-    const date = utc ? now.getUTCDate() : now.getDate();
-    const month = utc ? now.getUTCMonth() : now.getMonth();
-    const year = utc ? now.getUTCFullYear() : now.getFullYear();
-    return `${DAY_NAMES[day]} — ${date} ${MONTH_NAMES[month]} ${year}`;
-  });
-
+  const hours = $derived(padTime(utc ? now.getUTCHours() : now.getHours()));
+  const minutes = $derived(padTime(utc ? now.getUTCMinutes() : now.getMinutes()));
+  const seconds = $derived(padTime(utc ? now.getUTCSeconds() : now.getSeconds()));
+  const dateLabel = $derived(formatDateLabel(now, utc));
   const timezone = $derived(utc ? 'UTC' : Intl.DateTimeFormat().resolvedOptions().timeZone);
 </script>
 
@@ -41,7 +32,7 @@
     <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-black/40">Current Time</p>
     <button
       onclick={ontoggle}
-      class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-black/40 transition-opacity hover:text-black/70 cursor-pointer"
+      class="cursor-pointer font-mono text-[0.6rem] uppercase tracking-[0.1em] text-black/40 transition-opacity hover:text-black/70"
     >
       {timezone}
     </button>
@@ -54,5 +45,5 @@
     </p>
   </div>
 
-  <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-black/40">{dateLabel()}</p>
+  <p class="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-black/40">{dateLabel}</p>
 </div>

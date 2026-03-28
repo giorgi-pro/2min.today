@@ -1,6 +1,8 @@
 <script lang="ts">
   import { dragHandle } from 'svelte-dnd-action';
   import CategoryPanel from './CategoryPanel.svelte';
+  import NewsCard from './NewsCard.svelte';
+  import type { NewsItem } from '@2min.today/types';
 
   function optionalDragHandle(node: HTMLElement, enabled: boolean) {
     let destroyDh: (() => void) | undefined;
@@ -22,19 +24,6 @@
       },
     };
   }
-  import NewsCard from './NewsCard.svelte';
-
-  type Credit = { source: string; url: string };
-
-  type NewsItem = {
-    title: string;
-    bullets: string[];
-    whyItMatters: string;
-    credits: Credit[];
-    isBreaking: boolean;
-    isLive: boolean;
-    tags: string[];
-  };
 
   type Props = {
     name: string;
@@ -205,7 +194,7 @@
             ? 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
             : 'transform 0.25s cubic-bezier(0.55, 0, 1, 0.45)'}
         >
-          {#each news as item, i}
+          {#each news as item, i (item.title)}
             <div
               class="relative flex h-full shrink-0 items-center gap-2 px-3"
               role="group"
@@ -261,7 +250,7 @@
               <p class="font-mono text-[0.65rem] uppercase tracking-widest text-black/30">No news found</p>
             </div>
           {:else}
-            {#each news as item}
+            {#each news as item (item.title)}
               <NewsCard
                 title={item.title}
                 bullets={item.bullets}
@@ -297,7 +286,7 @@
       <p class="px-3 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-black/30">Source unavailable</p>
     {:else}
       <div class="flex flex-col">
-        {#each creditCredits as credit}
+        {#each creditCredits as credit (credit.url)}
           <div class="flex items-center border-b border-black/5 py-2 pl-3 pr-3 last:border-0">
             <div class="shrink-0 whitespace-nowrap pr-[30px] font-mono text-[0.55rem] uppercase leading-none tracking-widest text-black/40">{credit.source}</div>
             <div class="min-w-0 flex-1 leading-none">
