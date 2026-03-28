@@ -37,6 +37,8 @@
       <GlobalSearch
         bind:value={searchQuery}
         class="max-w-full"
+        compact={!searchExpanded}
+        bordered={false}
         onfocus={() => (searchFocused = true)}
         onblur={() => (searchFocused = false)}
       />

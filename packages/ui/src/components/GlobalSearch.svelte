@@ -2,6 +2,8 @@
   interface Props {
     class?: string;
     value?: string;
+    compact?: boolean;
+    bordered?: boolean;
     onfocus?: () => void;
     onblur?: () => void;
   }
@@ -9,6 +11,8 @@
   let {
     class: className,
     value = $bindable(''),
+    compact = false,
+    bordered = true,
     onfocus,
     onblur,
   }: Props = $props();
@@ -24,7 +28,7 @@
     spellcheck="false"
     bind:value
     placeholder="Search..."
-    class="w-full rounded-none border-b-2 border-black bg-transparent px-[0.7rem] py-2 font-sans text-sm text-on-surface caret-primary transition-colors placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-on-surface/30 focus:border-primary focus:outline-none md:text-base"
+    class="w-full appearance-none rounded-none bg-transparent px-[0.7rem] font-sans text-base text-on-surface caret-primary transition-[padding] duration-300 ease-out placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-on-surface/30 focus:outline-none {compact ? 'py-0.5' : 'py-2'} {bordered ? 'border-b-2 border-black focus:border-primary' : 'border-0'}"
     {onfocus}
     {onblur}
   />
