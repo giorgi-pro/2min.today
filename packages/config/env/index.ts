@@ -1,5 +1,6 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
+import 'dotenv/config';
 
 function buildEnv() {
   return createEnv({
