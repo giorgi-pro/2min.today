@@ -1,0 +1,13 @@
+{
+  "name": "@2min.today/types",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@google/generative-ai": "0.24.1",
+    "svelte": "^5.46.4"
+  }
+}

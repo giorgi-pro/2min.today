@@ -1,0 +1,135 @@
+# News ingestion for the digest pipeline (fetch.ts).
+# Toggle `enabled` per source without code changes.
+#
+# All feeds below were fetched and confirmed to return valid RSS with items.
+# `region:` is an optional hint. When set, every story from that feed is forced
+# to that region (summarize.ts: feedRegion ?? llm). Use it only for feeds that
+# are genuinely single-region (e.g. BBC Africa). Leave general feeds unhinted so
+# the model assigns region + topic itself.
+#
+# Balance publishers so cross-source clustering and "multiple sources" credit
+# stay meaningful. Keep the enabled set modest — more feeds = more Flash calls.
+
+sources:
+  # --- General wire (world; region + topic assigned by the model) ---
+  - id: bbc-world
+    type: rss
+    enabled: true
+    url: https://feeds.bbci.co.uk/news/world/rss.xml
+    label: BBC
+
+  - id: guardian-world
+    type: rss
+    enabled: true
+    url: https://www.theguardian.com/world/rss
+    label: The Guardian
+
+  - id: aljazeera
+    type: rss
+    enabled: true
+    url: https://www.aljazeera.com/xml/rss/all.xml
+    label: Al Jazeera
+
+  - id: npr
+    type: rss
+    enabled: true
+    url: https://feeds.npr.org/1001/rss.xml
+    label: NPR
+
+  # --- Topic desks ---
+  - id: guardian-business
+    type: rss
+    enabled: true
+    url: https://www.theguardian.com/business/rss
+    label: The Guardian
+
+  - id: arstechnica
+    type: rss
+    enabled: true
+    url: https://feeds.arstechnica.com/arstechnica/index
+    label: Ars Technica
+
+  - id: guardian-science
+    type: rss
+    enabled: true
+    url: https://www.theguardian.com/science/rss
+    label: The Guardian
+
+  - id: bbc-health
+    type: rss
+    enabled: true
+    url: https://feeds.bbci.co.uk/news/health/rss.xml
+    label: BBC
+
+  - id: guardian-environment
+    type: rss
+    enabled: true
+    url: https://www.theguardian.com/environment/rss
+    label: The Guardian
+
+  # --- Region-specific feeds (hinted, to cover the under-served axes) ---
+  - id: bbc-africa
+    type: rss
+    enabled: true
+    url: https://feeds.bbci.co.uk/news/world/africa/rss.xml
+    label: BBC
+    region: africa
+
+  - id: bbc-asia
+    type: rss
+    enabled: true
+    url: https://feeds.bbci.co.uk/news/world/asia/rss.xml
+    label: BBC
+    region: asia
+
+  - id: bbc-middle-east
+    type: rss
+    enabled: true
+    url: https://feeds.bbci.co.uk/news/world/middle_east/rss.xml
+    label: BBC
+    region: middle-east
+
+  # --- Validated extras, off by default (flip enabled to add) ---
+  - id: bbc-europe
+    type: rss
+    enabled: false
+    url: https://feeds.bbci.co.uk/news/world/europe/rss.xml
+    label: BBC
+    region: europe
+
+  - id: dw
+    type: rss
+    enabled: false
+    url: https://rss.dw.com/rdf/rss-en-all
+    label: DW
+
+  - id: cnbc
+    type: rss
+    enabled: false
+    url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114'
+    label: CNBC
+
+  - id: theverge
+    type: rss
+    enabled: true
+    url: https://www.theverge.com/rss/index.xml
+    label: The Verge
+
+  - id: techcrunch
+    type: rss
+    enabled: false
+    url: https://techcrunch.com/feed/
+    label: TechCrunch
+
+  - id: sciencedaily
+    type: rss
+    enabled: true
+    url: https://www.sciencedaily.com/rss/all.xml
+    label: ScienceDaily
+
+  - id: allafrica
+    type: rss
+    enabled: false
+    url: https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf
+    label: AllAfrica
+    region: africa

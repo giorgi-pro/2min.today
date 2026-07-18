@@ -1,0 +1,70 @@
+# OS
+.DS_Store
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Dependencies (pnpm workspace)
+node_modules
+.pnpm-store
+.pnp
+.pnp.js
+package-lock.json
+yarn.lock
+
+# Monorepo tooling
+.turbo
+
+# Local dev tools (make init — gopls, sqlc, buf, rust-analyzer, …)
+/tools/
+
+# Go (apps/api, apps/db)
+bin
+*.test
+*.out
+
+# Drizzle (apps/db) — migrations under migration/migrations are committed
+
+# SvelteKit / Vite (apps/web, apps/device, packages/ui)
+.svelte-kit
+build
+dist
+package
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Tauri (apps/device)
+**/src-tauri/target
+**/src-tauri/gen
+
+# Testing
+coverage
+test-results
+playwright-report
+blob-report
+.playwright
+
+# Deploy adapters (SvelteKit adapter-auto)
+.vercel
+.netlify
+
+# Infra (local Postgres data)
+infra/postgres/data
+
+# Runtime media (apps/api TTS cache)
+**/media/tts
+
+# Tool caches
+.eslintcache
+*.tsbuildinfo
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Secrets
+*.pem

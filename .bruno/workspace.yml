@@ -1,0 +1,14 @@
+opencollection: 1.0.0
+info:
+  name: "2min.today"
+  type: workspace
+
+collections:
+  - name: "2min.today"
+    path: "./collections/2min.today/"
+
+specs:
+
+docs: ''
+
+activeEnvironmentUid: 5csnfu000000000000000

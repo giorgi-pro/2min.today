@@ -1,0 +1,14 @@
+# 2min.today Topic Anchors
+# Topic = what a story is about (subject), independent of Region (where).
+# Single source of truth: lowercase slugs in DB and code. UI uppercases for display.
+# Used by: lib/pipeline/classify.ts, packages/scripts/seed-topic-anchors.ts
+# After editing anchor text, re-run from repo root: pnpm --filter @2min.today/web run seed:anchors
+topics:
+  politics: "politics government elections policy legislation parliament congress diplomacy foreign relations statecraft political parties campaigns cabinet ministers presidents prime ministers governance public policy"
+  conflict: "war conflict military defense armed forces security terrorism insurgency ceasefire invasion airstrikes troops weapons geopolitics sanctions intelligence espionage nuclear missiles combat casualties"
+  business: "business economy financial markets stock market economic growth inflation interest rates central banks trade tariffs corporate earnings companies mergers jobs unemployment currency GDP finance investment"
+  tech: "technology artificial intelligence software hardware semiconductors chips startups cybersecurity data privacy internet apps computing quantum robotics automation social media platforms digital innovation"
+  science: "science scientific research discovery physics chemistry biology space exploration astronomy astrophysics particle physics genetics experiments academic study peer-reviewed findings laboratory"
+  health: "health medicine public health disease outbreak virus vaccine hospitals doctors patients medical research pharmaceuticals drugs treatment mental health epidemiology healthcare wellbeing nutrition"
+  environment: "environment climate change global warming emissions carbon energy renewable oil gas electricity wildfires floods droughts hurricanes natural disasters biodiversity pollution conservation sustainability weather"
+  society: "society culture education religion human rights migration immigration crime justice courts law policing protests inequality demographics social issues civil rights community daily life human interest"

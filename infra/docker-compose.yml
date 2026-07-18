@@ -1,0 +1,26 @@
+name: ${APP_NAME}
+
+services:
+  postgres:
+    # pgvector-enabled Postgres 16 (bundles the `vector` extension the schema needs).
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${APP_NAME}
+    ports:
+      # Bind to loopback only — avoids conflict with a host Postgres install
+      # and keeps the dev DB off the local network. Override per-environment
+      # if you need wider access.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
+      # Init scripts run in filename order on a fresh volume.
+      - ./postgres/scripts/init.sql:/docker-entrypoint-initdb.d/00-init.sql
+      - ../packages/data/schema.sql:/docker-entrypoint-initdb.d/10-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${APP_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5

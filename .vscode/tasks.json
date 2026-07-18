@@ -1,0 +1,30 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run Web App",
+            "type": "shell",
+            "command": "lsof -ti :3000 | xargs kill -9 2>/dev/null; set -a && source apps/web/.env && set +a && pnpm dev --filter=@2min.today/web",
+            "isBackground": true,
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Trigger digest",
+            "type": "shell",
+            "command": "set -a && source apps/web/.env && set +a && curl \"http://localhost:3000/api/digest?secret=${CRON_SECRET}\"",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        }
+    ]
+}

@@ -1,0 +1,23 @@
+meta {
+  name: Fetch sources
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/api/digest/sources?secret={{cron_secret}}
+  body: none
+  auth: none
+}
+
+params:query {
+  secret: {{cron_secret}}
+}
+
+vars:pre-request {
+  cron_secret: 7-LaJIqbJXSgRqMFj2nh8HdQtTBm-bwlSFp06dlt
+}
+
+docs {
+  # Fetch-only diagnostics: RSS + X per-source counts, errors, deduped item total. Same `CRON_SECRET` as Run pipeline.
+}

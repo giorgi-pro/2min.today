@@ -1,0 +1,12 @@
+#dnd-action-dragged-el {
+  @apply !outline-none !box-border !bg-white;
+  border: 2px solid theme('colors.black') !important;
+}
+
+#dnd-action-dragged-el::after {
+  @apply content-[''] absolute left-0 right-0 -bottom-0.5 h-0.5 bg-black pointer-events-none z-[10000];
+}
+
+#dnd-action-dragged-el:focus-visible {
+  @apply !outline-none;
+}

@@ -1,0 +1,10 @@
+@layer base {
+  html {
+    @apply antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-white text-on-surface font-sans;
+  }
+}

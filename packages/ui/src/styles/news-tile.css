@@ -1,0 +1,3 @@
+.news-tile {
+  @apply w-max min-w-[30vh] max-w-[60vh] shrink-0;
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@2min.today/data",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./db": "./db.ts"
+  },
+  "scripts": {
+    "lint": "biome lint .",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@2min.today/config": "workspace:*",
+    "pg": "^8.22.0"
+  },
+  "devDependencies": {
+    "@2min.today/typescript-config": "workspace:*",
+    "@biomejs/biome": "2.1.1",
+    "@types/node": "^22.15.3",
+    "@types/pg": "^8.20.0",
+    "typescript": "5.9.2"
+  }
+}

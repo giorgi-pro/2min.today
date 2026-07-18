@@ -1,0 +1,25 @@
+{
+  "name": "@2min.today/scripts",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./*": "./**/*.ts"
+  },
+  "dependencies": {
+    "@2min.today/config": "workspace:*",
+    "@2min.today/data": "workspace:^",
+    "@2min.today/lib": "workspace:*",
+    "@2min.today/types": "workspace:*",
+    "@google/generative-ai": "0.24.1",
+    "fast-xml-parser": "5.5.9",
+    "fuse.js": "7.1.0",
+    "pg": "^8.22.0",
+    "pgvector": "^0.3.0",
+    "uuid": "13.0.0",
+    "yaml": "2.8.3"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.20.0"
+  }
+}
