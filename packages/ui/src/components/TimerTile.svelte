@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { padTime, formatDateLabel } from '@utils';
+  import { padTime, formatDateLabel, getLocalTimezoneLabel } from '@utils';
 
   interface Props {
     utc: boolean;
@@ -24,7 +24,7 @@
   const minutes = $derived(padTime(utc ? now.getUTCMinutes() : now.getMinutes()));
   const seconds = $derived(padTime(utc ? now.getUTCSeconds() : now.getSeconds()));
   const dateLabel = $derived(formatDateLabel(now, utc));
-  const timezone = $derived(utc ? 'UTC' : Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const timezone = $derived(utc ? 'UTC' : getLocalTimezoneLabel());
 </script>
 
 <div class="timer-tile flex flex-1 flex-col gap-3 border-2 border-black p-5">

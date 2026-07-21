@@ -1,4 +1,5 @@
 import type { DigestCard, Topic } from "@2min.today/types";
+import { writable } from "svelte/store";
 
 // Bump the key if the cached shape ever changes incompatibly.
 const STORAGE_KEY = "2min.today/digest-cache/v1";
@@ -6,6 +7,7 @@ const STORAGE_KEY = "2min.today/digest-cache/v1";
 export type CachedDigestPayload = {
   digest: Partial<Record<Topic, DigestCard[]>>;
   summaries: Partial<Record<Topic, string[]>>;
+  lastDigestRunAt: string | null;
 };
 
 type StoredDigestCache = CachedDigestPayload & {
@@ -33,13 +35,18 @@ export function readDigestCache(): CachedDigestPayload | null {
     ) {
       return null;
     }
-    return { digest: parsed.digest ?? {}, summaries: parsed.summaries ?? {} };
+    return {
+      digest: parsed.digest ?? {},
+      summaries: parsed.summaries ?? {},
+      lastDigestRunAt: parsed.lastDigestRunAt ?? null,
+    };
   } catch {
     return null;
   }
 }
 
 export function writeDigestCache(payload: CachedDigestPayload): void {
+  lastDigestRunAt.set(payload.lastDigestRunAt);
   if (typeof window === "undefined") return;
   try {
     const stored: StoredDigestCache = { ...payload, date: todayUtcDate() };
@@ -48,3 +55,10 @@ export function writeDigestCache(payload: CachedDigestPayload): void {
     // Storage full/unavailable (private browsing, quota) — safe to skip caching.
   }
 }
+
+// Shared with BottomSection/TimeTile, which render in the layout — outside
+// +page.svelte's component tree — so a store is how the value reaches them.
+// Seeded from the cache above so it's available before the first fetch resolves.
+export const lastDigestRunAt = writable<string | null>(
+  readDigestCache()?.lastDigestRunAt ?? null,
+);

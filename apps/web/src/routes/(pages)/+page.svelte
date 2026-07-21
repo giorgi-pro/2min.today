@@ -40,11 +40,12 @@ async function fetchDigestData() {
     const json = (await res.json()) as {
       digest: Partial<Record<Topic, DigestCard[]>>
       summaries: Partial<Record<Topic, string[]>>
+      lastDigestRunAt: string | null
     }
     liveDigest = json.digest ?? {}
     liveSummaries = json.summaries ?? {}
     digestLoaded = true
-    writeDigestCache({ digest: liveDigest, summaries: liveSummaries })
+    writeDigestCache({ digest: liveDigest, summaries: liveSummaries, lastDigestRunAt: json.lastDigestRunAt ?? null })
   } catch (err) {
     console.error('digest fetch failed', err)
   }

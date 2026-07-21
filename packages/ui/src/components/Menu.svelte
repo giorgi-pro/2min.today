@@ -27,6 +27,6 @@
   <EuropeSwitch active={activeRegions.has('europe')} onclick={() => onRegionToggle?.('europe')} />
   <MiddleEastSwitch active={activeRegions.has('middle-east')} onclick={() => onRegionToggle?.('middle-east')} />
   <AmericasSwitch active={activeRegions.has('americas')} onclick={() => onRegionToggle?.('americas')} />
-  <AsiaSwitch active={activeRegions.has('asia')} onclick={() => onRegionToggle?.('asia')} />
-  <AfricaSwitch active={activeRegions.has('africa')} onclick={() => onRegionToggle?.('africa')} />
+  <!-- <AsiaSwitch active={activeRegions.has('asia')} onclick={() => onRegionToggle?.('asia')} /> -->
+  <!-- <AfricaSwitch active={activeRegions.has('africa')} onclick={() => onRegionToggle?.('africa')} /> -->
 </nav>

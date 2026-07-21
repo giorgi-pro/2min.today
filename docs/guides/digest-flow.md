@@ -177,7 +177,7 @@ The homepage is **client-side rendered for its digest content** (not SSR) so a r
 3. Regardless of cache hit, it fetches `GET /api/digest/data` in the background. That endpoint calls the same `loadHomePageDigest()` service used everywhere else, which:
    - Queries `clusters` for rows in today's UTC window, ordered by `published_at` descending.
    - **Backfills each topic toward a minimum of 5 cards** using the most recent older rows if today's news alone doesn't reach it (`MIN_CARDS_PER_TOPIC` in `home-page-load.ts`).
-   - Is wrapped in a **2-minute in-memory cache** keyed by UTC date, so repeat requests within that window skip the DB entirely. On a DB error, it serves the last good cached value instead of an empty page.
+   - Is wrapped in an **in-memory cache keyed by the latest `published_at` in `clusters`**, so requests skip the DB entirely until a new digest run actually writes. On a DB error, it serves the last good cached value instead of an empty page. See [`how-caching-works.md`](./how-caching-works.md).
 4. The fetch response updates the page and refreshes the `localStorage` cache for next time.
 
 The 8 homepage rows (`TOPIC_ORDER` in `@2min.today/types`) are the **topics**: `politics`, `conflict`, `business`, `tech`, `science`, `health`, `environment`, `society`. **Region** is not a row — it's a header filter that narrows cards across all rows client-side.

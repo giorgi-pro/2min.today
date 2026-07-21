@@ -22,6 +22,7 @@ create index if not exists idx_clusters_embedding
 
 create index if not exists idx_clusters_region on clusters (region);
 create index if not exists idx_clusters_topic on clusters (topic);
+create index if not exists idx_clusters_published_at on clusters (published_at desc);
 
 -- Topic classification seeds (one embedding per topic).
 create table if not exists topic_anchors (

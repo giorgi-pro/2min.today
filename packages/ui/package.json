@@ -24,10 +24,11 @@
   },
   "dependencies": {
     "@2min.today/types": "workspace:*",
+    "@fontsource-variable/inter": "5.2.8",
+    "@fontsource/dseg7": "4.5.4",
+    "pusher-js": "^8.5.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "svelte-dnd-action": "0.9.69",
-    "@fontsource-variable/inter": "5.2.8",
-    "@fontsource/dseg7": "4.5.4"
+    "svelte-dnd-action": "0.9.69"
   }
 }

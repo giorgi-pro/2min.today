@@ -33,9 +33,16 @@ function buildEnv() {
         .optional(),
       CLASSIFY_SIMILARITY_THRESHOLD: z.coerce.number().optional(),
       CLUSTER_SIMILARITY_THRESHOLD: z.coerce.number().optional(),
+      // Pusher Channels: live "Current Visitors" presence count. Optional —
+      // the feature just stays off (BottomSection shows a placeholder) if unset.
+      PUSHER_APP_ID: z.string().optional(),
+      PUSHER_APP_SECRET: z.string().optional(),
     },
     clientPrefix: "PUBLIC_",
-    client: {},
+    client: {
+      PUBLIC_PUSHER_APP_KEY: z.string().optional(),
+      PUBLIC_PUSHER_CLUSTER: z.string().optional(),
+    },
     runtimeEnv: process.env,
     emptyStringAsUndefined: true,
   });

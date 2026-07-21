@@ -23,6 +23,7 @@
     "@sveltejs/adapter-auto": "7.0.1",
     "fast-xml-parser": "5.5.9",
     "fuse.js": "7.1.0",
+    "pusher": "^5.3.4",
     "svelte-dnd-action": "0.9.69",
     "uuid": "13.0.0"
   },

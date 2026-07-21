@@ -24,7 +24,7 @@ const Layout = $derived(isMobile.current ? MobileLayout : DesktopLayout)
     <main class="flex-1">
       {@render children()}
     </main>
-    <BottomSection newsSourcesCount={data.newsSourcesCount} />
+    <BottomSection newsSourcesCount={data.newsSourcesCount} pusherKey={data.pusherKey} pusherCluster={data.pusherCluster} />
     <Footer />
   </Layout>
 </div>

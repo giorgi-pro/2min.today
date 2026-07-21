@@ -1,5 +1,5 @@
 import { env } from '@2min.today/config/env'
-import { getDb } from '@2min.today/data/db'
+import { type Db, getDb } from '@2min.today/data/db'
 import { logger } from '@2min.today/logging'
 import { type Credit, type DigestCard, parseRegion, parseTopic, type SummaryJson, TOPIC_ORDER, type Topic } from '@2min.today/types'
 import { buildMockDigest } from '@utils'
@@ -9,28 +9,42 @@ export type HomePageLoadData = {
   summaries: Partial<Record<Topic, string[]>>
   fuseThreshold: number
   useMockData: boolean
+  // Identifies which digest run this data reflects. `null` in mock mode or
+  // when the clusters table is empty. The route uses this as the HTTP ETag.
+  etag: string | null
+  // Same run as `etag`, as an ISO 8601 string for display (e.g. TimeTile).
+  lastDigestRunAt: string | null
 }
 
 // A topic row backfills toward this many cards using older stories when
 // today's news alone doesn't reach it.
 const MIN_CARDS_PER_TOPIC = 5
 
-// The digest is a once-per-UTC-day artifact (idempotent cron), so a short
-// in-memory cache removes repeat DB round-trips per server instance without
-// risking staleness across a real digest re-run. Not shared across serverless
-// instances — that's fine, it just bounds the blast radius of a cache miss.
-const CACHE_TTL_MS = 2 * 60 * 1000
-
+// Cache is keyed by the latest `published_at` in `clusters`, not by time or
+// UTC date. A cache hit means "no digest run has written since we last
+// fetched" — checked via one cheap indexed query — so the expensive
+// today's-clusters + backfill queries only run when the data actually
+// changed. Not shared across serverless instances; a cold instance just
+// re-runs the cheap check once.
 type CacheEntry = {
-  utcDate: string
-  expiresAt: number
+  forRunAt: string | null
   digest: Partial<Record<Topic, DigestCard[]>>
 }
 
 let cache: CacheEntry | null = null
 
-function todayUtcDate(): string {
-  return new Date().toISOString().slice(0, 10)
+function toIso(runAt: string | null): string | null {
+  return runAt ? new Date(runAt).toISOString() : null
+}
+
+async function getLastDigestRunAt(db: Db): Promise<string | null> {
+  // Cast to text in SQL: `pg` auto-parses timestamptz into a JS Date, whose
+  // default .toString() is locale/timezone-formatted and not a stable cache
+  // key. The text cast returns a fixed, comparable string directly.
+  const { rows } = await db.query<{ run_at: string | null }>(
+    'select max(published_at)::text as run_at from clusters',
+  )
+  return rows[0]?.run_at ?? null
 }
 
 type ClusterRow = {
@@ -135,45 +149,67 @@ export async function loadHomePageDigest(): Promise<HomePageLoadData> {
       summaries: mock.summaries,
       fuseThreshold,
       useMockData: true,
+      etag: null,
+      lastDigestRunAt: null,
     }
   }
 
-  const utcDate = todayUtcDate()
-  const now = Date.now()
+  let runAt: string | null
+  try {
+    runAt = await getLastDigestRunAt(getDb())
+  } catch (err) {
+    logger.error({ err, route: 'home-page-load' }, 'Postgres load error (runAt check)')
+    return serveStaleOrEmpty(fuseThreshold)
+  }
 
-  if (cache && cache.utcDate === utcDate && cache.expiresAt > now) {
-    logger.debug({ utcDate }, 'home page digest cache hit')
-    return { digest: cache.digest, summaries: {}, fuseThreshold, useMockData: false }
+  if (cache && cache.forRunAt === runAt) {
+    logger.debug({ runAt }, 'home page digest cache hit')
+    return { digest: cache.digest, summaries: {}, fuseThreshold, useMockData: false, etag: runAt, lastDigestRunAt: toIso(runAt) }
   }
 
   const digest = await fetchDigestFromDb()
 
   if (digest === null) {
-    // DB error: serve the previous cached value if we have one (even if
-    // expired) rather than an empty page; never cache the failure itself.
-    if (cache) {
-      logger.warn({ utcDate }, 'home page digest DB error, serving stale cache')
-      return { digest: cache.digest, summaries: {}, fuseThreshold, useMockData: false }
-    }
-    return {
-      digest: {} as Partial<Record<Topic, DigestCard[]>>,
-      summaries: {} as Partial<Record<Topic, string[]>>,
-      fuseThreshold,
-      useMockData: false,
-    }
+    // DB error: serve the previous cached value if we have one rather than
+    // an empty page; never cache the failure itself.
+    return serveStaleOrEmpty(fuseThreshold)
   }
 
-  cache = { utcDate, expiresAt: now + CACHE_TTL_MS, digest }
+  cache = { forRunAt: runAt, digest }
 
   const topicCounts = Object.fromEntries(
     Object.entries(digest).map(([t, cards]) => [t, cards?.length ?? 0]),
   )
-  logger.info({ topicCounts }, 'home page digest loaded')
+  logger.info({ runAt, topicCounts }, 'home page digest cache refreshed')
 
   return {
     digest,
     summaries: {} as Partial<Record<Topic, string[]>>,
     fuseThreshold,
     useMockData: false,
+    etag: runAt,
+    lastDigestRunAt: toIso(runAt),
+  }
+}
+
+function serveStaleOrEmpty(fuseThreshold: number): HomePageLoadData {
+  if (cache) {
+    logger.warn({ forRunAt: cache.forRunAt }, 'home page digest DB error, serving stale cache')
+    return {
+      digest: cache.digest,
+      summaries: {},
+      fuseThreshold,
+      useMockData: false,
+      etag: cache.forRunAt,
+      lastDigestRunAt: toIso(cache.forRunAt),
+    }
+  }
+  return {
+    digest: {} as Partial<Record<Topic, DigestCard[]>>,
+    summaries: {} as Partial<Record<Topic, string[]>>,
+    fuseThreshold,
+    useMockData: false,
+    etag: null,
+    lastDigestRunAt: null,
   }
 }
